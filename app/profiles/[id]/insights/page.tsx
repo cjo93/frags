@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ComputePanel } from "./components/ComputePanel";
+import { ChatPanel } from "./components/ChatPanel";
 
 export default async function InsightsPage({ params }: { params: { id: string } }) {
   const profile = await prisma.profile.findUnique({
@@ -55,6 +56,7 @@ export default async function InsightsPage({ params }: { params: { id: string } 
         )}
       </div>
       <ComputePanel profileId={profile.id} profileName={profile.displayName} />
+      <ChatPanel profileId={profile.id} />
     </section>
   );
 }

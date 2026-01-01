@@ -36,6 +36,10 @@ curl -sS -X POST http://localhost:3000/api/compute \
 
 Re-running the same payload should return `cached: true` and the same `computeRunId`.
 
+## AI assistant
+
+Set `OPENAI_API_KEY` and `OPENAI_MODEL` in your `.env.local`, then open `/profiles/:id/insights` to chat with the AI assistant. It streams via the OpenAI Responses API and can invoke the `run_compute` tool to call `/api/compute`.
+
 ## Features
 
 - Next.js 15 App Router with TypeScript + strict mode
