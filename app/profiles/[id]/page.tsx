@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/auth/session";
+import { requireUserIdOrRedirect } from "@/lib/auth/guards";
 import { ProfileForm } from "../components/ProfileForm";
 
 interface ProfileEditParams {
@@ -10,7 +10,7 @@ interface ProfileEditParams {
 }
 
 export default async function ProfileEditPage({ params }: ProfileEditParams) {
-  const userId = await requireUserId();
+  const userId = await requireUserIdOrRedirect();
   const profile = await prisma.profile.findFirst({
     where: { id: params.id, userId },
     include: { birthData: true }

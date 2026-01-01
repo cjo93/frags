@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { EphemerisScene } from "./EphemerisScene";
 
 type ComputeArtifact = {
   engine: string;
@@ -91,37 +90,33 @@ export function ComputePanel({ profileId, profileName }: ComputePanelProps) {
               <span className="rounded bg-gray-100 px-2 py-1">
                 status {status === "cached" ? "cached" : "fresh"}
               </span>
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded border p-3">
-              <h3 className="text-sm font-semibold">Summary</h3>
-              <p className="text-xs text-gray-600">Birth data normalized and ephemeris cache details.</p>
-              <pre className="mt-2 overflow-x-auto rounded bg-gray-50 p-2 text-xs">
-                {JSON.stringify(
-                  {
-                    birthData: artifact.birthData,
-                    ephemeris: {
-                      cacheKey: artifact.ephemeris.cacheKey,
-                      canonicalHash: artifact.ephemeris.canonicalHash
-                    }
-                  },
-                  null,
-                  2
-                )}
-              </pre>
-            </div>
-            <div className="rounded border p-3">
-              <h3 className="text-sm font-semibold">Ephemeris points</h3>
-              <EphemerisScene points={ephemerisPoints} />
+              <span className="rounded bg-gray-100 px-2 py-1">points {ephemerisPoints.length}</span>
             </div>
           </div>
           <div className="rounded border p-3">
-            <h3 className="text-sm font-semibold">Raw artifact</h3>
+            <h3 className="text-sm font-semibold">Summary</h3>
+            <p className="text-xs text-gray-600">Birth data normalized and ephemeris cache details.</p>
+            <pre className="mt-2 overflow-x-auto rounded bg-gray-50 p-2 text-xs">
+              {JSON.stringify(
+                {
+                  birthData: artifact.birthData,
+                  ephemeris: {
+                    cacheKey: artifact.ephemeris.cacheKey,
+                    canonicalHash: artifact.ephemeris.canonicalHash,
+                    points: ephemerisPoints.length
+                  }
+                },
+                null,
+                2
+              )}
+            </pre>
+          </div>
+          <details className="rounded border p-3">
+            <summary className="cursor-pointer text-sm font-semibold">Raw artifact</summary>
             <pre className="mt-2 max-h-64 overflow-auto rounded bg-gray-50 p-2 text-xs">
               {JSON.stringify(artifact, null, 2)}
             </pre>
-          </div>
+          </details>
         </div>
       )}
       {!artifact && (

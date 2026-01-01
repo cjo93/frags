@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/auth/session";
+import { requireUserIdOrRedirect } from "@/lib/auth/guards";
 
 export default async function ProfilesPage() {
-  const userId = await requireUserId();
+  const userId = await requireUserIdOrRedirect();
   const profiles = await prisma.profile.findMany({
     where: { userId },
     include: { birthData: true },

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireUserIdOrRedirect } from "@/lib/auth/guards";
 import { ComputePanel } from "./components/ComputePanel";
 import { ChatPanel } from "./components/ChatPanel";
 
 export default async function InsightsPage({ params }: { params: { id: string } }) {
+  const userId = await requireUserIdOrRedirect();
   const profile = await prisma.profile.findUnique({
-    where: { id: params.id },
+    where: { id: params.id, userId },
     include: { birthData: true }
   });
 
@@ -24,9 +26,7 @@ export default async function InsightsPage({ params }: { params: { id: string } 
             </Link>
           </p>
           <h1 className="text-3xl font-semibold">Insights for {profile.displayName}</h1>
-          <p className="text-sm text-gray-600">
-            Run deterministic compute, inspect ephemeris cache, and visualize results.
-          </p>
+          <p className="text-sm text-gray-600">Prototype chat + deterministic compute.</p>
         </div>
       </div>
       <div className="rounded border p-4">
@@ -55,8 +55,8 @@ export default async function InsightsPage({ params }: { params: { id: string } 
           <p className="text-sm text-gray-600">No birth data provided.</p>
         )}
       </div>
-      <ComputePanel profileId={profile.id} profileName={profile.displayName} />
       <ChatPanel profileId={profile.id} />
+      <ComputePanel profileId={profile.id} profileName={profile.displayName} />
     </section>
   );
 }

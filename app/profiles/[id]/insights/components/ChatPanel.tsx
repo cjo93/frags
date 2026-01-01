@@ -8,12 +8,21 @@ interface ChatPanelProps {
 
 export function ChatPanel({ profileId }: ChatPanelProps) {
   const [input, setInput] = useState("Run compute for this profile and summarize ephemeris.");
-  const [stream, setStream] = useState("");
+  const [assistantText, setAssistantText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+
+  function readAloud() {
+    if (typeof window === "undefined") return;
+    if (!("speechSynthesis" in window)) return;
+    if (!assistantText.trim()) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(assistantText);
+    window.speechSynthesis.speak(utterance);
+  }
 
   async function send() {
     setIsStreaming(true);
-    setStream("");
+    setAssistantText("");
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
@@ -24,13 +33,48 @@ export function ChatPanel({ profileId }: ChatPanelProps) {
       }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        setStream((prev) => prev + decoder.decode(value, { stream: true }));
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Parse SSE blocks delimited by blank lines.
+        while (true) {
+          const idx = buffer.indexOf("\n\n");
+          if (idx === -1) break;
+          const block = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+
+          const dataLine = block
+            .split("\n")
+            .find((line) => line.startsWith("data:"));
+          if (!dataLine) continue;
+
+          const data = dataLine.slice("data:".length).trim();
+          if (!data || data === "[DONE]") continue;
+
+          try {
+            const json = JSON.parse(data);
+            const delta =
+              typeof json?.delta === "string"
+                ? json.delta
+                : typeof json?.text === "string"
+                  ? json.text
+                  : typeof json?.output_text === "string"
+                    ? json.output_text
+                    : null;
+            if (delta) {
+              setAssistantText((prev) => prev + delta);
+            }
+          } catch {
+            // Ignore non-JSON tool/control events.
+          }
+        }
       }
     } catch (err) {
-      setStream(err instanceof Error ? err.message : "Error streaming response");
+      setAssistantText(err instanceof Error ? err.message : "Error streaming response");
     } finally {
       setIsStreaming(false);
     }
@@ -45,13 +89,22 @@ export function ChatPanel({ profileId }: ChatPanelProps) {
             Streams via OpenAI Responses API; can call the compute tool.
           </p>
         </div>
-        <button
-          onClick={send}
-          className="rounded bg-blue-700 px-3 py-2 text-white hover:bg-blue-600 disabled:opacity-60"
-          disabled={isStreaming}
-        >
-          {isStreaming ? "Streaming..." : "Send"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={readAloud}
+            className="rounded border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-60"
+            disabled={!assistantText.trim() || isStreaming || typeof window === "undefined"}
+          >
+            Read aloud
+          </button>
+          <button
+            onClick={send}
+            className="rounded bg-blue-700 px-3 py-2 text-white hover:bg-blue-600 disabled:opacity-60"
+            disabled={isStreaming}
+          >
+            {isStreaming ? "Streaming..." : "Send"}
+          </button>
+        </div>
       </div>
       <textarea
         className="w-full rounded border p-2 text-sm"
@@ -60,7 +113,7 @@ export function ChatPanel({ profileId }: ChatPanelProps) {
         onChange={(e) => setInput(e.target.value)}
       />
       <div className="h-48 overflow-auto rounded border bg-gray-50 p-2 text-sm whitespace-pre-wrap">
-        {stream || "Awaiting response..."}
+        {assistantText || "Awaiting response..."}
       </div>
     </div>
   );
