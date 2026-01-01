@@ -34,12 +34,10 @@ export default async function ProfilesPage() {
                     Created {new Date(profile.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <Link
-                  href={`/profiles/${profile.id}`}
-                  className="text-sm font-semibold text-blue-600"
-                >
-                  Edit
-                </Link>
+                <div className="flex gap-3 text-sm font-semibold text-blue-600">
+                  <Link href={`/profiles/${profile.id}`}>Edit</Link>
+                  <Link href={`/profiles/${profile.id}/insights`}>Insights</Link>
+                </div>
               </div>
               {profile.birthData && (
                 <div className="mt-3 text-sm text-gray-600">
