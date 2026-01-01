@@ -55,6 +55,42 @@ After setting up the environment, you can:
 - Add more Prisma models + migrations for your domain (Profile / Family / ComputeRun / Horizons)
 - Wire Stripe checkout or payment intents using `lib/stripe/server.ts`
 
+## Deploy readiness
+
+### Healthcheck
+
+`GET /api/health` returns:
+- `{ ok: true, db: "ok" }` when Prisma can query the DB
+- `{ ok: false, db: "fail" }` with HTTP `503` on DB failure
+
+Example:
+
+```bash
+curl -sS http://localhost:3000/api/health
+```
+
+### Production steps (minimum)
+
+1. Set required env vars (see `.env.example`):
+   - `DATABASE_URL`
+   - `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
+   - `OPENAI_API_KEY` (if enabling AI)
+   - `BILLING_MODE` and associated vars (`ENTITLED_USER_IDS` or DB mode)
+
+2. Apply migrations:
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+```
+
+3. Build and run:
+
+```bash
+npm run build
+npm start
+```
+
 ## Entitlements (go-live helper)
 
 By default, `/api/compute` and `/api/ai` require both:

@@ -10,6 +10,15 @@ END $$;
 
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "subscriptionStatus" TEXT;
 
+-- Normalize existing values to avoid enum-cast failures.
+UPDATE "User"
+SET "subscriptionStatus" = CASE
+  WHEN "subscriptionStatus" IS NULL THEN NULL
+  WHEN UPPER("subscriptionStatus") IN ('ACTIVE', 'TRIALING', 'INACTIVE', 'CANCELED') THEN UPPER("subscriptionStatus")
+  WHEN LOWER("subscriptionStatus") IN ('cancelled') THEN 'CANCELED'
+  ELSE 'INACTIVE'
+END;
+
 -- Attempt to convert existing values; if there are unexpected strings, this will error.
 -- In early stages, you can manually normalize those rows first.
 ALTER TABLE "User"
