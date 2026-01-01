@@ -8,8 +8,67 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   name      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  profiles  Profile[]
+}
+
+model Profile {
+  id          String     @id @default(cuid())
+  userId      String
+  displayName String
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  birthData   BirthData?
+  fromEdges   FamilyEdge[] @relation("fromEdges")
+  toEdges     FamilyEdge[] @relation("toEdges")
+
+  @@index([userId])
+  @@unique([userId, displayName])
+}
+
+model BirthData {
+  profileId String   @id
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  date       DateTime
+  time       String?
+  tzIana     String
+  timeUtc    DateTime?
+  latitude   Float?
+  longitude  Float?
+  altitude   Float?
+  fidelity   Fidelity @default(MEDIUM)
+}
+
+model FamilyEdge {
+  id             String         @id @default(cuid())
+  fromProfileId  String
+  toProfileId    String
+  relationType   FamilyRelation
+  label          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  fromProfile    Profile        @relation("fromEdges", fields: [fromProfileId], references: [id], onDelete: Cascade)
+  toProfile      Profile        @relation("toEdges", fields: [toProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([fromProfileId, toProfileId, relationType])
+}
+
+enum Fidelity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum FamilyRelation {
+  PARENT
+  CHILD
+  SIBLING
+  PARTNER
+  OTHER
 }

@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "prisma:migrate": "prisma migrate dev --name init"
+    "prisma:migrate": "prisma migrate dev",
+    "seed:profiles": "node scripts/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
+    "zod": "^3.23.0",
     "next": "^14.2.10",
     "next-auth": "^4.24.0",
     "react": "^18.2.0",

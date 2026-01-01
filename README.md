@@ -18,6 +18,10 @@ This repository is intentionally minimal and now contains a Next.js App Router s
    ```bash
    npm run dev
    ```
+5. (Optional) Seed demo profiles/family edges after migrations:
+   ```bash
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/frags" npm run seed:profiles
+   ```
 
 ## Features
 
