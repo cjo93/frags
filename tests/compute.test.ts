@@ -21,6 +21,10 @@ vi.mock("@/lib/auth/session", () => ({
   requireUserId: () => demoUser
 }));
 
+vi.mock("@/lib/billing/entitlement", () => ({
+  requireEntitledUser: () => undefined
+}));
+
 const ephemerisMock = vi.fn(async (_input?: unknown) => ({
   cacheKey: "cache-1",
   canonicalHash: "hash-1",

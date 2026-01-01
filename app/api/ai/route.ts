@@ -1,5 +1,9 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { requireUserId } from "@/lib/auth/session";
+import { requireEntitledUser } from "@/lib/billing/entitlement";
+import { runCompute } from "@/lib/compute/runCompute";
+import { HttpError, getErrorMessage } from "@/lib/http";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -29,19 +33,18 @@ const computeTool: any = {
   }
 };
 
-async function callCompute(input: { profileId: string; engineVersion: string; options?: any }) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/compute`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input)
-  });
-  const json = await res.json();
-  return { status: res.status, body: json };
-}
-
 export async function POST(req: Request) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ message: "OPENAI_API_KEY is not configured" }, { status: 500 });
+  }
+
+  let userId: string;
+  try {
+    userId = await requireUserId();
+    await requireEntitledUser(userId);
+  } catch (error) {
+    const status = error instanceof HttpError ? error.status : 401;
+    return NextResponse.json({ message: getErrorMessage(error, "Unauthorized") }, { status });
   }
 
   const body = (await req.json()) as ChatRequest;
@@ -71,23 +74,30 @@ export async function POST(req: Request) {
     if (event.name !== "run_compute") return;
     try {
       const args = JSON.parse(event.arguments ?? "{}");
-      const response = await callCompute({
-        profileId: args.profileId ?? body.profileId,
-        engineVersion: args.engineVersion ?? body.engineVersion ?? "1.0.0",
+      const profileId = args.profileId ?? body.profileId;
+      const engineVersion = args.engineVersion ?? body.engineVersion ?? "1.0.0";
+      if (!profileId) {
+        throw new HttpError(400, "profileId is required for compute");
+      }
+
+      const response = await runCompute({
+        userId,
+        profileId,
+        engineVersion,
         options: args.options ?? body.options ?? {}
       });
 
       await stream.appendToolOutputs([
         {
           tool_call_id: event.id,
-          output: JSON.stringify(response.body)
+          output: JSON.stringify(response)
         }
       ]);
     } catch (error) {
       await stream.appendToolOutputs([
         {
           tool_call_id: event.id,
-          output: JSON.stringify({ error: (error as Error).message })
+          output: JSON.stringify({ error: getErrorMessage(error) })
         }
       ]);
     }

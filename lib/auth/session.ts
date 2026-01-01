@@ -1,5 +1,6 @@
 import { DefaultSession, getServerSession as nextAuthGetServerSession, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { HttpError } from "@/lib/http";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -42,8 +43,6 @@ type SessionWithUserId = DefaultSession & {
   user?: DefaultSession["user"] & { id?: string };
 };
 
-const DEV_USER_ID = process.env.DEV_USER_ID ?? "demo-user";
-
 export const getServerSession = () => nextAuthGetServerSession(authOptions);
 
 export async function requireUserId() {
@@ -51,11 +50,7 @@ export async function requireUserId() {
   const userId = session?.user?.id;
 
   if (!userId) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("Unauthorized: missing session");
-    }
-
-    return DEV_USER_ID;
+    throw new HttpError(401, "Unauthorized");
   }
 
   return userId;
