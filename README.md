@@ -25,7 +25,7 @@ This repository is intentionally minimal and now contains a Next.js App Router s
 
 ## Compute API quick checks
 
-With `npm run dev` running (and dev auth fallback enabled), you can smoke test the compute endpoint:
+With `npm run dev` running (and an Auth.js session established), you can smoke test the compute endpoint:
 
 ```bash
 # Replace profileId with one from /api/profiles (or seed output)
@@ -54,3 +54,23 @@ After setting up the environment, you can:
 - Flesh out Auth.js providers or replace the credentials stub
 - Add more Prisma models + migrations for your domain (Profile / Family / ComputeRun / Horizons)
 - Wire Stripe checkout or payment intents using `lib/stripe/server.ts`
+
+## Entitlements (go-live helper)
+
+By default, `/api/compute` and `/api/ai` require both:
+- a real Auth.js session, and
+- entitlement depending on `BILLING_MODE`.
+
+While Stripe webhooks are still being wired, you can enable a guarded admin-only endpoint that sets a user's `subscriptionStatus` in the DB:
+
+- Route: `POST /api/admin/entitlement`
+- Feature flag: `ENABLE_ADMIN_ENTITLEMENT=true`
+- Admin allowlist: `ENTITLEMENT_ADMIN_IDS=<comma-separated user IDs>`
+
+Example:
+
+```bash
+curl -sS -X POST http://localhost:3000/api/admin/entitlement \
+   -H "Content-Type: application/json" \
+   -d '{"userId":"<targetUserId>","subscriptionStatus":"ACTIVE"}'
+```
