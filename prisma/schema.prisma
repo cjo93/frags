@@ -114,3 +114,22 @@ enum ComputeStatus {
   SUCCESS
   FAILED
 }
+
+model EphemerisRequest {
+  id         String   @id @default(cuid())
+  cacheKey   String   @unique
+  requestJson Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  cache      EphemerisCache?
+}
+
+model EphemerisCache {
+  id                 String            @id @default(cuid())
+  ephemerisRequestId String            @unique
+  rawText            String
+  canonicalJson      Json
+  canonicalHash      String
+  createdAt          DateTime          @default(now())
+  request            EphemerisRequest  @relation(fields: [ephemerisRequestId], references: [id], onDelete: Cascade)
+}
