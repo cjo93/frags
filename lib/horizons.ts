@@ -35,17 +35,18 @@ export interface EphemerisRequestCanonical {
 export function buildEphemerisRequest(input: EphemerisRequestInput): EphemerisRequestCanonical {
   return {
     target: input.target,
-    observer: input.observer.kind === "TOPO"
-      ? {
-          kind: "TOPO",
-          latitude: Number(input.observer.latitude.toFixed(6)),
-          longitude: Number(input.observer.longitude.toFixed(6)),
-          elevation:
-            input.observer.elevation !== undefined
-              ? Number(input.observer.elevation.toFixed(2))
-              : undefined
-        }
-      : { kind: "GEOCENTER" },
+    observer:
+      input.observer.kind === "TOPO"
+        ? {
+            kind: "TOPO",
+            latitude: Number(input.observer.latitude.toFixed(6)),
+            longitude: Number(input.observer.longitude.toFixed(6)),
+            elevation:
+              input.observer.elevation !== undefined
+                ? Number(input.observer.elevation.toFixed(2))
+                : 0
+          }
+        : { kind: "GEOCENTER" },
     refFrame: input.refFrame ?? "ICRF",
     timescale: input.timescale ?? "UTC",
     start: input.start,

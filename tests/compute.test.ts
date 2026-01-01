@@ -21,6 +21,18 @@ vi.mock("@/lib/auth/session", () => ({
   requireUserId: () => demoUser
 }));
 
+const ephemerisMock = vi.fn(async (_input?: unknown) => ({
+  cacheKey: "cache-1",
+  canonicalHash: "hash-1",
+  canonicalJson: { formatVersion: "1", points: [] },
+  rawText: "raw",
+  fromCache: false
+}));
+
+vi.mock("@/lib/ephemeris/cache", () => ({
+  getOrCreateEphemeris: (input: unknown) => ephemerisMock(input)
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     profile: {
@@ -110,6 +122,7 @@ describe("compute API", () => {
       computeRuns: [],
       artifacts: []
     };
+    ephemerisMock.mockClear();
   });
 
   it("returns cached artifact on repeat call", async () => {
@@ -133,6 +146,7 @@ describe("compute API", () => {
     expect(json2.cached).toBe(true);
     expect(json2.computeRunId).toBe(json1.computeRunId);
     expect(json1.artifact).toEqual(json2.artifact);
+    expect(json1.artifact.ephemeris.cacheKey).toBe("cache-1");
   });
 
   it("creates new run when options change", async () => {
@@ -154,5 +168,18 @@ describe("compute API", () => {
 
     expect(json1.computeRunId).not.toBe(json2.computeRunId);
     expect(json1.artifact.inputsHash).not.toBe(json2.artifact.inputsHash);
+  });
+
+  it("includes ephemeris payload in artifact", async () => {
+    const req = new Request("http://localhost/api/compute", {
+      method: "POST",
+      body: JSON.stringify({ profileId: "profile-1", engineVersion: "1.0.0" })
+    });
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(json.artifact.ephemeris).toBeDefined();
+    expect(json.artifact.ephemeris.cacheKey).toBe("cache-1");
+    expect(json.artifact.ephemeris.canonical).toEqual({ formatVersion: "1", points: [] });
   });
 });

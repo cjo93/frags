@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/auth/session";
 import { canonicalStringify, sha256Hex } from "@/lib/utils/canonical";
+import { getOrCreateEphemeris } from "@/lib/ephemeris/cache";
+import { EphemerisRequestInput } from "@/lib/horizons";
 
 type ComputeRequestBody = {
   profileId: string;
@@ -44,26 +46,36 @@ async function buildCanonicalInputs(profileId: string, options: any) {
   };
 }
 
-function buildArtifact({
-  engine,
-  engineVersion,
-  profileId,
-  inputsHash,
-  canonicalInputs
-}: {
-  engine: string;
-  engineVersion: string;
-  profileId: string;
-  inputsHash: string;
-  canonicalInputs: Record<string, unknown> | null;
-}) {
+function buildEphemerisInput(profile: { birthData: any }): EphemerisRequestInput {
+  const birth = profile.birthData;
+  const baseTimestamp =
+    birth?.timeUtc?.toISOString() ??
+    birth?.date?.toISOString?.() ??
+    "2000-01-01T00:00:00.000Z";
+
+  const observer =
+    birth?.latitude !== null &&
+    birth?.latitude !== undefined &&
+    birth?.longitude !== null &&
+    birth?.longitude !== undefined
+      ? {
+          kind: "TOPO" as const,
+          latitude: birth.latitude,
+          longitude: birth.longitude,
+          elevation: birth?.altitude ?? 0
+        }
+      : ({ kind: "GEOCENTER" } as const);
+
   return {
-    engine,
-    engineVersion,
-    profileId,
-    inputsHash,
-    natal: canonicalInputs,
-    computed: { placeholder: true }
+    target: "sun",
+    observer,
+    refFrame: "ICRF",
+    timescale: "UTC",
+    start: baseTimestamp,
+    stop: baseTimestamp,
+    step: "1h",
+    quantities: [1, 2],
+    units: "KM"
   };
 }
 
@@ -149,15 +161,26 @@ export async function POST(request: Request) {
 
     computeRunId = running.id;
 
-    const artifactPayload = buildArtifact({
+    const ephemerisInput = buildEphemerisInput(profile);
+    const ephemerisRequest = ephemerisInput;
+    const ephemeris = await getOrCreateEphemeris(ephemerisRequest);
+
+    const artifactPayload = {
       engine,
       engineVersion: body.engineVersion,
       profileId: profile.id,
       inputsHash,
-      canonicalInputs
-    });
+      birthData: canonicalInputs.birthData,
+      options: canonicalInputs.options,
+      ephemeris: {
+        cacheKey: ephemeris.cacheKey,
+        canonicalHash: ephemeris.canonicalHash,
+        request: ephemerisRequest,
+        canonical: ephemeris.canonicalJson
+      }
+    };
 
-    const artifactJson: Prisma.InputJsonValue = artifactPayload as Prisma.InputJsonValue;
+    const artifactJson: Prisma.InputJsonValue = artifactPayload as unknown as Prisma.InputJsonValue;
 
     await prisma.computeArtifact.upsert({
       where: {
