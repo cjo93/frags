@@ -9,7 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "prisma:migrate": "prisma migrate dev",
-    "seed:profiles": "node scripts/seed.js"
+    "seed:profiles": "node scripts/seed.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
@@ -24,9 +25,11 @@
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@vitest/ui": "^1.6.0",
     "eslint": "^8.50.0",
     "eslint-config-next": "^15.0.4",
     "prisma": "^5.0.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^1.6.0"
   }
 }

@@ -26,6 +26,7 @@ model Profile {
   birthData   BirthData?
   fromEdges   FamilyEdge[] @relation("fromEdges")
   toEdges     FamilyEdge[] @relation("toEdges")
+  computeRuns ComputeRun[]
 
   @@index([userId])
   @@unique([userId, displayName])
@@ -71,4 +72,45 @@ enum FamilyRelation {
   SIBLING
   PARTNER
   OTHER
+}
+
+model ComputeRun {
+  id            String         @id @default(cuid())
+  userId        String
+  profileId     String
+  engine        String         @default("defrag-core")
+  engineVersion String
+  inputsHash    String
+  status        ComputeStatus  @default(PENDING)
+  startedAt     DateTime?      @default(now())
+  finishedAt    DateTime?
+  error         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  profile       Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  artifacts     ComputeArtifact[]
+
+  @@index([userId])
+  @@index([profileId, createdAt])
+  @@unique([profileId, engineVersion, inputsHash])
+}
+
+model ComputeArtifact {
+  id            String   @id @default(cuid())
+  computeRunId  String
+  kind          String
+  schemaVersion String
+  canonicalJson Json
+  rawJson       Json?
+  createdAt     DateTime @default(now())
+  computeRun    ComputeRun @relation(fields: [computeRunId], references: [id], onDelete: Cascade)
+
+  @@unique([computeRunId, kind, schemaVersion])
+}
+
+enum ComputeStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
 }

@@ -23,6 +23,19 @@ This repository is intentionally minimal and now contains a Next.js App Router s
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/frags" npm run seed:profiles
    ```
 
+## Compute API quick checks
+
+With `npm run dev` running (and dev auth fallback enabled), you can smoke test the compute endpoint:
+
+```bash
+# Replace profileId with one from /api/profiles (or seed output)
+curl -sS -X POST http://localhost:3000/api/compute \
+  -H "Content-Type: application/json" \
+  -d '{"profileId":"<profile-id>","engineVersion":"1.0.0","options":{"mode":"demo"}}' | jq
+```
+
+Re-running the same payload should return `cached: true` and the same `computeRunId`.
+
 ## Features
 
 - Next.js 15 App Router with TypeScript + strict mode
