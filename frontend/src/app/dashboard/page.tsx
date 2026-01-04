@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createPortal } from '@/lib/api';
 import type { FeatureFlags } from '@/lib/api';
+import { OnboardingPanel, useOnboardingState } from '@/components/onboarding';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { token, user, billing, profiles, constellations, refresh, logout } = useAuth();
+  const { hasSeen: hasSeenOnboarding, markSeen: markOnboardingSeen } = useOnboardingState();
 
   useEffect(() => {
     if (!token) {
@@ -39,6 +41,12 @@ export default function DashboardPage() {
             <span className="text-sm text-neutral-600 dark:text-neutral-400">
               {user?.email}
             </span>
+            <Link
+              href="/settings"
+              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+            >
+              Settings
+            </Link>
             <button
               onClick={logout}
               className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
@@ -50,6 +58,17 @@ export default function DashboardPage() {
       </header>
 
       <div className="flex-1 max-w-5xl mx-auto w-full px-6 py-12">
+        {/* First-run Onboarding */}
+        {!hasSeenOnboarding && (
+          <OnboardingPanel
+            hasProfiles={(profiles?.length || 0) > 0}
+            hasSynthesis={(profiles?.length || 0) > 0} // Synthesis is auto-computed on profile creation
+            hasAIAccess={featureFlags.ai_preview_allowed || featureFlags.ai_full_allowed || false}
+            hasConstellationAccess={featureFlags.constellation_create || false}
+            onDismiss={markOnboardingSeen}
+          />
+        )}
+
         {/* Current Access */}
         <section className="mb-12">
           <div className="flex items-baseline justify-between mb-4">

@@ -1,19 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { constellation } from '@/lib/design';
 
 interface ConstellationMember {
   id: string;
   name: string;
-  role?: string;
+  role?: 'primary' | 'close' | 'extended' | string;
 }
 
 interface ConstellationEdge {
   from: string;
   to: string;
   relationship?: string;
+  weight?: 'light' | 'normal' | 'heavy';
 }
+
+type Layer = 'bowen' | 'jung' | 'curriculum';
 
 interface ConstellationCanvasProps {
   name?: string;
@@ -21,55 +25,76 @@ interface ConstellationCanvasProps {
   edges?: ConstellationEdge[];
   /** If false, shows locked overlay with upgrade CTA */
   hasAccess?: boolean;
+  /** If true, layer toggles are enabled (Constellation tier only) */
+  layersEnabled?: boolean;
 }
 
 /**
- * Constellation Canvas v1 (read-only)
+ * Constellation Canvas v2 (read-only, data-driven)
  * 
  * Structured relational layout. No physics. No drag.
  * Visual grammar: systems diagram meets museum placard.
  * 
- * Layout: Layered bands (horizontal tiers by role/relationship depth)
+ * Layout: Role-based horizontal bands
+ * - Primary (self) at top center
+ * - Close relations in middle band
+ * - Extended relations in bottom band
  */
 export function ConstellationCanvas({ 
   name, 
   members = [], 
   edges = [],
   hasAccess = true,
+  layersEnabled = false,
 }: ConstellationCanvasProps) {
+  const [activeLayer, setActiveLayer] = useState<Layer | null>(null);
   const memberCount = members.length;
   
-  // Structured layout: horizontal bands with staggered positions
-  // Band 0 = center (self/primary), Band 1 = close relations, Band 2 = extended
-  const getNodePosition = (index: number, total: number): { x: number; y: number } => {
-    if (total <= 1) return { x: 140, y: 80 };
-    if (total === 2) {
-      return index === 0 ? { x: 100, y: 80 } : { x: 180, y: 80 };
-    }
-    // Layered bands for 3+ members
-    const bands = [
-      [{ x: 140, y: 40 }],                           // Top: primary
-      [{ x: 70, y: 100 }, { x: 210, y: 100 }],       // Middle: close
-      [{ x: 40, y: 140 }, { x: 140, y: 140 }, { x: 240, y: 140 }], // Bottom: extended
-    ];
+  // Group members by role for structured layout
+  const groupedMembers = {
+    primary: members.filter(m => m.role === 'primary'),
+    close: members.filter(m => m.role === 'close'),
+    extended: members.filter(m => !m.role || m.role === 'extended'),
+  };
+
+  // Structured layout: horizontal bands by role
+  const getNodePosition = (member: ConstellationMember, index: number): { x: number; y: number } => {
+    const role = member.role || 'extended';
     
-    // Distribute members across bands
-    if (index === 0) return bands[0][0];
-    if (index <= 2) return bands[1][Math.min(index - 1, 1)];
-    return bands[2][Math.min(index - 3, 2)];
+    // Primary band (top center)
+    if (role === 'primary') {
+      const primaryCount = groupedMembers.primary.length;
+      const primaryIndex = groupedMembers.primary.indexOf(member);
+      const spacing = 280 / (primaryCount + 1);
+      return { x: spacing * (primaryIndex + 1), y: 35 };
+    }
+    
+    // Close band (middle)
+    if (role === 'close') {
+      const closeCount = groupedMembers.close.length;
+      const closeIndex = groupedMembers.close.indexOf(member);
+      const spacing = 280 / (closeCount + 1);
+      return { x: spacing * (closeIndex + 1), y: 90 };
+    }
+    
+    // Extended band (bottom)
+    const extendedCount = groupedMembers.extended.length;
+    const extendedIndex = groupedMembers.extended.indexOf(member);
+    const spacing = 280 / (extendedCount + 1);
+    return { x: spacing * (extendedIndex + 1), y: 145 };
   };
 
   // Build node positions from members or use placeholder
   const nodes = memberCount > 0 
     ? members.map((m, i) => ({ 
         ...m, 
-        ...getNodePosition(i, memberCount),
+        ...getNodePosition(m, i),
         initial: m.name.charAt(0).toUpperCase(),
       }))
     : [
-        { id: 'a', name: 'A', x: 140, y: 40, initial: 'A' },
-        { id: 'b', name: 'B', x: 70, y: 100, initial: 'B' },
-        { id: 'c', name: 'C', x: 210, y: 100, initial: 'C' },
+        { id: 'a', name: 'A', role: 'primary', x: 140, y: 35, initial: 'A' },
+        { id: 'b', name: 'B', role: 'close', x: 90, y: 90, initial: 'B' },
+        { id: 'c', name: 'C', role: 'close', x: 190, y: 90, initial: 'C' },
       ];
 
   // Build edges from data or use placeholder connections
@@ -78,12 +103,19 @@ export function ConstellationCanvas({
         const from = nodes.find(n => n.id === e.from);
         const to = nodes.find(n => n.id === e.to);
         if (!from || !to) return null;
-        return { x1: from.x, y1: from.y, x2: to.x, y2: to.y, relationship: e.relationship };
+        return { 
+          x1: from.x, 
+          y1: from.y, 
+          x2: to.x, 
+          y2: to.y, 
+          relationship: e.relationship,
+          weight: e.weight || 'normal',
+        };
       }).filter(Boolean)
     : [
-        { x1: 140, y1: 40, x2: 70, y2: 100 },
-        { x1: 140, y1: 40, x2: 210, y2: 100 },
-        { x1: 70, y1: 100, x2: 210, y2: 100 },
+        { x1: 140, y1: 35, x2: 90, y2: 90, weight: 'normal' },
+        { x1: 140, y1: 35, x2: 190, y2: 90, weight: 'normal' },
+        { x1: 90, y1: 90, x2: 190, y2: 90, weight: 'light' },
       ];
 
   return (
@@ -159,26 +191,27 @@ export function ConstellationCanvas({
         </div>
       )}
 
-      {/* Layer toggles (disabled in v1 - read-only) */}
-      <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-800 flex gap-2">
-        <button
-          disabled
-          className={`${constellation.layerToggle} opacity-50 cursor-not-allowed`}
-        >
-          Bowen
-        </button>
-        <button
-          disabled
-          className={`${constellation.layerToggle} opacity-50 cursor-not-allowed`}
-        >
-          Jung
-        </button>
-        <button
-          disabled
-          className={`${constellation.layerToggle} opacity-50 cursor-not-allowed`}
-        >
-          Curriculum
-        </button>
+      {/* Layer toggles */}
+      <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2">
+        <span className="text-xs text-neutral-400 mr-2">Layers</span>
+        {(['bowen', 'jung', 'curriculum'] as Layer[]).map((layer) => (
+          <button
+            key={layer}
+            disabled={!layersEnabled}
+            onClick={() => setActiveLayer(activeLayer === layer ? null : layer)}
+            data-active={activeLayer === layer}
+            className={`${constellation.layerToggle} ${
+              !layersEnabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {layer.charAt(0).toUpperCase() + layer.slice(1)}
+          </button>
+        ))}
+        {!layersEnabled && (
+          <span className="text-xs text-neutral-400 ml-auto">
+            Requires Constellation plan
+          </span>
+        )}
       </div>
     </div>
   );
