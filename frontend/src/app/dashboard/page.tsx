@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { createPortal } from '@/lib/api';
 import type { FeatureFlags } from '@/lib/api';
 
 export default function DashboardPage() {
@@ -91,6 +92,11 @@ export default function DashboardPage() {
               <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
                 Full AI synthesis access enabled.
               </p>
+            )}
+            {currentPlan !== 'free' && (
+              <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                <ManageBillingButton />
+              </div>
             )}
           </div>
         </section>
@@ -290,5 +296,30 @@ function ConstellationCard({
         View →
       </Link>
     </div>
+  );
+}
+function ManageBillingButton() {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleManageBilling = async () => {
+    setLoading(true);
+    try {
+      const { url } = await createPortal();
+      router.push(url);
+    } catch (err) {
+      console.error('Portal error:', err);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleManageBilling}
+      disabled={loading}
+      className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 disabled:opacity-50"
+    >
+      {loading ? 'Loading...' : 'Manage billing'}
+    </button>
   );
 }
