@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import type { FeatureFlags } from '@/lib/api';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -21,9 +22,9 @@ export default function DashboardPage() {
     return null;
   }
 
-  const featureFlags = billing?.feature_flags || {};
-  const currentPlan = billing?.plan || 'free';
-  const isActive = billing?.active || false;
+  const featureFlags: Partial<FeatureFlags> = billing?.feature_flags || {};
+  const currentPlan = billing?.plan_key || 'free';
+  const isActive = billing?.entitled || false;
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -153,14 +154,14 @@ export default function DashboardPage() {
         <section className="mb-12">
           <div className="flex items-baseline justify-between mb-4">
             <h2 className="text-lg font-medium">Your Constellations</h2>
-            {featureFlags.constellations && (
+            {featureFlags.constellation_create && (
               <span className="text-sm text-neutral-400">
                 {constellations?.length || 0} {(constellations?.length || 0) === 1 ? 'constellation' : 'constellations'}
               </span>
             )}
           </div>
 
-          {!featureFlags.constellations ? (
+          {!featureFlags.constellation_create ? (
             <div className="p-8 border border-dashed border-neutral-300 dark:border-neutral-700 text-center">
               <p className="text-neutral-600 dark:text-neutral-400 mb-2">
                 Constellations require the Constellation plan.
@@ -211,7 +212,7 @@ function ProfileCard({
   featureFlags 
 }: { 
   profile: { id: string; name: string; birth_date?: string }; 
-  featureFlags: Record<string, boolean>;
+  featureFlags: Partial<FeatureFlags>;
 }) {
   return (
     <div className="p-6 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">

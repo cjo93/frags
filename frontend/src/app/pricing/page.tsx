@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createCheckout } from '@/lib/api';
 import { useState } from 'react';
@@ -18,6 +19,7 @@ const tiers = [
       'AI preview responses',
     ],
     cta: 'Begin with Insight',
+    featured: false,
   },
   {
     name: 'Integration',
@@ -47,23 +49,27 @@ const tiers = [
       'Full AI synthesis',
     ],
     cta: 'Enter Constellation',
+    featured: false,
   },
 ] as const;
 
+type TierKey = typeof tiers[number]['key'];
+
 export default function PricingPage() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loading, setLoading] = useState<TierKey | null>(null);
 
   const handleCheckout = async (tier: 'insight' | 'integration' | 'constellation') => {
     if (!isAuthenticated) {
-      window.location.href = '/register';
+      router.push('/register');
       return;
     }
     
     setLoading(tier);
     try {
       const { url } = await createCheckout(tier);
-      window.location.href = url;
+      router.push(url);
     } catch (err) {
       console.error('Checkout error:', err);
       setLoading(null);
