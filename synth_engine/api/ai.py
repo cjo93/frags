@@ -197,17 +197,55 @@ USER'S CONTEXT:
         return f"Sorry, I encountered an error processing your request. Please try again."
 
 
+def _truncate_to_preview(text: str, max_chars: int = 280) -> str:
+    """
+    Truncate text to approximately 2 sentences or max_chars, whichever is shorter.
+    Tries to end at a sentence boundary.
+    """
+    if len(text) <= max_chars:
+        return text
+    
+    # Find sentence boundaries within the limit
+    sentence_endings = ['.', '!', '?']
+    truncated = text[:max_chars]
+    
+    # Look for the last sentence ending
+    last_end = -1
+    for i, char in enumerate(truncated):
+        if char in sentence_endings and i > 50:  # At least 50 chars
+            last_end = i + 1
+            # Check if we have ~2 sentences
+            count = sum(1 for c in truncated[:i+1] if c in sentence_endings)
+            if count >= 2:
+                break
+    
+    if last_end > 50:
+        return truncated[:last_end].strip()
+    
+    # Fall back to word boundary
+    space_idx = truncated.rfind(' ')
+    if space_idx > 50:
+        return truncated[:space_idx].strip() + "..."
+    
+    return truncated.strip() + "..."
+
+
 @router.post("/chat")
 def chat(
     message: str,
     thread_id: Optional[str] = None,
     profile_id: Optional[str] = None,
     constellation_id: Optional[str] = None,
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(get_current_user),
     s: Session = Depends(db),
 ):
     """
-    Send a message to the AI synthesis assistant (admin-only).
+    Send a message to the AI synthesis assistant.
+    
+    Access tiers:
+    - Free: No access (402)
+    - Insight/Integration: Preview mode (truncated response)
+    - Constellation: Full mode
     
     - If thread_id is provided, continues an existing conversation
     - If profile_id is provided, context is loaded from that profile's layers
@@ -218,6 +256,18 @@ def chat(
     # Check OpenAI is configured
     if not settings.openai_api_key:
         raise HTTPException(503, "AI not configured")
+    
+    # Determine access level based on plan
+    plan = R.plan_for_user(s, user.id)
+    is_paid = plan in ("insight", "integration", "constellation")
+    is_full_access = plan == "constellation"
+    
+    # Free users cannot access AI at all
+    if not is_paid:
+        raise HTTPException(
+            status_code=402,
+            detail="AI synthesis requires a paid subscription. Visit /billing/checkout?price_tier=insight to subscribe.",
+        )
     
     # Get or create thread
     if thread_id:
@@ -254,18 +304,35 @@ def chat(
     # Call LLM
     assistant_response = _call_llm(messages, context)
     citations = _get_citations(context)
+    
+    # Record usage (even for previews)
+    R.record_usage(s, user.id, "ai_chat", units=1)
 
-    # Store assistant message
+    # Apply preview truncation if not full access
+    is_preview = not is_full_access
+    displayed_response = assistant_response
+    if is_preview:
+        displayed_response = _truncate_to_preview(assistant_response)
+
+    # Store the FULL assistant message (for continuity if they upgrade)
     R.add_chat_message(s, thread.id, "assistant", assistant_response, citations=citations)
 
-    return {
+    # Build response
+    response = {
         "thread_id": thread.id,
         "message": {
             "role": "assistant",
-            "content": assistant_response,
+            "content": displayed_response,
             "citations": citations,
         },
+        "preview": is_preview,
     }
+    
+    if is_preview:
+        response["upgrade_required"] = "constellation"
+        response["preview_note"] = "Upgrade to Constellation for full AI synthesis responses."
+    
+    return response
 
 
 @router.get("/threads")

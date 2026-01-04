@@ -700,7 +700,7 @@ def get_active_subscription(s: Session, user_id: str) -> Optional[StripeSubscrip
 def _feature_flags_for_plan(plan: str) -> Dict[str, bool]:
     """Return feature flags based on plan tier."""
     # Plan hierarchy: free < insight < integration < constellation
-    is_insight = plan in ("insight", "integration", "constellation")
+    is_paid = plan in ("insight", "integration", "constellation")
     is_integration = plan in ("integration", "constellation")
     is_constellation = plan == "constellation"
     
@@ -712,7 +712,8 @@ def _feature_flags_for_plan(plan: str) -> Dict[str, bool]:
         "state_models": is_integration,  # Integration+
         "constellation_create": is_constellation,  # Constellation only
         "constellation_compute": is_constellation,  # Constellation only
-        "ai_chat": False,  # Admin-only, not plan-gated yet
+        "ai_preview_allowed": is_paid,  # Any paid tier gets preview
+        "ai_full_allowed": is_constellation,  # Only Constellation gets full AI
     }
 
 
