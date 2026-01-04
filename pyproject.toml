@@ -29,3 +29,4 @@ include-package-data = true
 [tool.setuptools.packages.find]
 include = ["synth_engine*"]
 exclude = ["alembic*", "notebooks*"]
+# Force rebuild Sat Jan  3 17:36:01 PST 2026
