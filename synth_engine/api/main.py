@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from jose import JWTError
 
@@ -43,9 +44,26 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Synthesis Engine API", version="0.4.0")
 limiter = TokenBucketLimiter()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://defrag.app",
+        "https://www.defrag.app",
+    ],
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
+    allow_credentials=False,
+    allow_methods=["*"] ,
+    allow_headers=["*"],
+)
+
 
 def new_id() -> str:
     return str(uuid.uuid4())
+
+
+@app.get("/health")
+def health():
+    return {"ok": True, "ts": datetime.now(timezone.utc).isoformat()}
 
 
 def require_profile(s: Session, user_id: str, profile_id: str) -> Profile:
