@@ -5,16 +5,35 @@ import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from synth_engine.api.deps import db, get_current_user
+from synth_engine.api.deps import db, get_current_user, require_role
 from synth_engine.config import settings
 from synth_engine.storage import repo as R
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
 
+def _billing_enabled() -> bool:
+    """Check if billing is configured."""
+    return bool(settings.stripe_secret_key)
+
+
+def _webhook_configured() -> bool:
+    """Check if webhook secret is configured."""
+    return bool(settings.stripe_webhook_secret)
+
+
+def _prices_configured() -> dict[str, bool]:
+    """Check which price tiers are configured."""
+    return {
+        "basic": bool(settings.stripe_price_basic),
+        "pro": bool(settings.stripe_price_pro),
+        "family": bool(settings.stripe_price_family),
+    }
+
+
 def _stripe_init():
-    if not settings.stripe_secret_key:
-        raise HTTPException(503, "Stripe not configured")
+    if not _billing_enabled():
+        raise HTTPException(503, "Billing not configured")
     stripe.api_key = settings.stripe_secret_key
 
 
@@ -34,7 +53,7 @@ def create_checkout(
     }
     price_id = price_map.get(price_tier)
     if not price_id:
-        raise HTTPException(400, f"Invalid tier: {price_tier}")
+        raise HTTPException(400, f"Tier not configured: {price_tier}")
 
     # Get or create Stripe customer
     existing_customer_id = R.get_stripe_customer_id(s, user.id)
@@ -80,11 +99,11 @@ async def stripe_webhook(req: Request, s: Session = Depends(db)):
     """Handle Stripe webhook events."""
     _stripe_init()
 
+    if not _webhook_configured():
+        raise HTTPException(503, "Webhook not configured")
+
     payload = await req.body()
     sig = req.headers.get("stripe-signature", "")
-
-    if not settings.stripe_webhook_secret:
-        raise HTTPException(503, "Webhook secret not configured")
 
     try:
         event = stripe.Webhook.construct_event(payload, sig, settings.stripe_webhook_secret)
@@ -134,4 +153,29 @@ def usage_summary(
     s: Session = Depends(db),
 ):
     """Get usage summary for the authenticated user."""
-    return R.get_usage_summary(s, user.id, days=days)
+    plan = R.plan_for_user(s, user.id)
+    usage = R.get_usage_summary(s, user.id, days=days)
+    return {"plan": plan, "usage": usage}
+
+
+@router.get("/debug")
+def billing_debug(
+    user=Depends(require_role("admin")),
+    s: Session = Depends(db),
+):
+    """
+    Admin-only debug endpoint to inspect billing configuration.
+    Does not expose secrets.
+    """
+    prices = _prices_configured()
+    sub = R.get_active_subscription(s, user.id)
+
+    return {
+        "billing_enabled": _billing_enabled(),
+        "prices_present": prices,
+        "all_prices_configured": all(prices.values()),
+        "webhook_configured": _webhook_configured(),
+        "current_user_plan": R.plan_for_user(s, user.id),
+        "active_subscription_status": sub.status if sub else None,
+        "price_id": sub.price_id if sub else None,
+    }

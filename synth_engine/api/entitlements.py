@@ -9,6 +9,35 @@ from synth_engine.storage import repo as R
 from synth_engine.storage.models import User
 
 
+# Plan hierarchy: free < basic < pro < family
+PLAN_HIERARCHY = {"free": 0, "basic": 1, "pro": 2, "family": 3}
+
+
+def require_plan(min_plan: str):
+    """
+    Dependency factory that requires user to have at least the specified plan.
+    
+    Plan hierarchy: free < basic < pro < family
+    
+    Usage:
+        @router.post("/compute")
+        def compute(user=Depends(require_plan("basic"))):
+            ...
+    """
+    def _dep(user: User = Depends(get_current_user), s: Session = Depends(db)):
+        user_plan = R.plan_for_user(s, user.id)
+        user_level = PLAN_HIERARCHY.get(user_plan, 0)
+        required_level = PLAN_HIERARCHY.get(min_plan, 0)
+        
+        if user_level < required_level:
+            raise HTTPException(
+                status_code=402,
+                detail=f"Upgrade to {min_plan} required. Visit /billing/checkout?price_tier={min_plan} to subscribe.",
+            )
+        return user
+    return _dep
+
+
 def require_entitlement(action: str):
     """
     Dependency factory that checks if user is entitled to perform an action.

@@ -648,11 +648,50 @@ def upsert_subscription_from_stripe(s: Session, stripe_customer_id: str, sub_obj
         return sub
 
 
+def plan_for_user(s: Session, user_id: str) -> str:
+    """
+    Returns the plan key for a user based on their active subscription.
+    Maps price_id → plan key (free/basic/pro/family).
+    """
+    from synth_engine.config import settings
+
+    sub = (
+        s.query(StripeSubscription)
+        .filter(
+            StripeSubscription.user_id == user_id,
+            StripeSubscription.status.in_(("active", "trialing")),
+        )
+        .first()
+    )
+    if not sub or not sub.price_id:
+        return "free"
+
+    # Map price_id to plan key
+    price_to_plan = {
+        settings.stripe_price_basic: "basic",
+        settings.stripe_price_pro: "pro",
+        settings.stripe_price_family: "family",
+    }
+    return price_to_plan.get(sub.price_id, "free")
+
+
+def get_active_subscription(s: Session, user_id: str) -> Optional[StripeSubscription]:
+    """Get the active subscription for a user, if any."""
+    return (
+        s.query(StripeSubscription)
+        .filter(
+            StripeSubscription.user_id == user_id,
+            StripeSubscription.status.in_(("active", "trialing")),
+        )
+        .first()
+    )
+
+
 def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
     """Get billing status for a user."""
     customer = s.query(StripeCustomer).filter(StripeCustomer.user_id == user_id).first()
     if not customer:
-        return {"has_stripe": False, "subscription": None, "entitled": False}
+        return {"has_stripe": False, "subscription": None, "entitled": False, "plan": "free"}
 
     sub = (
         s.query(StripeSubscription)
@@ -661,9 +700,10 @@ def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
         .first()
     )
     if not sub:
-        return {"has_stripe": True, "subscription": None, "entitled": False}
+        return {"has_stripe": True, "subscription": None, "entitled": False, "plan": "free"}
 
     entitled = sub.status in ("active", "trialing")
+    plan = plan_for_user(s, user_id) if entitled else "free"
     return {
         "has_stripe": True,
         "subscription": {
@@ -673,6 +713,7 @@ def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
             "cancel_at_period_end": sub.cancel_at_period_end,
         },
         "entitled": entitled,
+        "plan": plan,
     }
 
 

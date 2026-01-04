@@ -42,7 +42,7 @@ from synth_engine.clinical.ingest import normalize_big5, normalize_attachment
 from synth_engine.telemetry.adapter import infer_context
 from synth_engine.api.ratelimit import TokenBucketLimiter
 from synth_engine.api.auth import decode_token
-from synth_engine.api.entitlements import require_entitlement
+from synth_engine.api.entitlements import require_entitlement, require_plan
 from synth_engine.fusion.synthesis import synthesize_profile, synthesize_constellation
 
 # Import routers
@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Synthesis Engine API", version="0.6.0", lifespan=lifespan)
+app = FastAPI(title="Synthesis Engine API", version="0.7.0", lifespan=lifespan)
 limiter = TokenBucketLimiter()
 
 # Include routers
@@ -559,7 +559,7 @@ def compute_reading(
     profile_id: str,
     days: int = 14,
     include_symbolic: bool = True,
-    user: User = Depends(require_entitlement("compute_reading")),
+    user: User = Depends(require_plan("basic")),
     s: Session = Depends(db),
 ):
     _ = require_profile(s, user.id, profile_id)
@@ -738,7 +738,7 @@ def compute_constellation(
     constellation_id: str,
     auto_compute_missing: bool = True,
     days_for_autocompute: int = 14,
-    user: User = Depends(require_entitlement("constellation_compute")),
+    user: User = Depends(require_plan("family")),
     s: Session = Depends(db),
 ):
     c = R.get_constellation_owned(s, constellation_id, user.id)
