@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 import json
 import uuid
 from datetime import datetime, timezone
@@ -8,6 +9,7 @@ from typing import Dict, Any, Optional
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 from jose import JWTError
 
@@ -40,8 +42,16 @@ from synth_engine.telemetry.adapter import infer_context
 from synth_engine.api.ratelimit import TokenBucketLimiter
 from synth_engine.api.auth import decode_token
 
-Base.metadata.create_all(bind=engine)
-app = FastAPI(title="Synthesis Engine API", version="0.4.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    inspector = inspect(engine)
+    if not inspector.has_table("users"):
+        raise RuntimeError("Database tables missing. Run: alembic upgrade head")
+    yield
+
+
+app = FastAPI(title="Synthesis Engine API", version="0.4.0", lifespan=lifespan)
 limiter = TokenBucketLimiter()
 
 app.add_middleware(
