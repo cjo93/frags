@@ -82,15 +82,18 @@ def _get_citations(context: Dict[str, Any]) -> List[Dict[str, Any]]:
     return citations
 
 
-def _call_llm(messages: List[Dict[str, str]], context: Dict[str, Any]) -> str:
-    """Call the LLM with context. Returns assistant response."""
+def _check_openai_configured():
+    """Raise 501 if OpenAI is not configured."""
     if not settings.openai_api_key:
-        # Return a placeholder if OpenAI is not configured
-        return (
-            "AI synthesis is not yet configured. Please set SYNTH_OPENAI_API_KEY in your environment. "
-            "In the meantime, explore your computed layers in the profile view."
+        raise HTTPException(
+            status_code=501,
+            detail="AI synthesis is not yet enabled. Use /profiles/{id}/synthesis for deterministic insights.",
         )
 
+
+def _call_llm(messages: List[Dict[str, str]], context: Dict[str, Any]) -> str:
+    """Call the LLM with context. Returns assistant response."""
+    # Note: caller should check _check_openai_configured() first
     try:
         import openai
         client = openai.OpenAI(api_key=settings.openai_api_key)
@@ -140,7 +143,12 @@ def chat(
     - If thread_id is provided, continues an existing conversation
     - If profile_id is provided, context is loaded from that profile's layers
     - If constellation_id is provided, context is loaded from constellation layers
+    
+    Returns 501 if OpenAI is not configured. Use /profiles/{id}/synthesis for deterministic insights.
     """
+    # Check OpenAI is configured
+    _check_openai_configured()
+    
     # Get or create thread
     if thread_id:
         thread = R.get_chat_thread(s, thread_id, user.id)

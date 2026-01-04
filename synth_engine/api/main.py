@@ -42,6 +42,8 @@ from synth_engine.clinical.ingest import normalize_big5, normalize_attachment
 from synth_engine.telemetry.adapter import infer_context
 from synth_engine.api.ratelimit import TokenBucketLimiter
 from synth_engine.api.auth import decode_token
+from synth_engine.api.entitlements import require_entitlement
+from synth_engine.fusion.synthesis import synthesize_profile, synthesize_constellation
 
 # Import routers
 from synth_engine.api.billing import router as billing_router
@@ -57,7 +59,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Synthesis Engine API", version="0.5.0", lifespan=lifespan)
+app = FastAPI(title="Synthesis Engine API", version="0.6.0", lifespan=lifespan)
 limiter = TokenBucketLimiter()
 
 # Include routers
@@ -550,19 +552,42 @@ def compute_profile_reading(s: Session, profile_id: str, days: int = 14, include
 
 
 # -------------------------
-# Compute reading (public)
+# Compute reading (paid - requires subscription)
 # -------------------------
 @app.post("/profiles/{profile_id}/compute_reading")
 def compute_reading(
     profile_id: str,
     days: int = 14,
     include_symbolic: bool = True,
+    user: User = Depends(require_entitlement("compute_reading")),
+    s: Session = Depends(db),
+):
+    _ = require_profile(s, user.id, profile_id)
+    out = compute_profile_reading(s, profile_id, days=days, include_symbolic=include_symbolic)
+    return out
+
+
+# -------------------------
+# Deterministic synthesis (free - no LLM required)
+# -------------------------
+@app.post("/profiles/{profile_id}/synthesis")
+def profile_synthesis(
+    profile_id: str,
     user_id: str = Depends(me_user_id),
     s: Session = Depends(db),
 ):
+    """
+    Generate a deterministic synthesis from computed layers.
+    
+    Returns structured sections with citations. Does not require subscription.
+    Call /compute_reading first to populate layers.
+    """
     _ = require_profile(s, user_id, profile_id)
-    out = compute_profile_reading(s, profile_id, days=days, include_symbolic=include_symbolic)
-    return out
+    try:
+        result = synthesize_profile(s, profile_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(404, str(e))
 
 
 @app.get("/profiles/{profile_id}/readings")
@@ -713,10 +738,10 @@ def compute_constellation(
     constellation_id: str,
     auto_compute_missing: bool = True,
     days_for_autocompute: int = 14,
-    user_id: str = Depends(me_user_id),
+    user: User = Depends(require_entitlement("constellation_compute")),
     s: Session = Depends(db),
 ):
-    c = R.get_constellation_owned(s, constellation_id, user_id)
+    c = R.get_constellation_owned(s, constellation_id, user.id)
     if not c:
         raise HTTPException(404, "Constellation not found")
 
@@ -882,3 +907,28 @@ def list_constellation_layers(
         "next_before_ts": next_ts,
         "next_before_id": next_id,
     }
+
+
+# -------------------------
+# Constellation synthesis (free - deterministic)
+# -------------------------
+@app.post("/constellations/{constellation_id}/synthesis")
+def constellation_synthesis(
+    constellation_id: str,
+    user_id: str = Depends(me_user_id),
+    s: Session = Depends(db),
+):
+    """
+    Generate a deterministic synthesis for a constellation.
+    
+    Returns structured sections with citations. Does not require subscription.
+    Call /constellations/{id}/compute first to populate layers.
+    """
+    c = R.get_constellation_owned(s, constellation_id, user_id)
+    if not c:
+        raise HTTPException(404, "Constellation not found")
+    try:
+        result = synthesize_constellation(s, constellation_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(404, str(e))

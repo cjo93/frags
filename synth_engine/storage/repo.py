@@ -563,6 +563,22 @@ def list_constellation_layers_keyset(
     return rows, next_ts, next_id
 
 
+def latest_constellation_layer_payload(s: Session, constellation_id: str, layer: str) -> Optional[Dict[str, Any]]:
+    """Get the latest payload for a constellation layer."""
+    row = (
+        s.query(ConstellationLayer)
+        .filter(ConstellationLayer.constellation_id == constellation_id, ConstellationLayer.layer == layer)
+        .order_by(desc(ConstellationLayer.created_at))
+        .first()
+    )
+    if not row:
+        return None
+    try:
+        return json.loads(row.payload_json)
+    except Exception:
+        return None
+
+
 # -------------------------
 # Stripe / Billing
 # -------------------------
