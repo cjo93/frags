@@ -8,8 +8,7 @@ from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from synth_engine.api.deps import db, get_current_user
-from synth_engine.api.entitlements import require_entitlement
+from synth_engine.api.deps import db, get_current_user, require_role
 from synth_engine.config import settings
 from synth_engine.storage import repo as R
 from synth_engine.storage.models import User, Profile, ComputedLayer
@@ -134,20 +133,21 @@ def chat(
     thread_id: Optional[str] = None,
     profile_id: Optional[str] = None,
     constellation_id: Optional[str] = None,
-    user: User = Depends(require_entitlement("ai_chat")),
+    user: User = Depends(require_role("admin")),
     s: Session = Depends(db),
 ):
     """
-    Send a message to the AI synthesis assistant.
+    Send a message to the AI synthesis assistant (admin-only).
     
     - If thread_id is provided, continues an existing conversation
     - If profile_id is provided, context is loaded from that profile's layers
     - If constellation_id is provided, context is loaded from constellation layers
     
-    Returns 501 if OpenAI is not configured. Use /profiles/{id}/synthesis for deterministic insights.
+    Returns 503 if OpenAI is not configured.
     """
     # Check OpenAI is configured
-    _check_openai_configured()
+    if not settings.openai_api_key:
+        raise HTTPException(503, "AI not configured")
     
     # Get or create thread
     if thread_id:
