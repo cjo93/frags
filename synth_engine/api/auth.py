@@ -4,7 +4,7 @@ from jose import jwt
 from passlib.context import CryptContext
 from synth_engine.config import settings
 
-pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
 
 def hash_password(p: str) -> str:
     return pwd.hash(p)
