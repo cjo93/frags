@@ -561,3 +561,263 @@ def list_constellation_layers_keyset(
         next_ts = last.created_at.astimezone(timezone.utc).isoformat()
         next_id = last.id
     return rows, next_ts, next_id
+
+
+# -------------------------
+# Stripe / Billing
+# -------------------------
+from synth_engine.storage.models import StripeCustomer, StripeSubscription, UsageLedger, ChatThread, ChatMessage, User
+
+
+def ensure_stripe_customer(s: Session, user_id: str, email: str, stripe_customer_id: str) -> StripeCustomer:
+    """Create or return existing StripeCustomer record."""
+    existing = s.query(StripeCustomer).filter(StripeCustomer.user_id == user_id).first()
+    if existing:
+        return existing
+    sc = StripeCustomer(id=new_id(), user_id=user_id, stripe_customer_id=stripe_customer_id)
+    s.add(sc)
+    s.commit()
+    return sc
+
+
+def get_stripe_customer_id(s: Session, user_id: str) -> Optional[str]:
+    """Get stripe_customer_id for a user, or None if not linked."""
+    sc = s.query(StripeCustomer).filter(StripeCustomer.user_id == user_id).first()
+    return sc.stripe_customer_id if sc else None
+
+
+def get_user_id_by_stripe_customer(s: Session, stripe_customer_id: str) -> Optional[str]:
+    """Reverse lookup: get user_id from stripe_customer_id."""
+    sc = s.query(StripeCustomer).filter(StripeCustomer.stripe_customer_id == stripe_customer_id).first()
+    return sc.user_id if sc else None
+
+
+def upsert_subscription_from_stripe(s: Session, stripe_customer_id: str, sub_obj: Dict[str, Any]) -> Optional[StripeSubscription]:
+    """Create or update subscription from Stripe webhook payload."""
+    user_id = get_user_id_by_stripe_customer(s, stripe_customer_id)
+    if not user_id:
+        return None
+
+    stripe_sub_id = sub_obj.get("id")
+    status = sub_obj.get("status", "unknown")
+    price_id = None
+    items = sub_obj.get("items", {}).get("data", [])
+    if items:
+        price_id = items[0].get("price", {}).get("id")
+    current_period_end = sub_obj.get("current_period_end")
+    cancel_at_period_end = sub_obj.get("cancel_at_period_end", False)
+
+    existing = s.query(StripeSubscription).filter(StripeSubscription.stripe_subscription_id == stripe_sub_id).first()
+    if existing:
+        existing.status = status
+        existing.price_id = price_id
+        if current_period_end:
+            existing.current_period_end = datetime.utcfromtimestamp(current_period_end)
+        existing.cancel_at_period_end = cancel_at_period_end
+        existing.updated_at = datetime.utcnow()
+        s.commit()
+        return existing
+    else:
+        sub = StripeSubscription(
+            id=new_id(),
+            user_id=user_id,
+            stripe_subscription_id=stripe_sub_id,
+            status=status,
+            price_id=price_id,
+            current_period_end=datetime.utcfromtimestamp(current_period_end) if current_period_end else None,
+            cancel_at_period_end=cancel_at_period_end,
+        )
+        s.add(sub)
+        s.commit()
+        return sub
+
+
+def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
+    """Get billing status for a user."""
+    customer = s.query(StripeCustomer).filter(StripeCustomer.user_id == user_id).first()
+    if not customer:
+        return {"has_stripe": False, "subscription": None, "entitled": False}
+
+    sub = (
+        s.query(StripeSubscription)
+        .filter(StripeSubscription.user_id == user_id)
+        .order_by(desc(StripeSubscription.updated_at))
+        .first()
+    )
+    if not sub:
+        return {"has_stripe": True, "subscription": None, "entitled": False}
+
+    entitled = sub.status in ("active", "trialing")
+    return {
+        "has_stripe": True,
+        "subscription": {
+            "status": sub.status,
+            "price_id": sub.price_id,
+            "current_period_end": sub.current_period_end.isoformat() if sub.current_period_end else None,
+            "cancel_at_period_end": sub.cancel_at_period_end,
+        },
+        "entitled": entitled,
+    }
+
+
+def is_entitled(s: Session, user_id: str, action: str) -> bool:
+    """
+    Check if user is entitled to perform an action.
+    - If they have an active/trialing subscription, always entitled.
+    - Otherwise, check free tier limits via UsageLedger.
+    """
+    from synth_engine.config import settings
+
+    sub = (
+        s.query(StripeSubscription)
+        .filter(StripeSubscription.user_id == user_id, StripeSubscription.status.in_(("active", "trialing")))
+        .first()
+    )
+    if sub:
+        return True
+
+    # Free tier: check daily usage
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    usage_today = (
+        s.query(UsageLedger)
+        .filter(
+            UsageLedger.user_id == user_id,
+            UsageLedger.action == action,
+            UsageLedger.created_at >= today_start,
+        )
+        .count()
+    )
+
+    if action == "ai_chat":
+        return usage_today < settings.free_chat_daily_limit
+    elif action in ("compute_reading", "constellation_compute"):
+        return usage_today < settings.free_compute_daily_limit
+    else:
+        return True  # Unknown actions allowed by default
+
+
+def record_usage(s: Session, user_id: str, action: str, units: int = 1, meta: Optional[Dict[str, Any]] = None) -> UsageLedger:
+    """Record usage in the ledger."""
+    entry = UsageLedger(
+        id=new_id(),
+        user_id=user_id,
+        action=action,
+        units=units,
+        meta_json=json.dumps(meta or {}),
+    )
+    s.add(entry)
+    s.commit()
+    return entry
+
+
+def get_usage_summary(s: Session, user_id: str, days: int = 30) -> Dict[str, int]:
+    """Get usage summary for a user over the last N days."""
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    rows = s.query(UsageLedger).filter(UsageLedger.user_id == user_id, UsageLedger.created_at >= cutoff).all()
+    summary: Dict[str, int] = {}
+    for r in rows:
+        summary[r.action] = summary.get(r.action, 0) + r.units
+    return summary
+
+
+# -------------------------
+# AI Chat
+# -------------------------
+def create_chat_thread(
+    s: Session,
+    user_id: str,
+    profile_id: Optional[str] = None,
+    constellation_id: Optional[str] = None,
+    title: str = "",
+) -> ChatThread:
+    thread = ChatThread(
+        id=new_id(),
+        user_id=user_id,
+        profile_id=profile_id,
+        constellation_id=constellation_id,
+        title=title,
+    )
+    s.add(thread)
+    s.commit()
+    return thread
+
+
+def get_chat_thread(s: Session, thread_id: str, user_id: str) -> Optional[ChatThread]:
+    return (
+        s.query(ChatThread)
+        .filter(ChatThread.id == thread_id, ChatThread.user_id == user_id)
+        .first()
+    )
+
+
+def add_chat_message(
+    s: Session,
+    thread_id: str,
+    role: str,
+    content: str,
+    citations: Optional[List[Dict[str, Any]]] = None,
+) -> ChatMessage:
+    msg = ChatMessage(
+        id=new_id(),
+        thread_id=thread_id,
+        role=role,
+        content=content,
+        citations_json=json.dumps(citations or []),
+    )
+    s.add(msg)
+    s.commit()
+    return msg
+
+
+def get_chat_messages(s: Session, thread_id: str, limit: int = 50) -> List[ChatMessage]:
+    return (
+        s.query(ChatMessage)
+        .filter(ChatMessage.thread_id == thread_id)
+        .order_by(ChatMessage.created_at)
+        .limit(limit)
+        .all()
+    )
+
+
+def list_chat_threads(
+    s: Session,
+    user_id: str,
+    limit: int = 50,
+    before_ts: Optional[str] = None,
+    before_id: Optional[str] = None,
+) -> Tuple[List[ChatThread], Optional[str], Optional[str]]:
+    limit = _clamp_limit(limit)
+    bts, bid = parse_keyset(before_ts, before_id)
+    q = s.query(ChatThread).filter(ChatThread.user_id == user_id).order_by(desc(ChatThread.created_at), desc(ChatThread.id))
+    if bts is not None and bid is not None:
+        q = q.filter(or_(ChatThread.created_at < bts, and_(ChatThread.created_at == bts, ChatThread.id < bid)))
+    rows = q.limit(limit).all()
+    next_ts = next_id = None
+    if len(rows) == limit:
+        last = rows[-1]
+        next_ts = to_utc_iso(last.created_at)
+        next_id = last.id
+    return rows, next_ts, next_id
+
+
+# -------------------------
+# Admin helpers
+# -------------------------
+def list_users_paginated(
+    s: Session,
+    limit: int = 50,
+    offset: int = 0,
+) -> Tuple[List[User], int]:
+    total = s.query(User).count()
+    users = s.query(User).order_by(User.created_at.desc()).offset(offset).limit(limit).all()
+    return users, total
+
+
+def set_user_role(s: Session, user_id: str, role: str) -> Optional[User]:
+    from synth_engine.storage.models import UserRole
+    user = s.query(User).filter(User.id == user_id).first()
+    if not user:
+        return None
+    user.role = UserRole(role)
+    s.commit()
+    return user

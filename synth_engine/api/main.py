@@ -19,7 +19,7 @@ from synth_engine.storage.models import Base, User, Profile, Constellation
 from synth_engine.storage import repo as R
 
 from synth_engine.api.auth import hash_password, verify_password, create_token
-from synth_engine.api.deps import db, me_user_id
+from synth_engine.api.deps import db, me_user_id, get_current_user
 
 from synth_engine.schemas.person import PersonInput
 from synth_engine.parsing.natal_text import parse_natal_text
@@ -43,6 +43,11 @@ from synth_engine.telemetry.adapter import infer_context
 from synth_engine.api.ratelimit import TokenBucketLimiter
 from synth_engine.api.auth import decode_token
 
+# Import routers
+from synth_engine.api.billing import router as billing_router
+from synth_engine.api.admin import router as admin_router
+from synth_engine.api.ai import router as ai_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,8 +57,13 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Synthesis Engine API", version="0.4.3", lifespan=lifespan)
+app = FastAPI(title="Synthesis Engine API", version="0.5.0", lifespan=lifespan)
 limiter = TokenBucketLimiter()
+
+# Include routers
+app.include_router(billing_router)
+app.include_router(admin_router)
+app.include_router(ai_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,8 +72,8 @@ app.add_middleware(
         "https://www.defrag.app",
     ],
     allow_origin_regex=r"^https://.*\.vercel\.app$",
-    allow_credentials=False,
-    allow_methods=["*"] ,
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -89,6 +99,52 @@ def debug_db():
             scheme_user, _ = pre.rsplit(":", 1)
             masked = f"{scheme_user}:***@{rest}"
     return {"database_url": masked, "engine_url": str(engine.url)}
+
+
+@app.get("/dashboard")
+def dashboard(user: User = Depends(get_current_user), s: Session = Depends(db)):
+    """
+    One-call endpoint to hydrate the frontend dashboard.
+    Returns user info, billing status, profiles, and recent activity.
+    """
+    # Get billing status
+    billing = R.get_billing_status(s, user.id)
+    
+    # Get profiles
+    profiles = s.query(Profile).filter(Profile.user_id == user.id).order_by(Profile.created_at.desc()).limit(10).all()
+    
+    # Get constellations
+    constellations = s.query(Constellation).filter(Constellation.user_id == user.id).order_by(Constellation.created_at.desc()).limit(10).all()
+    
+    # Get usage summary
+    usage = R.get_usage_summary(s, user.id, days=30)
+    
+    return {
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role.value,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+        },
+        "billing": billing,
+        "profiles": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in profiles
+        ],
+        "constellations": [
+            {
+                "id": c.id,
+                "name": c.name,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+            }
+            for c in constellations
+        ],
+        "usage_30d": usage,
+    }
 
 
 def require_profile(s: Session, user_id: str, profile_id: str) -> Profile:

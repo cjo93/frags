@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import enum
 from datetime import datetime
-from sqlalchemy import String, DateTime, Text, ForeignKey, Integer, Float, UniqueConstraint, Index
+from typing import Optional
+from sqlalchemy import String, DateTime, Text, ForeignKey, Integer, Float, Boolean, Enum, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from synth_engine.storage.db import Base
@@ -13,11 +15,18 @@ def utcnow():
     return datetime.utcnow()
 
 
+class UserRole(str, enum.Enum):
+    user = "user"
+    admin = "admin"
+    clinician = "clinician"
+
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(String, primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String)
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.user, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
@@ -184,4 +193,67 @@ class ConstellationLayer(Base):
     payload_json: Mapped[str] = mapped_column(Text)
     inputs_hash: Mapped[str] = mapped_column(String, index=True)
     version: Mapped[str] = mapped_column(String, default="1.0.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+# -------------------------
+# Stripe Billing
+# -------------------------
+class StripeCustomer(Base):
+    __tablename__ = "stripe_customers"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    stripe_customer_id: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class StripeSubscription(Base):
+    __tablename__ = "stripe_subscriptions"
+    __table_args__ = (Index("ix_stripe_sub_user_status", "user_id", "status"),)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False, index=True)
+    stripe_subscription_id: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    price_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    current_period_end: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+# -------------------------
+# Usage Ledger
+# -------------------------
+class UsageLedger(Base):
+    __tablename__ = "usage_ledger"
+    __table_args__ = (Index("ix_usage_user_action_created", "user_id", "action", "created_at", "id"),)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    units: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    meta_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+# -------------------------
+# AI Chat
+# -------------------------
+class ChatThread(Base):
+    __tablename__ = "chat_threads"
+    __table_args__ = (Index("ix_chat_threads_user_created", "user_id", "created_at", "id"),)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False, index=True)
+    profile_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("profiles.id"), nullable=True, index=True)
+    constellation_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("constellations.id"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+    __table_args__ = (Index("ix_chat_messages_thread_created", "thread_id", "created_at", "id"),)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    thread_id: Mapped[str] = mapped_column(String, ForeignKey("chat_threads.id"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String, nullable=False)  # user | assistant | system
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    citations_json: Mapped[str] = mapped_column(Text, default="[]")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
