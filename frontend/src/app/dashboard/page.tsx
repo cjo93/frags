@@ -83,9 +83,8 @@ export default function DashboardPage() {
               <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
                 You have access to AI synthesis previews.{' '}
                 <Link href="/pricing" className="underline underline-offset-4">
-                  Upgrade to Constellation
-                </Link>{' '}
-                for full responses.
+                  Unlock full synthesis
+                </Link>
               </p>
             )}
             {featureFlags.ai_full_allowed && (
