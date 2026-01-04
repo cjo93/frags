@@ -179,10 +179,10 @@ export default function DashboardPage() {
           ) : (!constellations || constellations.length === 0) ? (
             <div className="p-8 border border-dashed border-neutral-300 dark:border-neutral-700 text-center">
               <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-                No constellations yet.
+                Constellations reveal patterns that only emerge between people.
               </p>
               <p className="text-sm text-neutral-400 dark:text-neutral-600">
-                Create a constellation to explore relational dynamics between profiles.
+                Create one when you&apos;re ready to explore relationships, not just traits.
               </p>
             </div>
           ) : (

@@ -177,3 +177,66 @@ export const motion = {
   slideUp: 'animate-in slide-in-from-bottom-4 duration-300',
   // No bouncy or attention-grabbing animations
 };
+// Constellation Visual System
+// Think: systems diagram meets museum placard
+export const constellation = {
+  // Node = Profile
+  node: {
+    base: `
+      rounded-full
+      border-2 border-neutral-300 dark:border-neutral-700
+      bg-white dark:bg-neutral-900
+      flex items-center justify-center
+      transition-all duration-200
+    `,
+    sizes: {
+      sm: 'w-8 h-8 text-xs',
+      md: 'w-12 h-12 text-sm',
+      lg: 'w-16 h-16 text-base',
+    },
+    states: {
+      default: 'border-neutral-300 dark:border-neutral-700',
+      selected: 'border-neutral-900 dark:border-white ring-2 ring-neutral-200 dark:ring-neutral-800',
+      highlighted: 'border-neutral-500 dark:border-neutral-500',
+    },
+  },
+  
+  // Edge = Relationship (line between nodes)
+  edge: {
+    base: 'stroke-neutral-300 dark:stroke-neutral-700',
+    highlighted: 'stroke-neutral-600 dark:stroke-neutral-400',
+    weights: {
+      light: 'stroke-1',
+      normal: 'stroke-2',
+      heavy: 'stroke-[3px]',
+    },
+  },
+  
+  // Layer toggles (Bowen / Jung / Curriculum)
+  layerToggle: `
+    px-3 py-1.5
+    text-xs font-medium
+    border border-neutral-200 dark:border-neutral-800
+    bg-transparent
+    text-neutral-600 dark:text-neutral-400
+    transition-all duration-150
+    hover:bg-neutral-100 dark:hover:bg-neutral-900
+    data-[active=true]:bg-neutral-900 data-[active=true]:text-white
+    dark:data-[active=true]:bg-white dark:data-[active=true]:text-neutral-900
+  `,
+  
+  // Canvas / container
+  canvas: `
+    w-full
+    bg-neutral-50 dark:bg-neutral-900/50
+    border border-neutral-200 dark:border-neutral-800
+    overflow-hidden
+  `,
+  
+  // Structured layout preference (no force-directed chaos)
+  layout: {
+    preferStructured: true,
+    minNodeSpacing: 80,
+    edgeCurve: 'bezier',
+  },
+};
