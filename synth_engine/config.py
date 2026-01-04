@@ -1,3 +1,6 @@
+import secrets
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -5,7 +8,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./synth.db"
 
-    jwt_secret: str = "CHANGE_ME"
+    jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(48))
     jwt_algorithm: str = "HS256"
     jwt_exp_minutes: int = 60 * 24 * 7
 
