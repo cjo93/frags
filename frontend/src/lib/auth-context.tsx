@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react';
 import { getDashboard, DashboardData } from '@/lib/api';
 
 interface AuthContextType {
@@ -18,69 +18,89 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+// Get initial token from localStorage (client-only)
+function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('token');
+}
 
-  const refresh = async () => {
+type LoadState = 'idle' | 'loading' | 'done' | 'error';
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  // Initialize token from localStorage synchronously (no effect needed)
+  const [token, setToken] = useState<string | null>(getStoredToken);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loadState, setLoadState] = useState<LoadState>(() => 
+    getStoredToken() ? 'loading' : 'idle'
+  );
+
+  const logout = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    setToken(null);
+    setData(null);
+    setLoadState('idle');
+  }, []);
+
+  const refresh = useCallback(async () => {
     if (!token) return;
     try {
       const dashboard = await getDashboard();
       setData(dashboard);
     } catch {
-      // Token invalid, clear it
       logout();
     }
-  };
+  }, [token, logout]);
 
-  const login = (newToken: string) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setData(null);
-  };
-
-  // Initialize from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('token');
-    if (stored) {
-      setToken(stored);
-    } else {
-      setIsLoading(false);
+  const login = useCallback((newToken: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', newToken);
     }
+    setToken(newToken);
+    setLoadState('loading');
   }, []);
 
   // Fetch dashboard when token changes
   useEffect(() => {
-    if (token) {
-      setIsLoading(true);
-      getDashboard()
-        .then(setData)
-        .catch(() => logout())
-        .finally(() => setIsLoading(false));
-    }
-  }, [token]);
+    if (!token) return;
+    
+    let cancelled = false;
+    
+    getDashboard()
+      .then((dashboard) => {
+        if (!cancelled) {
+          setData(dashboard);
+          setLoadState('done');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          logout();
+        }
+      });
+    
+    return () => { cancelled = true; };
+  }, [token, logout]);
+
+  // Derive isLoading from loadState
+  const isLoading = loadState === 'loading';
+
+  const value = useMemo(() => ({
+    token,
+    user: data?.user ?? null,
+    billing: data?.billing ?? null,
+    profiles: data?.profiles ?? [],
+    constellations: data?.constellations ?? [],
+    isLoading,
+    isAuthenticated: !!token && !!data,
+    login,
+    logout,
+    refresh,
+  }), [token, data, isLoading, login, logout, refresh]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        token,
-        user: data?.user ?? null,
-        billing: data?.billing ?? null,
-        profiles: data?.profiles ?? [],
-        constellations: data?.constellations ?? [],
-        isLoading,
-        isAuthenticated: !!token && !!data,
-        login,
-        logout,
-        refresh,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
