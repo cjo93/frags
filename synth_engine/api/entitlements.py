@@ -9,19 +9,20 @@ from synth_engine.storage import repo as R
 from synth_engine.storage.models import User
 
 
-# Plan hierarchy: free < basic < pro < family
-PLAN_HIERARCHY = {"free": 0, "basic": 1, "pro": 2, "family": 3}
+# Plan hierarchy: free < insight < integration < constellation
+# insight = basic price, integration = pro price, constellation = family price
+PLAN_HIERARCHY = {"free": 0, "insight": 1, "integration": 2, "constellation": 3}
 
 
 def require_plan(min_plan: str):
     """
     Dependency factory that requires user to have at least the specified plan.
     
-    Plan hierarchy: free < basic < pro < family
+    Plan hierarchy: free < insight < integration < constellation
     
     Usage:
         @router.post("/compute")
-        def compute(user=Depends(require_plan("basic"))):
+        def compute(user=Depends(require_plan("integration"))):
             ...
     """
     def _dep(user: User = Depends(get_current_user), s: Session = Depends(db)):

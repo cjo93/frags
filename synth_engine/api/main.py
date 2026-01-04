@@ -552,14 +552,14 @@ def compute_profile_reading(s: Session, profile_id: str, days: int = 14, include
 
 
 # -------------------------
-# Compute reading (paid - requires subscription)
+# Compute reading (paid - requires Integration tier)
 # -------------------------
 @app.post("/profiles/{profile_id}/compute_reading")
 def compute_reading(
     profile_id: str,
     days: int = 14,
     include_symbolic: bool = True,
-    user: User = Depends(require_plan("basic")),
+    user: User = Depends(require_plan("integration")),
     s: Session = Depends(db),
 ):
     _ = require_profile(s, user.id, profile_id)
@@ -687,8 +687,12 @@ def list_clinical_records(
 # Constellations
 # -------------------------
 @app.post("/constellations/create")
-def create_constellation(name: str, user_id: str = Depends(me_user_id), s: Session = Depends(db)):
-    c = R.create_constellation(s, user_id, name)
+def create_constellation(
+    name: str,
+    user: User = Depends(require_plan("constellation")),
+    s: Session = Depends(db),
+):
+    c = R.create_constellation(s, user.id, name)
     return {"constellation_id": c.id, "name": c.name}
 
 
@@ -738,7 +742,7 @@ def compute_constellation(
     constellation_id: str,
     auto_compute_missing: bool = True,
     days_for_autocompute: int = 14,
-    user: User = Depends(require_plan("family")),
+    user: User = Depends(require_plan("constellation")),
     s: Session = Depends(db),
 ):
     c = R.get_constellation_owned(s, constellation_id, user.id)

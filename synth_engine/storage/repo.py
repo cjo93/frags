@@ -648,10 +648,20 @@ def upsert_subscription_from_stripe(s: Session, stripe_customer_id: str, sub_obj
         return sub
 
 
+# Plan tier names and hierarchy
+# insight (BASIC price) < integration (PRO price) < constellation (FAMILY price)
+PLAN_NAMES = {
+    "free": "Free",
+    "insight": "Insight",
+    "integration": "Integration",
+    "constellation": "Constellation",
+}
+
+
 def plan_for_user(s: Session, user_id: str) -> str:
     """
     Returns the plan key for a user based on their active subscription.
-    Maps price_id → plan key (free/basic/pro/family).
+    Maps price_id → plan key (free/insight/integration/constellation).
     """
     from synth_engine.config import settings
 
@@ -666,11 +676,11 @@ def plan_for_user(s: Session, user_id: str) -> str:
     if not sub or not sub.price_id:
         return "free"
 
-    # Map price_id to plan key
+    # Map price_id to plan key (env var names unchanged, semantic names updated)
     price_to_plan = {
-        settings.stripe_price_basic: "basic",
-        settings.stripe_price_pro: "pro",
-        settings.stripe_price_family: "family",
+        settings.stripe_price_basic: "insight",
+        settings.stripe_price_pro: "integration",
+        settings.stripe_price_family: "constellation",
     }
     return price_to_plan.get(sub.price_id, "free")
 
@@ -687,11 +697,39 @@ def get_active_subscription(s: Session, user_id: str) -> Optional[StripeSubscrip
     )
 
 
+def _feature_flags_for_plan(plan: str) -> Dict[str, bool]:
+    """Return feature flags based on plan tier."""
+    # Plan hierarchy: free < insight < integration < constellation
+    is_insight = plan in ("insight", "integration", "constellation")
+    is_integration = plan in ("integration", "constellation")
+    is_constellation = plan == "constellation"
+    
+    return {
+        "synthesis_profile": True,  # Free for all
+        "synthesis_constellation": True,  # Free for all
+        "compute_reading": is_integration,  # Integration+
+        "temporal_overlays": is_integration,  # Integration+
+        "state_models": is_integration,  # Integration+
+        "constellation_create": is_constellation,  # Constellation only
+        "constellation_compute": is_constellation,  # Constellation only
+        "ai_chat": False,  # Admin-only, not plan-gated yet
+    }
+
+
 def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
     """Get billing status for a user."""
     customer = s.query(StripeCustomer).filter(StripeCustomer.user_id == user_id).first()
+    plan = "free"
+    
     if not customer:
-        return {"has_stripe": False, "subscription": None, "entitled": False, "plan": "free"}
+        return {
+            "has_stripe": False,
+            "subscription": None,
+            "entitled": False,
+            "plan_key": plan,
+            "plan_name": PLAN_NAMES.get(plan, "Free"),
+            "feature_flags": _feature_flags_for_plan(plan),
+        }
 
     sub = (
         s.query(StripeSubscription)
@@ -700,7 +738,14 @@ def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
         .first()
     )
     if not sub:
-        return {"has_stripe": True, "subscription": None, "entitled": False, "plan": "free"}
+        return {
+            "has_stripe": True,
+            "subscription": None,
+            "entitled": False,
+            "plan_key": plan,
+            "plan_name": PLAN_NAMES.get(plan, "Free"),
+            "feature_flags": _feature_flags_for_plan(plan),
+        }
 
     entitled = sub.status in ("active", "trialing")
     plan = plan_for_user(s, user_id) if entitled else "free"
@@ -713,7 +758,9 @@ def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
             "cancel_at_period_end": sub.cancel_at_period_end,
         },
         "entitled": entitled,
-        "plan": plan,
+        "plan_key": plan,
+        "plan_name": PLAN_NAMES.get(plan, "Free"),
+        "feature_flags": _feature_flags_for_plan(plan),
     }
 
 

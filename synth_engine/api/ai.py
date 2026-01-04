@@ -52,20 +52,90 @@ def _build_context_for_profile(s: Session, profile_id: str) -> Dict[str, Any]:
 
 def _build_context_for_constellation(s: Session, constellation_id: str) -> Dict[str, Any]:
     """Build grounded context from stored layers for a constellation."""
-    context: Dict[str, Any] = {"constellation_id": constellation_id, "layers": {}}
+    from synth_engine.storage.models import (
+        Constellation,
+        ConstellationMember,
+        ConstellationEdge,
+        ConstellationRun,
+    )
 
-    # Load latest constellation layers
+    context: Dict[str, Any] = {
+        "constellation_id": constellation_id,
+        "members": [],
+        "edges": [],
+        "layers": {},
+        "runs": [],
+    }
+
+    # Load constellation metadata
+    constellation = s.query(Constellation).filter(Constellation.id == constellation_id).first()
+    if not constellation:
+        return context
+
+    context["name"] = constellation.name
+    context["created_at"] = constellation.created_at.isoformat() if constellation.created_at else None
+
+    # Load members with their profile data
+    members = (
+        s.query(ConstellationMember)
+        .filter(ConstellationMember.constellation_id == constellation_id)
+        .all()
+    )
+    for m in members:
+        # Get profile info
+        profile = s.query(Profile).filter(Profile.id == m.profile_id).first()
+        member_ctx = {
+            "profile_id": m.profile_id,
+            "role": m.role,
+            "meta": json.loads(m.meta_json) if m.meta_json else {},
+        }
+        if profile:
+            try:
+                member_ctx["person"] = json.loads(profile.person_json)
+            except Exception:
+                pass
+            # Also get key layers for each member (minimal for AI context)
+            for layer_name in ["natal_astro", "numerology", "humandesign"]:
+                payload = R.latest_layer_payload(s, m.profile_id, layer_name)
+                if payload:
+                    member_ctx.setdefault("layers", {})[layer_name] = payload
+        context["members"].append(member_ctx)
+
+    # Load edges (relationships between members)
+    edges = (
+        s.query(ConstellationEdge)
+        .filter(ConstellationEdge.constellation_id == constellation_id)
+        .all()
+    )
+    for e in edges:
+        context["edges"].append({
+            "from_profile_id": e.from_profile_id,
+            "to_profile_id": e.to_profile_id,
+            "relationship": e.relationship,
+            "meta": json.loads(e.meta_json) if e.meta_json else {},
+        })
+
+    # Load constellation-level computed layers
     for layer_name in ["bowen", "curriculum", "jung_summary", "constellation_graph"]:
-        rows = (
-            s.query(ComputedLayer)
-            .filter(ComputedLayer.profile_id == constellation_id, ComputedLayer.layer == layer_name)
-            .order_by(ComputedLayer.created_at.desc())
-            .first()
-        )
-        # Actually constellation layers are in a different table
-        pass
+        payload = R.latest_constellation_layer_payload(s, constellation_id, layer_name)
+        if payload:
+            context["layers"][layer_name] = payload
 
-    # For now, return minimal context
+    # Load recent runs (for temporal context)
+    runs = (
+        s.query(ConstellationRun)
+        .filter(ConstellationRun.constellation_id == constellation_id)
+        .order_by(ConstellationRun.created_at.desc())
+        .limit(3)
+        .all()
+    )
+    for run in runs:
+        context["runs"].append({
+            "id": run.id,
+            "as_of": run.as_of,
+            "created_at": run.created_at.isoformat() if run.created_at else None,
+        })
+
     return context
 
 
