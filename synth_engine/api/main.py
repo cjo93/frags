@@ -77,6 +77,20 @@ def health():
     return {"ok": True, "ts": datetime.now(timezone.utc).isoformat()}
 
 
+@app.get("/debug/db")
+def debug_db():
+    from synth_engine.config import settings
+    url = settings.database_url
+    # Mask password if present
+    masked = url
+    if "@" in url:
+        pre, rest = url.split("@", 1)
+        if ":" in pre:
+            scheme_user, _ = pre.rsplit(":", 1)
+            masked = f"{scheme_user}:***@{rest}"
+    return {"database_url": masked, "engine_url": str(engine.url)}
+
+
 def require_profile(s: Session, user_id: str, profile_id: str) -> Profile:
     prof = s.query(Profile).filter(Profile.id == profile_id, Profile.user_id == user_id).first()
     if not prof:
@@ -141,16 +155,19 @@ def register(email: str, password: str, s: Session = Depends(db)):
     try:
         if s.query(User).filter(User.email == email).first():
             raise HTTPException(400, "Email already registered")
-        s.add(User(id=uid, email=email, password_hash=hash_password(password)))
+        pw_hash = hash_password(password)
+        user = User(id=uid, email=email, password_hash=pw_hash)
+        s.add(user)
         s.commit()
         return {"token": create_token(uid)}
     except HTTPException:
         raise
     except Exception as e:
         s.rollback()
-        print("ERROR /auth/register", repr(e), flush=True)
+        err_msg = f"{type(e).__name__}: {e}"
+        print("ERROR /auth/register", err_msg, flush=True)
         print(traceback.format_exc(), flush=True)
-        raise HTTPException(status_code=500, detail=f"register_failed:{type(e).__name__}")
+        raise HTTPException(status_code=500, detail=err_msg)
 
 
 @app.post("/auth/login")
