@@ -1,16 +1,24 @@
 from __future__ import annotations
+import hashlib
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 from passlib.context import CryptContext
 from synth_engine.config import settings
 
-pwd = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
+pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def _prehash(p: str) -> str:
+    """Pre-hash password with SHA256 to avoid bcrypt's 72-byte limit."""
+    return hashlib.sha256(p.encode("utf-8")).hexdigest()
+
 
 def hash_password(p: str) -> str:
-    return pwd.hash(p)
+    return pwd.hash(_prehash(p))
+
 
 def verify_password(p: str, h: str) -> bool:
-    return pwd.verify(p, h)
+    return pwd.verify(_prehash(p), h)
 
 def create_token(user_id: str) -> str:
     exp = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_exp_minutes)

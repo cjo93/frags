@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Synthesis Engine API", version="0.4.1", lifespan=lifespan)
+app = FastAPI(title="Synthesis Engine API", version="0.4.2", lifespan=lifespan)
 limiter = TokenBucketLimiter()
 
 app.add_middleware(
