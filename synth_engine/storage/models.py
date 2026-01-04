@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import String, DateTime, Text, ForeignKey, Integer, Float, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -8,7 +8,9 @@ from synth_engine.storage.db import Base
 
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    # Use naive UTC timestamps so this works with Postgres columns created as
+    # TIMESTAMP WITHOUT TIME ZONE (alembic migration uses sa.DateTime()).
+    return datetime.utcnow()
 
 
 class User(Base):
