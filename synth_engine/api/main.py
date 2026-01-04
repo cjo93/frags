@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 import json
+import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
@@ -137,11 +138,19 @@ async def rate_limit_middleware(request: Request, call_next):
 @app.post("/auth/register")
 def register(email: str, password: str, s: Session = Depends(db)):
     uid = new_id()
-    if s.query(User).filter(User.email == email).first():
-        raise HTTPException(400, "Email already registered")
-    s.add(User(id=uid, email=email, password_hash=hash_password(password)))
-    s.commit()
-    return {"token": create_token(uid)}
+    try:
+        if s.query(User).filter(User.email == email).first():
+            raise HTTPException(400, "Email already registered")
+        s.add(User(id=uid, email=email, password_hash=hash_password(password)))
+        s.commit()
+        return {"token": create_token(uid)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        s.rollback()
+        print("ERROR /auth/register", repr(e), flush=True)
+        print(traceback.format_exc(), flush=True)
+        raise HTTPException(status_code=500, detail=f"register_failed:{type(e).__name__}")
 
 
 @app.post("/auth/login")
