@@ -58,7 +58,8 @@ export function ChatMessage({ message, isPreview, upgradeRequired }: ChatMessage
       {isPreview && upgradeRequired && (
         <div className="mt-3 p-4 border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/50">
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-            This is a preview. Full relational synthesis is available in Constellation.
+            This is a preview of relational synthesis.<br />
+            Full synthesis and cross-profile reasoning are available in Constellation.
           </p>
           <Link
             href="/pricing"
