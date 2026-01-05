@@ -6,9 +6,11 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** If true, input is locked in preview mode with upgrade hint */
+  previewLocked?: boolean;
 }
 
-export function ChatInput({ onSend, disabled, placeholder = 'Ask about this profile...' }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, placeholder = 'Ask about this profile...', previewLocked }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -72,9 +74,15 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about this prof
           Send
         </button>
       </div>
-      <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
-        Press Enter to send, Shift+Enter for new line
-      </p>
+      {previewLocked ? (
+        <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
+          Continue this thread by unlocking Constellation.
+        </p>
+      ) : (
+        <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
+          Press Enter to send, Shift+Enter for new line
+        </p>
+      )}
     </form>
   );
 }

@@ -3,24 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-interface OnboardingStep {
-  id: string;
-  title: string;
-  description: string;
-  action: {
-    label: string;
-    href?: string;
-    onClick?: () => void;
-  };
-  completed: boolean;
-  locked?: boolean;
-}
-
 interface OnboardingPanelProps {
-  hasProfiles: boolean;
-  hasSynthesis: boolean;
-  hasAIAccess: boolean;
-  hasConstellationAccess: boolean;
   onDismiss: () => void;
 }
 
@@ -47,152 +30,86 @@ export function useOnboardingState() {
   return { hasSeen, markSeen, reset };
 }
 
-export function OnboardingPanel({
-  hasProfiles,
-  hasSynthesis,
-  hasAIAccess,
-  hasConstellationAccess,
-  onDismiss,
-}: OnboardingPanelProps) {
-  const steps: OnboardingStep[] = [
-    {
-      id: 'profile',
-      title: 'Create a profile',
-      description:
-        'A profile holds birth data and computed layers across Human Design, Gene Keys, numerology, and astrology. Start with yourself.',
-      action: {
-        label: 'Create profile',
-        href: '/profile/new',
-      },
-      completed: hasProfiles,
-    },
-    {
-      id: 'synthesis',
-      title: 'Generate synthesis',
-      description:
-        'Once a profile exists, Defrag computes deterministic insights from each system. This happens automatically when you create a profile.',
-      action: {
-        label: 'View synthesis',
-        href: '/dashboard',
-      },
-      completed: hasSynthesis,
-    },
-    {
-      id: 'ai',
-      title: 'Ask a question',
-      description:
-        'Use the AI to explore what your synthesis means. It draws only from your computed layers—no speculation, no hallucination.',
-      action: {
-        label: hasAIAccess ? 'Ask about a profile' : 'Requires paid plan',
-        href: hasAIAccess ? '/dashboard' : '/pricing',
-      },
-      completed: false, // Can't track this easily
-      locked: !hasAIAccess,
-    },
-    {
-      id: 'constellation',
-      title: 'Explore constellations',
-      description:
-        'Constellations map relationships between profiles. They reveal patterns that only emerge when you look at people together.',
-      action: {
-        label: hasConstellationAccess ? 'Create constellation' : 'Requires Constellation plan',
-        href: hasConstellationAccess ? '/constellation/new' : '/pricing',
-      },
-      completed: false,
-      locked: !hasConstellationAccess,
-    },
-  ];
+const steps = [
+  {
+    id: 'not-a-test',
+    title: 'This is not a personality test.',
+    description:
+      'Defrag synthesizes existing symbolic systems—Human Design, Gene Keys, numerology, astrology—into a unified view. Nothing is invented. Everything is computed.',
+  },
+  {
+    id: 'patterns-emerge',
+    title: 'Patterns emerge over time and between people.',
+    description:
+      'Your profile captures a moment. Constellations reveal relationships. The more data you add, the more structure becomes visible.',
+  },
+  {
+    id: 'you-decide',
+    title: 'You decide how deep to go.',
+    description:
+      'Start with your own synthesis. Add family or partners when you\'re ready. The system doesn\'t push—you lead.',
+  },
+];
 
-  const completedCount = steps.filter((s) => s.completed).length;
-  const allDone = completedCount >= 2; // Profile + synthesis = enough to dismiss
+export function OnboardingPanel({ onDismiss }: OnboardingPanelProps) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const isLastStep = currentStep === steps.length - 1;
+
+  const handleNext = () => {
+    if (isLastStep) {
+      onDismiss();
+    } else {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const step = steps[currentStep];
 
   return (
     <div className="mb-12 p-6 border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
       <div className="flex items-start justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-medium mb-1">Getting started</h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Defrag synthesizes symbolic systems into a unified view of yourself and your relationships.
+        <div className="flex-1">
+          <p className="text-xs text-neutral-400 mb-2">
+            {currentStep + 1} of {steps.length}
+          </p>
+          <h2 className="text-lg font-medium mb-2">{step.title}</h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-lg">
+            {step.description}
           </p>
         </div>
         <button
           onClick={onDismiss}
-          className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-          aria-label="Dismiss onboarding"
+          className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 ml-4"
+          aria-label="Skip onboarding"
         >
-          {allDone ? 'Done' : 'Skip'}
+          Skip
         </button>
       </div>
 
-      <div className="space-y-4">
-        {steps.map((step, index) => (
-          <div
-            key={step.id}
-            className={`flex gap-4 ${step.locked ? 'opacity-60' : ''}`}
-          >
-            {/* Step number / check */}
-            <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-              {step.completed ? (
-                <svg
-                  className="w-5 h-5 text-neutral-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              ) : (
-                <span className="text-sm text-neutral-400 font-medium">
-                  {index + 1}
-                </span>
-              )}
-            </div>
+      <div className="flex items-center justify-between">
+        {/* Progress dots */}
+        <div className="flex gap-2">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className={`w-2 h-2 rounded-full ${
+                i === currentStep
+                  ? 'bg-neutral-900 dark:bg-white'
+                  : i < currentStep
+                  ? 'bg-neutral-400'
+                  : 'bg-neutral-200 dark:bg-neutral-700'
+              }`}
+            />
+          ))}
+        </div>
 
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <p
-                className={`font-medium text-sm ${
-                  step.completed
-                    ? 'text-neutral-400 line-through'
-                    : 'text-neutral-900 dark:text-white'
-                }`}
-              >
-                {step.title}
-              </p>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
-                {step.description}
-              </p>
-              {!step.completed && (
-                <div className="mt-2">
-                  {step.action.href ? (
-                    <Link
-                      href={step.action.href}
-                      className={`text-sm underline underline-offset-4 ${
-                        step.locked
-                          ? 'text-neutral-400'
-                          : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {step.action.label}
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={step.action.onClick}
-                      className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4"
-                    >
-                      {step.action.label}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+        {/* Next / Continue button */}
+        <button
+          onClick={handleNext}
+          className="px-4 py-2 text-sm font-medium border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+        >
+          {isLastStep ? 'Continue to dashboard' : 'Next'}
+        </button>
       </div>
     </div>
   );

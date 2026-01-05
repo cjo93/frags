@@ -147,13 +147,12 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Data & Privacy */}
+        {/* Data & Computation */}
         <section className="mb-12">
-          <h2 className="text-lg font-medium mb-4">Data & Privacy</h2>
+          <h2 className="text-lg font-medium mb-4">Data & Computation</h2>
           <div className="p-6 border border-neutral-200 dark:border-neutral-800">
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed mb-4">
-              Your data is stored securely and never shared with third parties. 
-              Defrag synthesizes symbolic systems for self-exploration only.
+              Computations are deterministic. AI synthesis is optional and gated by plan. No data is sold or shared.
             </p>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
               To request data export or account deletion, contact support.

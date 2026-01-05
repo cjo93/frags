@@ -144,6 +144,11 @@ export function ConstellationCanvas({
           preserveAspectRatio="xMidYMid meet"
           viewBox="0 0 280 180"
         >
+          {/* Band labels - editorial typography */}
+          <text x="12" y="38" className="fill-neutral-300 dark:fill-neutral-700 text-[8px]" style={{ fontSize: '8px' }}>Primary</text>
+          <text x="12" y="93" className="fill-neutral-300 dark:fill-neutral-700 text-[8px]" style={{ fontSize: '8px' }}>Close</text>
+          <text x="12" y="148" className="fill-neutral-300 dark:fill-neutral-700 text-[8px]" style={{ fontSize: '8px' }}>Extended</text>
+          
           {/* Edges (relationships) - structured lines */}
           {edgeLines.map((edge, i) => edge && (
             <line
@@ -179,7 +184,7 @@ export function ConstellationCanvas({
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-950/80">
           <div className="text-center p-6">
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-              Some patterns only emerge between people.
+              This view becomes readable once relationships are computed.
             </p>
             <Link
               href="/pricing"

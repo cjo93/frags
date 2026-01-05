@@ -15,11 +15,8 @@ const tiers = [
     features: [
       'Up to 3 profiles',
       'Full readings and state models',
-      'AI previews to understand synthesis',
-      'Dashboard and history',
+      'AI previews',
     ],
-    cta: 'Begin with Insight',
-    featured: false,
   },
   {
     name: 'Integration',
@@ -28,12 +25,9 @@ const tiers = [
     description: 'Multi-profile and system-level synthesis across time and context.',
     features: [
       'Unlimited profiles',
-      'Temporal overlays and check-ins',
+      'Temporal overlays',
       'Constellations (view only)',
-      'AI previews across profiles',
     ],
-    cta: 'Continue with Integration',
-    featured: true,
   },
   {
     name: 'Constellation',
@@ -42,12 +36,9 @@ const tiers = [
     description: 'Relational synthesis across people. Full AI interpretation.',
     features: [
       'Create and compute constellations',
-      'Full AI synthesis without truncation',
-      'Layered system views (Bowen, Jung)',
-      'Priority compute queue',
+      'Full AI synthesis',
+      'Layered system views',
     ],
-    cta: 'Enter Constellation',
-    featured: false,
   },
 ] as const;
 
@@ -116,38 +107,31 @@ export default function PricingPage() {
           Choose your depth.
         </h1>
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-          Each tier builds on the last. Start where it feels right. 
-          Your data carries forward as you grow.
+          Choose based on how deeply you want to work with patterns — personal, systemic, or relational.
         </p>
       </section>
 
       {/* Pricing Cards */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-8">
           {tiers.map((tier) => (
             <div
               key={tier.key}
-              className={`
-                border p-8 flex flex-col
-                ${tier.featured 
-                  ? 'border-neutral-900 dark:border-white' 
-                  : 'border-neutral-200 dark:border-neutral-800'
-                }
-              `}
+              className="border border-neutral-200 dark:border-neutral-800 p-8 flex flex-col"
             >
               <div>
                 <h3 className="text-xl font-medium">{tier.name}</h3>
-                <p className="mt-2 text-neutral-600 dark:text-neutral-400 text-sm">
+                <p className="mt-3 text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
                   {tier.description}
                 </p>
               </div>
               
-              <div className="mt-6">
+              <div className="mt-8">
                 <span className="text-4xl font-light">${tier.price}</span>
                 <span className="text-neutral-400 dark:text-neutral-500 ml-1">/month</span>
               </div>
               
-              <ul className="mt-8 space-y-3 flex-1">
+              <ul className="mt-10 space-y-4 flex-1">
                 {tier.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
                     <svg className="w-4 h-4 mt-0.5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,16 +145,9 @@ export default function PricingPage() {
               <button
                 onClick={() => handleCheckout(tier.key)}
                 disabled={loading === tier.key}
-                className={`
-                  mt-8 w-full py-3 text-sm font-medium transition-all
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  ${tier.featured
-                    ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:opacity-80'
-                    : 'border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                  }
-                `}
+                className="mt-10 w-full py-3 text-sm font-medium transition-all border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading === tier.key ? 'Loading...' : tier.cta}
+                {loading === tier.key ? 'Loading...' : 'Continue'}
               </button>
             </div>
           ))}

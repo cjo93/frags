@@ -61,10 +61,6 @@ export default function DashboardPage() {
         {/* First-run Onboarding */}
         {!hasSeenOnboarding && (
           <OnboardingPanel
-            hasProfiles={(profiles?.length || 0) > 0}
-            hasSynthesis={(profiles?.length || 0) > 0} // Synthesis is auto-computed on profile creation
-            hasAIAccess={featureFlags.ai_preview_allowed || featureFlags.ai_full_allowed || false}
-            hasConstellationAccess={featureFlags.constellation_create || false}
             onDismiss={markOnboardingSeen}
           />
         )}

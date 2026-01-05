@@ -122,7 +122,11 @@ export function ChatContainer({ profileId, constellationId, initialMessage }: Ch
       </div>
 
       {/* Input area */}
-      <ChatInput onSend={handleSend} disabled={isLoading} />
+      <ChatInput 
+        onSend={handleSend} 
+        disabled={isLoading || messages.some(m => m.isPreview)} 
+        previewLocked={messages.some(m => m.isPreview)}
+      />
     </div>
   );
 }
