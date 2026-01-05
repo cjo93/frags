@@ -72,6 +72,7 @@ app.add_middleware(
     allow_origins=[
         "https://defrag.app",
         "https://www.defrag.app",
+        "http://localhost:3000",
     ],
     allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
