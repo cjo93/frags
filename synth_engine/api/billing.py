@@ -8,33 +8,50 @@ from threading import Lock
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from synth_engine.api.deps import db, get_current_user, require_role
 from synth_engine.config import settings
 from synth_engine.storage import repo as R
+from synth_engine.storage.models import StripeWebhookEvent
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 logger = logging.getLogger(__name__)
 
 
 # -------------------------
-# Webhook Idempotency
+# Webhook Idempotency (DB-backed for production)
 # -------------------------
-# In-memory LRU cache for processed events (single-instance safe)
-# For multi-instance deployments, use database-backed deduplication
+def _try_record_event(s: Session, event_id: str, event_type: str) -> bool:
+    """
+    Try to record a webhook event in the database.
+    Returns True if this is a new event (should be processed).
+    Returns False if already processed (dedupe).
+    """
+    try:
+        evt = StripeWebhookEvent(event_id=event_id, event_type=event_type)
+        s.add(evt)
+        s.flush()  # Attempt insert, will raise IntegrityError if PK exists
+        return True
+    except IntegrityError:
+        s.rollback()
+        return False
+
+
+# In-memory fallback cache (for backward compat and extra safety)
 _processed_events: OrderedDict[str, bool] = OrderedDict()
 _processed_events_lock = Lock()
 _MAX_CACHED_EVENTS = 1000
 
 
-def _is_event_processed(event_id: str) -> bool:
-    """Check if a webhook event has already been processed."""
+def _is_event_in_memory(event_id: str) -> bool:
+    """Check if a webhook event is in memory cache."""
     with _processed_events_lock:
         return event_id in _processed_events
 
 
-def _mark_event_processed(event_id: str) -> None:
-    """Mark a webhook event as processed (with LRU eviction)."""
+def _mark_event_in_memory(event_id: str) -> None:
+    """Mark a webhook event as processed in memory cache."""
     with _processed_events_lock:
         if event_id in _processed_events:
             _processed_events.move_to_end(event_id)
@@ -158,7 +175,7 @@ def create_portal(
 
 @router.post("/webhook")
 async def stripe_webhook(req: Request, s: Session = Depends(db)):
-    """Handle Stripe webhook events with idempotency check."""
+    """Handle Stripe webhook events with DB-backed idempotency."""
     _stripe_init()
 
     if not _webhook_configured():
@@ -178,10 +195,20 @@ async def stripe_webhook(req: Request, s: Session = Depends(db)):
     event_type = event.get("type", "")
     data_object = event.get("data", {}).get("object", {})
 
-    # Idempotency check: skip if already processed
-    if event_id and _is_event_processed(event_id):
-        logger.info(f"Skipping already processed webhook event: {event_id}")
-        return {"received": True, "status": "already_processed"}
+    # DB-backed idempotency check: try to insert event
+    if event_id:
+        # Quick in-memory check first (optimization)
+        if _is_event_in_memory(event_id):
+            logger.info(f"Skipping webhook {event_id} (in-memory cache hit), deduped=true")
+            return {"received": True, "status": "already_processed"}
+        
+        # Try DB insert - if fails, event was already processed
+        is_new = _try_record_event(s, event_id, event_type)
+        if not is_new:
+            logger.info(f"Skipping webhook {event_id} type={event_type}, deduped=true")
+            return {"received": True, "status": "already_processed"}
+        
+        logger.info(f"Processing webhook {event_id} type={event_type}, deduped=false")
 
     # Handle subscription events
     if event_type in (
@@ -204,9 +231,12 @@ async def stripe_webhook(req: Request, s: Session = Depends(db)):
             R.upsert_subscription_from_stripe(s, customer_id=customer_id, sub_obj=dict(sub))
             logger.info(f"Processed checkout.session.completed for customer {customer_id}")
 
-    # Mark event as processed after successful handling
+    # Mark in memory cache after successful processing
     if event_id:
-        _mark_event_processed(event_id)
+        _mark_event_in_memory(event_id)
+
+    # Commit the transaction (includes the webhook event record)
+    s.commit()
 
     return {"received": True}
 

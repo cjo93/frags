@@ -257,3 +257,13 @@ class ChatMessage(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     citations_json: Mapped[str] = mapped_column(Text, default="[]")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+# -------------------------
+# Stripe Webhook Idempotency
+# -------------------------
+class StripeWebhookEvent(Base):
+    __tablename__ = "stripe_webhook_events"
+    event_id: Mapped[str] = mapped_column(String, primary_key=True)
+    event_type: Mapped[str] = mapped_column(String, nullable=False)
+    processed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
