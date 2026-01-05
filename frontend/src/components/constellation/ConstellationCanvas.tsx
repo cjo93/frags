@@ -179,7 +179,7 @@ export function ConstellationCanvas({
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-950/80">
           <div className="text-center p-6">
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-              Full relational synthesis is available in Constellation.
+              Some patterns only emerge between people.
             </p>
             <Link
               href="/pricing"

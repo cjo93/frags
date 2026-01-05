@@ -337,7 +337,7 @@ def chat(
     
     if is_preview:
         response["upgrade_required"] = "constellation"
-        response["preview_note"] = "This is a preview of relational synthesis. Full synthesis and cross-profile reasoning are available in Constellation."
+        response["preview_note"] = "This is a preview of relational synthesis. Full interpretation is available in the Constellation tier."
     
     return response
 
