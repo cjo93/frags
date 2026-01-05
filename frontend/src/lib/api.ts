@@ -45,16 +45,16 @@ async function request<T>(
 
 // Auth
 export async function register(email: string, password: string) {
-  return request<{ token: string; user_id: string }>('/auth/register', {
+  const params = new URLSearchParams({ email, password });
+  return request<{ token: string; user_id: string }>(`/auth/register?${params}`, {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
   });
 }
 
 export async function login(email: string, password: string) {
-  return request<{ token: string }>('/auth/login', {
+  const params = new URLSearchParams({ email, password });
+  return request<{ token: string }>(`/auth/login?${params}`, {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
   });
 }
 
