@@ -130,7 +130,11 @@ def get_current_user(
         return dev_user
     
     # Normal JWT auth flow
-    user_id = decode_token(token)
+    try:
+        user_id = decode_token(token)
+    except Exception:
+        raise HTTPException(401, "Invalid or expired token")
+    
     user = s.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(401, "User not found")
