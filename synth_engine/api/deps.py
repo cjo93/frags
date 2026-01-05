@@ -1,8 +1,9 @@
 from __future__ import annotations
+from datetime import datetime
 from fastapi import Depends, HTTPException, Header, Request
 from sqlalchemy.orm import Session
 from synth_engine.storage.db import SessionLocal
-from synth_engine.storage.models import User
+from synth_engine.storage.models import User, UserRole
 from synth_engine.api.auth import decode_token
 from synth_engine.config import settings
 
@@ -22,12 +23,13 @@ def me_user_id(authorization: str = Header(...)) -> str:
 
 
 class DevAdminUser:
-    """Fake user object for dev admin bypass."""
+    """Fake user object for dev admin bypass - mimics User model attributes."""
     def __init__(self, email: str):
         self.id = "dev-admin-00000000-0000-0000-0000-000000000000"
         self.email = email
-        self.role = "admin"
-        self.is_dev_admin = True
+        self.role = UserRole.admin  # Use actual enum so .value works
+        self.created_at = datetime.utcnow()  # Fake creation time
+        self.is_dev_admin = True  # Flag to identify dev admin bypass
 
 
 def get_current_user(authorization: str = Header(...), s: Session = Depends(db)) -> User:
