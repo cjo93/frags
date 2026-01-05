@@ -243,7 +243,7 @@ def chat(
     thread_id: Optional[str] = None,
     profile_id: Optional[str] = None,
     constellation_id: Optional[str] = None,
-    user: User = Depends(get_current_user),
+    user=Depends(get_current_user),
     s: Session = Depends(db),
 ):
     """
@@ -347,7 +347,7 @@ def list_threads(
     limit: int = 20,
     before_ts: Optional[str] = None,
     before_id: Optional[str] = None,
-    user: User = Depends(get_current_user),
+    user=Depends(get_current_user),
     s: Session = Depends(db),
 ):
     """List chat threads for the authenticated user."""
@@ -371,7 +371,7 @@ def list_threads(
 @router.get("/threads/{thread_id}")
 def get_thread(
     thread_id: str,
-    user: User = Depends(get_current_user),
+    user=Depends(get_current_user),
     s: Session = Depends(db),
 ):
     """Get a chat thread with its messages."""
