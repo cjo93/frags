@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from fastapi import FastAPI, Depends, HTTPException, Request, Body
+from fastapi import FastAPI, Depends, HTTPException, Request, Body, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect
@@ -216,8 +216,8 @@ class AuthCredentials(BaseModel):
 
 @app.post("/auth/register")
 def register(
-    email: str = None,
-    password: str = None,
+    email: str = Query(default=None),
+    password: str = Query(default=None),
     body: AuthCredentials = Body(default=None),
     s: Session = Depends(db),
 ):
@@ -248,8 +248,8 @@ def register(
 
 @app.post("/auth/login")
 def login(
-    email: str = None,
-    password: str = None,
+    email: str = Query(default=None),
+    password: str = Query(default=None),
     body: AuthCredentials = Body(default=None),
     s: Session = Depends(db),
 ):
