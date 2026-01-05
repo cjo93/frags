@@ -7,12 +7,13 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, Body
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 from jose import JWTError
+from pydantic import BaseModel
 
 from synth_engine.storage.db import engine
 from synth_engine.storage.models import Base, User, Profile, Constellation
@@ -208,8 +209,24 @@ async def rate_limit_middleware(request: Request, call_next):
 # -------------------------
 # Auth
 # -------------------------
+class AuthCredentials(BaseModel):
+    email: str
+    password: str
+
+
 @app.post("/auth/register")
-def register(email: str, password: str, s: Session = Depends(db)):
+def register(
+    email: str = None,
+    password: str = None,
+    body: AuthCredentials = Body(default=None),
+    s: Session = Depends(db),
+):
+    # Accept both query params and JSON body
+    email = email or (body.email if body else None)
+    password = password or (body.password if body else None)
+    if not email or not password:
+        raise HTTPException(400, "email and password required")
+    
     uid = new_id()
     try:
         if s.query(User).filter(User.email == email).first():
@@ -230,7 +247,18 @@ def register(email: str, password: str, s: Session = Depends(db)):
 
 
 @app.post("/auth/login")
-def login(email: str, password: str, s: Session = Depends(db)):
+def login(
+    email: str = None,
+    password: str = None,
+    body: AuthCredentials = Body(default=None),
+    s: Session = Depends(db),
+):
+    # Accept both query params and JSON body
+    email = email or (body.email if body else None)
+    password = password or (body.password if body else None)
+    if not email or not password:
+        raise HTTPException(400, "email and password required")
+    
     u = s.query(User).filter(User.email == email).first()
     if not u or not verify_password(password, u.password_hash):
         raise HTTPException(401, "Invalid credentials")
