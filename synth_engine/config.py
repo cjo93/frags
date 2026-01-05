@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     free_chat_daily_limit: int = 10
     free_compute_daily_limit: int = 3
 
+    # Dev admin bypass (for founder testing without Stripe)
+    dev_admin_enabled: bool = False
+    dev_admin_email: str = ""
+
     # Astrology config
     zodiac: str = "tropical"
     house_systems: str = "P,WS"

@@ -719,6 +719,17 @@ def _feature_flags_for_plan(plan: str) -> Dict[str, bool]:
 
 def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
     """Get billing status for a user."""
+    # Dev admin bypass - return full constellation access
+    if user_id == "dev-admin-00000000-0000-0000-0000-000000000000":
+        return {
+            "has_stripe": True,
+            "subscription": {"status": "active", "price_id": "dev_admin", "current_period_end": None, "cancel_at_period_end": False},
+            "entitled": True,
+            "plan_key": "constellation",
+            "plan_name": "Constellation (Dev Admin)",
+            "feature_flags": _feature_flags_for_plan("constellation"),
+        }
+    
     customer = s.query(StripeCustomer).filter(StripeCustomer.user_id == user_id).first()
     plan = "free"
     
