@@ -75,9 +75,17 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about this prof
         </button>
       </div>
       {previewLocked ? (
-        <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
-          Continue this thread by unlocking Constellation.
-        </p>
+        <div className="mt-2 flex items-center justify-between">
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">
+            Continue with full interpretation by upgrading to the Constellation tier.
+          </p>
+          <a
+            href="/pricing"
+            className="text-xs text-neutral-600 dark:text-neutral-400 underline underline-offset-2 hover:text-neutral-900 dark:hover:text-white"
+          >
+            View pricing
+          </a>
+        </div>
       ) : (
         <p className="mt-2 text-xs text-neutral-400 dark:text-neutral-500">
           Press Enter to send, Shift+Enter for new line

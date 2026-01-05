@@ -11,33 +11,36 @@ const tiers = [
     name: 'Insight',
     key: 'insight',
     price: 15,
-    description: 'Structured personal synthesis. Deterministic, grounded, interpretable.',
+    description: 'Explore individual patterns with structured, deterministic synthesis.',
     features: [
       'Up to 3 profiles',
-      'Full readings and state models',
-      'AI previews',
+      'Deterministic synthesis (no AI)',
+      'Limited AI interpretation preview',
+      'Personal dashboard',
     ],
   },
   {
     name: 'Integration',
     key: 'integration',
     price: 29,
-    description: 'Multi-profile and system-level synthesis across time and context.',
+    description: 'Work across multiple profiles and systems with deeper context.',
     features: [
       'Unlimited profiles',
-      'Temporal overlays',
-      'Constellations (view only)',
+      'Systems and relationship views (read-only)',
+      'Limited AI interpretation preview',
+      'Expanded synthesis layers',
     ],
   },
   {
     name: 'Constellation',
     key: 'constellation',
     price: 59,
-    description: 'Relational synthesis across people. Full AI interpretation.',
+    description: 'Reveal relational patterns that only emerge between people.',
     features: [
-      'Create and compute constellations',
-      'Full AI synthesis',
-      'Layered system views',
+      'Full constellation creation and computation',
+      'Complete AI interpretation',
+      'Cross-profile and relational synthesis',
+      'Priority compute access',
     ],
   },
 ] as const;
@@ -152,6 +155,11 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
+        
+        {/* Pricing comparison line */}
+        <p className="mt-8 text-sm text-neutral-500 dark:text-neutral-400 text-center">
+          AI interpretation previews are available on lower tiers. Full interpretation requires the Constellation tier.
+        </p>
       </section>
 
       {/* Philosophy */}

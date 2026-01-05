@@ -61,7 +61,7 @@ export function ChatMessage({ message, isPreview, upgradeRequired }: ChatMessage
             This is a preview of relational synthesis.
           </p>
           <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-4">
-            The assistant can reason across people and systems once unlocked.
+            Full interpretation is available in the Constellation tier.
           </p>
           <Link
             href="/pricing"

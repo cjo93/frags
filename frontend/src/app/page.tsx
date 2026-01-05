@@ -36,24 +36,23 @@ export default function Home() {
       <section className="flex-1 flex items-center">
         <div className="max-w-5xl mx-auto px-6 py-24 md:py-32">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight max-w-3xl">
-            Understand yourself through synthesis.
+            Understand patterns across people, time, and systems.
           </h1>
           <p className="mt-6 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-            Defrag integrates astrological timing, psychological models, and personal check-ins 
-            into a unified view of your inner life.
+            Defrag helps you explore personal and relational dynamics using structured synthesis — without prediction, diagnosis, or advice.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
             <Link
-              href="/register"
+              href="/pricing"
               className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
             >
-              Begin your synthesis
+              View pricing
             </Link>
             <Link
-              href="/pricing"
+              href="/login"
               className="inline-flex items-center justify-center px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
             >
-              View pricing
+              Sign in
             </Link>
           </div>
         </div>
