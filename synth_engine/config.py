@@ -43,8 +43,15 @@ class Settings(BaseSettings):
     free_compute_daily_limit: int = 3
 
     # Dev admin bypass (for founder testing without Stripe)
+    # SECURITY: Must set both enable flag AND secret token
+    # Never enable in production unless emergency debugging needed
     dev_admin_enabled: bool = False
-    dev_admin_email: str = ""
+    dev_admin_token: str = ""  # Must be 32+ char random secret, NOT "DEV_ADMIN"
+    dev_admin_email: str = ""  # Email to associate with dev admin session
+    
+    # Admin mutations (impersonation, plan override, etc.)
+    # Separate gate for sensitive write operations
+    admin_mutations_enabled: bool = False
 
     # Astrology config
     zodiac: str = "tropical"

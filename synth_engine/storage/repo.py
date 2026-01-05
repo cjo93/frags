@@ -23,6 +23,9 @@ from synth_engine.storage.models import (
     ConstellationLayer,
 )
 
+# Dev admin user ID constant (imported from deps for consistency)
+DEV_ADMIN_USER_ID = "dev-admin-00000000-0000-0000-0000-000000000000"
+
 
 def new_id() -> str:
     return str(uuid.uuid4())
@@ -664,6 +667,10 @@ def plan_for_user(s: Session, user_id: str) -> str:
     Maps price_id → plan key (free/insight/integration/constellation).
     """
     from synth_engine.config import settings
+    
+    # Dev admin bypass - always constellation
+    if user_id == DEV_ADMIN_USER_ID:
+        return "constellation"
 
     sub = (
         s.query(StripeSubscription)
@@ -720,7 +727,7 @@ def _feature_flags_for_plan(plan: str) -> Dict[str, bool]:
 def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
     """Get billing status for a user."""
     # Dev admin bypass - return full constellation access
-    if user_id == "dev-admin-00000000-0000-0000-0000-000000000000":
+    if user_id == DEV_ADMIN_USER_ID:
         return {
             "has_stripe": True,
             "subscription": {"status": "active", "price_id": "dev_admin", "current_period_end": None, "cancel_at_period_end": False},
@@ -779,10 +786,15 @@ def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
 def is_entitled(s: Session, user_id: str, action: str) -> bool:
     """
     Check if user is entitled to perform an action.
+    - Dev admin: always entitled
     - If they have an active/trialing subscription, always entitled.
     - Otherwise, check free tier limits via UsageLedger.
     """
     from synth_engine.config import settings
+    
+    # Dev admin bypass - always entitled
+    if user_id == DEV_ADMIN_USER_ID:
+        return True
 
     sub = (
         s.query(StripeSubscription)
