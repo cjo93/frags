@@ -150,12 +150,15 @@ export default function SettingsPage() {
         {/* Data & computation */}
         <section className="mb-12">
           <h2 className="text-lg font-medium mb-4">Data & computation</h2>
-          <div className="p-6 border border-neutral-200 dark:border-neutral-800">
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed mb-4">
-              Defrag performs deterministic and probabilistic computations on structured data you provide.
+          <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-3">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              AI features generate interpretations, not advice or diagnosis.
             </p>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              AI features generate interpretations, not advice or diagnosis. Your data is not used to train models.
+              All synthesis is deterministic. The same inputs produce the same outputs.
+            </p>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              No data is shared between users.
             </p>
           </div>
         </section>

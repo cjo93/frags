@@ -30,9 +30,9 @@ export function useOnboardingState() {
 }
 
 const steps = [
-  'Create profiles to represent people or roles.',
-  'Explore individual patterns through structured synthesis.',
-  'Combine profiles to reveal relational dynamics.',
+  'Create structured profiles.',
+  'Observe patterns over time.',
+  'Explore relationships when context expands.',
 ];
 
 export function OnboardingPanel({ onDismiss }: OnboardingPanelProps) {

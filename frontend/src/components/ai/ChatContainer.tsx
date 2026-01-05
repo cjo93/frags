@@ -113,8 +113,9 @@ export function ChatContainer({ profileId, constellationId, initialMessage }: Ch
         )}
 
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
-            {error}
+          <div className="p-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-600 dark:text-neutral-400">
+            <p>{error}</p>
+            <p className="mt-1 text-xs text-neutral-500">Try again or refresh the page.</p>
           </div>
         )}
 

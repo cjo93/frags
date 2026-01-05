@@ -14,8 +14,8 @@ const tiers = [
     description: 'Explore individual patterns with structured, deterministic synthesis.',
     features: [
       'Up to 3 profiles',
-      'Deterministic synthesis (no AI)',
-      'Limited AI interpretation preview',
+      'Deterministic synthesis',
+      'AI preview access',
       'Personal dashboard',
     ],
   },
@@ -23,12 +23,12 @@ const tiers = [
     name: 'Integration',
     key: 'integration',
     price: 29,
-    description: 'Work across multiple profiles and systems with deeper context.',
+    description: 'Work across multiple profiles and systems with deeper contextual continuity.',
     features: [
       'Unlimited profiles',
-      'Systems and relationship views (read-only)',
-      'Limited AI interpretation preview',
-      'Expanded synthesis layers',
+      'Systems view',
+      'Constellations (view-only)',
+      'AI preview access',
     ],
   },
   {
@@ -37,10 +37,10 @@ const tiers = [
     price: 59,
     description: 'Reveal relational patterns that only emerge between people.',
     features: [
-      'Full constellation creation and computation',
-      'Complete AI interpretation',
-      'Cross-profile and relational synthesis',
-      'Priority compute access',
+      'Full constellation creation',
+      'Relational synthesis',
+      'Full AI interpretation',
+      'Priority compute',
     ],
   },
 ] as const;
@@ -110,7 +110,7 @@ export default function PricingPage() {
           Choose your depth.
         </h1>
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-          Choose based on how deeply you want to work with patterns — personal, systemic, or relational.
+          All plans use the same deterministic synthesis engine. Higher tiers unlock broader context and deeper interpretation.
         </p>
       </section>
 
@@ -155,11 +155,6 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
-        
-        {/* Pricing comparison line */}
-        <p className="mt-8 text-sm text-neutral-500 dark:text-neutral-400 text-center">
-          AI interpretation previews are available on lower tiers. Full interpretation requires the Constellation tier.
-        </p>
       </section>
 
       {/* Philosophy */}
