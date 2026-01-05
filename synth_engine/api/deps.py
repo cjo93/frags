@@ -69,7 +69,8 @@ def _validate_dev_admin_token(token: str) -> bool:
     1. SYNTH_DEV_ADMIN_ENABLED must be true
     2. SYNTH_DEV_ADMIN_TOKEN must be set (32+ chars)
     3. SYNTH_DEV_ADMIN_EMAIL must be set
-    4. Token must match exactly
+    4. SYNTH_DEV_ADMIN_EXPIRES_AT not passed (if set)
+    5. Token must match exactly
     """
     if not settings.dev_admin_enabled:
         return False
@@ -82,6 +83,23 @@ def _validate_dev_admin_token(token: str) -> bool:
     if not settings.dev_admin_email:
         audit_logger.warning("DEV_ADMIN: Attempted access but email not configured")
         return False
+    
+    # Check expiry time bomb (if set)
+    if settings.dev_admin_expires_at:
+        try:
+            from datetime import datetime, timezone
+            # Parse ISO format (e.g., "2026-01-06T00:00:00Z" or "2026-01-06T00:00:00+00:00")
+            expires_str = settings.dev_admin_expires_at.replace('Z', '+00:00')
+            expires_at = datetime.fromisoformat(expires_str)
+            if datetime.now(timezone.utc) > expires_at:
+                audit_logger.warning(
+                    f"DEV_ADMIN: Access denied - token expired at {settings.dev_admin_expires_at}"
+                )
+                return False
+        except ValueError as e:
+            audit_logger.warning(f"DEV_ADMIN: Invalid expires_at format: {e}")
+            # Invalid format = fail closed (deny access)
+            return False
     
     # Reject the old insecure "DEV_ADMIN" string
     if token == "DEV_ADMIN":

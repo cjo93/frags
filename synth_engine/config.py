@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     dev_admin_enabled: bool = False
     dev_admin_token: str = ""  # Must be 32+ char random secret, NOT "DEV_ADMIN"
     dev_admin_email: str = ""  # Email to associate with dev admin session
+    dev_admin_expires_at: str = ""  # ISO datetime, e.g. "2026-01-06T00:00:00Z" - auto-disable after this time
     
     # Admin mutations (impersonation, plan override, etc.)
     # Separate gate for sensitive write operations

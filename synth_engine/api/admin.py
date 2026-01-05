@@ -144,6 +144,7 @@ def admin_config_status(
     return {
         "dev_admin_enabled": settings.dev_admin_enabled,
         "dev_admin_email": settings.dev_admin_email if settings.dev_admin_enabled else None,
+        "dev_admin_expires_at": settings.dev_admin_expires_at if settings.dev_admin_enabled else None,
         "admin_mutations_enabled": settings.admin_mutations_enabled,
         "stripe_configured": bool(settings.stripe_secret_key),
         "stripe_webhook_configured": bool(settings.stripe_webhook_secret),
