@@ -106,7 +106,7 @@ def debug_db():
 
 
 @app.get("/dashboard")
-def dashboard(user: User = Depends(get_current_user), s: Session = Depends(db)):
+def dashboard(user=Depends(get_current_user), s: Session = Depends(db)):
     """
     One-call endpoint to hydrate the frontend dashboard.
     Returns user info, billing status, profiles, and recent activity.
