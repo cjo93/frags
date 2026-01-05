@@ -20,6 +20,12 @@ interface AdminStats {
 }
 
 interface AIConfig {
+  ai_provider: string;
+  ai_configured: boolean;
+  supports_chat: boolean;
+  supports_vision: boolean;
+  supports_image: boolean;
+  image_enabled: boolean;
   openai_configured: boolean;
   openai_model: string;
   openai_key_prefix: string | null;
@@ -28,9 +34,13 @@ interface AIConfig {
 interface AdminConfig {
   dev_admin_enabled: boolean;
   dev_admin_email: string | null;
+  dev_admin_expires_at: string | null;
   admin_mutations_enabled: boolean;
   stripe_configured: boolean;
   stripe_webhook_configured: boolean;
+  ai_provider: string;
+  ai_configured: boolean;
+  image_enabled: boolean;
   openai_configured: boolean;
   app_base_url: string;
   api_base_url: string;
@@ -232,6 +242,14 @@ export default function AdminPage() {
                     {config.dev_admin_enabled ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
+                {config.dev_admin_expires_at && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Token Expires</span>
+                    <span className={new Date(config.dev_admin_expires_at) > new Date() ? 'text-amber-400' : 'text-red-400'}>
+                      {new Date(config.dev_admin_expires_at).toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-400">Admin Mutations</span>
                   <span className={config.admin_mutations_enabled ? 'text-amber-400' : 'text-gray-500'}>
@@ -259,19 +277,39 @@ export default function AdminPage() {
               <h3 className="font-semibold mb-3">AI Config</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">OpenAI</span>
-                  <span className={aiConfig.openai_configured ? 'text-green-400' : 'text-red-400'}>
-                    {aiConfig.openai_configured ? 'Configured' : 'Not Configured'}
+                  <span className="text-gray-400">Provider</span>
+                  <span className={aiConfig.ai_configured ? 'text-green-400' : 'text-amber-400'}>
+                    {aiConfig.ai_provider}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Model</span>
-                  <span className="text-white">{aiConfig.openai_model}</span>
+                  <span className="text-gray-400">Status</span>
+                  <span className={aiConfig.ai_configured ? 'text-green-400' : 'text-red-400'}>
+                    {aiConfig.ai_configured ? 'Configured' : 'Not Configured'}
+                  </span>
                 </div>
-                {aiConfig.openai_key_prefix && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Chat</span>
+                  <span className={aiConfig.supports_chat ? 'text-green-400' : 'text-gray-500'}>
+                    {aiConfig.supports_chat ? '✓ Enabled' : '○ Disabled'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Vision</span>
+                  <span className={aiConfig.supports_vision ? 'text-green-400' : 'text-gray-500'}>
+                    {aiConfig.supports_vision ? '✓ Enabled' : '○ Disabled'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Image Gen</span>
+                  <span className={aiConfig.image_enabled ? 'text-green-400' : 'text-gray-500'}>
+                    {aiConfig.image_enabled ? '✓ Enabled' : '○ Disabled'}
+                  </span>
+                </div>
+                {aiConfig.openai_model && (
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Key Prefix</span>
-                    <span className="text-gray-500 font-mono text-xs">{aiConfig.openai_key_prefix}</span>
+                    <span className="text-gray-400">Default Model</span>
+                    <span className="text-gray-300 font-mono text-xs">{aiConfig.openai_model}</span>
                   </div>
                 )}
               </div>

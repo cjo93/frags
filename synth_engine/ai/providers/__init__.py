@@ -10,6 +10,7 @@ from synth_engine.ai.providers.base import AIProvider
 from synth_engine.ai.providers.disabled import DisabledProvider
 from synth_engine.ai.providers.serverless_gpu import ServerlessGPUProvider
 from synth_engine.ai.providers.openai_provider import OpenAIProvider
+from synth_engine.ai.providers.cloudflare import CloudflareProvider
 
 
 def get_ai_provider(settings: "Settings") -> AIProvider:
@@ -18,8 +19,7 @@ def get_ai_provider(settings: "Settings") -> AIProvider:
     
     Provider selection order:
     1. SYNTH_AI_PROVIDER env var (explicit choice)
-    2. Fall back to openai if OPENAI_API_KEY is set (backwards compat)
-    3. Default to disabled
+    2. "auto" mode: try cloudflare → openai → disabled
     
     Security: Never accepts provider keys from browser.
     All keys must be server-side env vars.
@@ -29,9 +29,18 @@ def get_ai_provider(settings: "Settings") -> AIProvider:
     if provider_name == "disabled":
         return DisabledProvider()
     
+    if provider_name == "cloudflare":
+        if not settings.cloudflare_account_id or not settings.cloudflare_api_token:
+            return DisabledProvider()
+        return CloudflareProvider(
+            account_id=settings.cloudflare_account_id,
+            api_token=settings.cloudflare_api_token,
+            chat_model=settings.cloudflare_chat_model,
+            embed_model=settings.cloudflare_embed_model,
+        )
+    
     if provider_name == "serverless_gpu":
         if not settings.serverless_gpu_api_key or not settings.serverless_gpu_endpoint:
-            # Not configured - fall back to disabled
             return DisabledProvider()
         return ServerlessGPUProvider(
             api_key=settings.serverless_gpu_api_key,
@@ -51,12 +60,23 @@ def get_ai_provider(settings: "Settings") -> AIProvider:
         # Future: implement GeminiProvider
         return DisabledProvider()
     
-    # Backwards compatibility: if no provider specified but OpenAI key exists
-    if provider_name == "auto" and settings.openai_api_key:
-        return OpenAIProvider(
-            api_key=settings.openai_api_key,
-            default_model=settings.openai_model or "gpt-4o-mini",
-        )
+    # Auto mode: try providers in order of preference
+    if provider_name == "auto":
+        # 1. Try Cloudflare (free tier, recommended)
+        if settings.cloudflare_account_id and settings.cloudflare_api_token:
+            return CloudflareProvider(
+                account_id=settings.cloudflare_account_id,
+                api_token=settings.cloudflare_api_token,
+                chat_model=settings.cloudflare_chat_model,
+                embed_model=settings.cloudflare_embed_model,
+            )
+        
+        # 2. Try OpenAI (backwards compat)
+        if settings.openai_api_key:
+            return OpenAIProvider(
+                api_key=settings.openai_api_key,
+                default_model=settings.openai_model or "gpt-4o-mini",
+            )
     
     return DisabledProvider()
 
@@ -67,4 +87,5 @@ __all__ = [
     "DisabledProvider",
     "ServerlessGPUProvider", 
     "OpenAIProvider",
+    "CloudflareProvider",
 ]

@@ -22,10 +22,20 @@ import { useAuth } from '@/lib/auth-context';
 
 const DEV_MODE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEV === 'true';
 
+interface ConfigStatus {
+  dev_admin_enabled?: boolean;
+  dev_admin_expires_at?: string;
+  ai_provider?: string;
+  ai_configured?: boolean;
+  stripe_configured?: boolean;
+}
+
 export default function DevPage() {
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const [validating, setValidating] = useState(false);
+  const [configStatus, setConfigStatus] = useState<ConfigStatus | null>(null);
+  const [testingToken, setTestingToken] = useState(false);
   const { login, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
@@ -43,6 +53,70 @@ export default function DevPage() {
       setCurrentToken(localStorage.getItem('token'));
     }
   }, [isAuthenticated]);
+
+  // Fetch config status if we have a token
+  useEffect(() => {
+    if (currentToken && currentToken.length >= 32) {
+      fetchConfigStatus(currentToken);
+    }
+  }, [currentToken]);
+
+  const fetchConfigStatus = async (authToken: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
+      const res = await fetch(`${apiUrl}/admin/config`, {
+        headers: { 'Authorization': `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConfigStatus(data);
+      }
+    } catch {
+      // Ignore errors
+    }
+  };
+
+  if (!DEV_MODE_ENABLED) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white">
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-red-500">Dev Mode Disabled</h1>
+          <p className="text-gray-400 mt-2">This page is not available in this environment.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleTestToken = async () => {
+    if (token.length < 32) {
+      setError('Token must be at least 32 characters');
+      return;
+    }
+    
+    setTestingToken(true);
+    setError('');
+    setConfigStatus(null);
+    
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
+      const res = await fetch(`${apiUrl}/admin/config`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (!res.ok) {
+        setError(res.status === 401 ? 'Invalid or expired token' : `Error: ${res.status}`);
+        setTestingToken(false);
+        return;
+      }
+      
+      const data = await res.json();
+      setConfigStatus(data);
+      setTestingToken(false);
+    } catch {
+      setError('Network error - check API URL');
+      setTestingToken(false);
+    }
+  };
 
   if (!DEV_MODE_ENABLED) {
     return (
@@ -127,12 +201,35 @@ export default function DevPage() {
               </p>
             </div>
             
+            {/* Config Status */}
+            {configStatus && (
+              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 space-y-2">
+                <h3 className="text-sm font-medium text-gray-300 mb-3">System Status</h3>
+                <StatusRow label="AI Provider" value={configStatus.ai_provider || 'disabled'} ok={configStatus.ai_configured} />
+                <StatusRow label="Stripe" value={configStatus.stripe_configured ? 'configured' : 'not configured'} ok={configStatus.stripe_configured} />
+                {configStatus.dev_admin_expires_at && (
+                  <StatusRow 
+                    label="Token Expires" 
+                    value={new Date(configStatus.dev_admin_expires_at).toLocaleString()} 
+                    ok={new Date(configStatus.dev_admin_expires_at) > new Date()} 
+                  />
+                )}
+              </div>
+            )}
+            
             <div className="space-y-3">
               <button
                 onClick={() => router.push('/dashboard')}
                 className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition"
               >
                 Go to Dashboard
+              </button>
+              
+              <button
+                onClick={() => router.push('/admin')}
+                className="w-full py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg font-medium transition"
+              >
+                Admin Panel
               </button>
               
               <button
@@ -168,14 +265,41 @@ export default function DevPage() {
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
-
-            <button
-              type="submit"
-              disabled={validating || token.length < 32}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg font-medium transition"
-            >
-              {validating ? 'Validating...' : 'Enter Dev Mode'}
-            </button>
+            
+            {/* Config status after test */}
+            {configStatus && (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 space-y-2">
+                <p className="text-green-400 text-sm font-medium">✓ Token Valid</p>
+                <StatusRow label="AI Provider" value={configStatus.ai_provider || 'disabled'} ok={configStatus.ai_configured} />
+                <StatusRow label="Stripe" value={configStatus.stripe_configured ? 'configured' : 'not configured'} ok={configStatus.stripe_configured} />
+                {configStatus.dev_admin_expires_at && (
+                  <StatusRow 
+                    label="Expires" 
+                    value={new Date(configStatus.dev_admin_expires_at).toLocaleString()} 
+                    ok={new Date(configStatus.dev_admin_expires_at) > new Date()} 
+                  />
+                )}
+              </div>
+            )}
+            
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleTestToken}
+                disabled={testingToken || token.length < 32}
+                className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-800 disabled:text-gray-500 border border-gray-600 rounded-lg font-medium transition"
+              >
+                {testingToken ? 'Testing...' : 'Test Token'}
+              </button>
+              
+              <button
+                type="submit"
+                disabled={validating || token.length < 32}
+                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg font-medium transition"
+              >
+                {validating ? 'Validating...' : 'Enter Dev Mode'}
+              </button>
+            </div>
           </form>
         )}
 
@@ -185,6 +309,18 @@ export default function DevPage() {
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatusRow({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
+  return (
+    <div className="flex justify-between text-xs">
+      <span className="text-gray-400">{label}</span>
+      <span className={ok ? 'text-green-400' : 'text-amber-400'}>
+        {ok !== undefined && (ok ? '✓ ' : '○ ')}
+        {value}
+      </span>
     </div>
   );
 }

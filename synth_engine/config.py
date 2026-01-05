@@ -35,9 +35,16 @@ class Settings(BaseSettings):
     api_base_url: str = "https://api.defrag.app"
 
     # AI Provider configuration
-    # SYNTH_AI_PROVIDER: disabled | serverless_gpu | openai | gemini | auto
-    # "auto" = use OpenAI if OPENAI_API_KEY set, else disabled
+    # SYNTH_AI_PROVIDER: disabled | cloudflare | serverless_gpu | openai | gemini | auto
+    # "auto" = try cloudflare first, then openai, then disabled
     ai_provider: str = "auto"
+    
+    # Cloudflare Workers AI (recommended - free tier available)
+    # https://developers.cloudflare.com/workers-ai/
+    cloudflare_account_id: str = ""
+    cloudflare_api_token: str = ""
+    cloudflare_chat_model: str = "@cf/meta/llama-3.1-8b-instruct"
+    cloudflare_embed_model: str = "@cf/baai/bge-large-en-v1.5"
     
     # OpenAI (for AI synthesis) - used when ai_provider=openai or auto
     openai_api_key: str = ""
