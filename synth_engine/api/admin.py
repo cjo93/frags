@@ -126,7 +126,17 @@ def ai_config_status(
     Get AI configuration status (admin only).
     Does NOT expose the actual API key.
     """
+    from synth_engine.ai.providers import get_ai_provider
+    provider = get_ai_provider(settings)
+    
     return {
+        "ai_provider": provider.name,
+        "ai_configured": provider.is_configured,
+        "supports_chat": provider.is_configured,
+        "supports_vision": provider.supports_vision,
+        "supports_image": provider.supports_image_generation,
+        "image_enabled": settings.ai_image_enabled,
+        # Legacy fields for backwards compat
         "openai_configured": bool(settings.openai_api_key),
         "openai_model": settings.openai_model,
         "openai_key_prefix": settings.openai_api_key[:8] + "..." if settings.openai_api_key else None,
@@ -141,6 +151,9 @@ def admin_config_status(
     Get overall admin configuration status (admin only).
     Does NOT expose secrets.
     """
+    from synth_engine.ai.providers import get_ai_provider
+    provider = get_ai_provider(settings)
+    
     return {
         "dev_admin_enabled": settings.dev_admin_enabled,
         "dev_admin_email": settings.dev_admin_email if settings.dev_admin_enabled else None,
@@ -148,6 +161,11 @@ def admin_config_status(
         "admin_mutations_enabled": settings.admin_mutations_enabled,
         "stripe_configured": bool(settings.stripe_secret_key),
         "stripe_webhook_configured": bool(settings.stripe_webhook_secret),
+        # AI provider info
+        "ai_provider": provider.name,
+        "ai_configured": provider.is_configured,
+        "image_enabled": settings.ai_image_enabled and provider.supports_image_generation,
+        # Legacy field
         "openai_configured": bool(settings.openai_api_key),
         "app_base_url": settings.app_base_url,
         "api_base_url": settings.api_base_url,

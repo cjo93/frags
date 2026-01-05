@@ -6,14 +6,28 @@ import traceback
 from typing import Optional, List, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from synth_engine.api.deps import db, get_current_user, require_role
 from synth_engine.config import settings
 from synth_engine.storage import repo as R
 from synth_engine.storage.models import User, Profile, ComputedLayer
+from synth_engine.ai.providers import get_ai_provider
+from synth_engine.ai.providers.base import ChatMessage, ProviderError
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+
+# Lazy-loaded provider instance
+_provider = None
+
+
+def _get_provider():
+    """Get or create the AI provider instance."""
+    global _provider
+    if _provider is None:
+        _provider = get_ai_provider(settings)
+    return _provider
 
 
 def _build_context_for_profile(s: Session, profile_id: str) -> Dict[str, Any]:
@@ -152,23 +166,24 @@ def _get_citations(context: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def _check_openai_configured():
-    """Raise 501 if OpenAI is not configured."""
-    if not settings.openai_api_key:
+    """Raise 503 if AI provider is not configured."""
+    provider = _get_provider()
+    if not provider.is_configured:
         raise HTTPException(
-            status_code=501,
+            status_code=503,
             detail="AI synthesis is not yet enabled. Use /profiles/{id}/synthesis for deterministic insights.",
         )
 
 
 def _call_llm(messages: List[Dict[str, str]], context: Dict[str, Any]) -> str:
     """Call the LLM with context. Returns assistant response."""
-    # Note: caller should check _check_openai_configured() first
-    try:
-        import openai
-        client = openai.OpenAI(api_key=settings.openai_api_key)
+    provider = _get_provider()
+    
+    if not provider.is_configured:
+        raise HTTPException(503, "AI not configured")
 
-        # Build system prompt with grounded context
-        system_prompt = """You are Defrag's synthesis assistant. You help users understand personal insights 
+    # Build system prompt with grounded context
+    system_prompt = """You are Defrag's synthesis assistant. You help users understand personal insights 
 from computed layers: astrology, numerology, Human Design, Gene Keys, and psychological models.
 
 TONE:
@@ -187,17 +202,26 @@ RULES:
 
 USER'S CONTEXT:
 """
-        system_prompt += json.dumps(context, indent=2, default=str)
+    system_prompt += json.dumps(context, indent=2, default=str)
 
-        full_messages = [{"role": "system", "content": system_prompt}] + messages
+    # Convert to ChatMessage format
+    chat_messages = [ChatMessage(role="system", content=system_prompt)]
+    for m in messages:
+        chat_messages.append(ChatMessage(role=m["role"], content=m["content"]))
 
-        response = client.chat.completions.create(
-            model=settings.openai_model,
-            messages=full_messages,
-            max_tokens=1000,
+    try:
+        response = provider.chat(
+            messages=chat_messages,
             temperature=0.7,
+            max_tokens=1000,
         )
-        return response.choices[0].message.content or ""
+        return response.content
+    except ProviderError as e:
+        print(f"Provider error: {e}", flush=True)
+        traceback.print_exc()
+        if e.status_code == 503:
+            raise HTTPException(503, str(e))
+        return f"Sorry, I encountered an error processing your request. Please try again."
     except Exception as e:
         print(f"LLM error: {e}", flush=True)
         traceback.print_exc()
@@ -258,10 +282,11 @@ def chat(
     - If profile_id is provided, context is loaded from that profile's layers
     - If constellation_id is provided, context is loaded from constellation layers
     
-    Returns 503 if OpenAI is not configured.
+    Returns 503 if AI provider is not configured.
     """
-    # Check OpenAI is configured
-    if not settings.openai_api_key:
+    # Check AI provider is configured
+    provider = _get_provider()
+    if not provider.is_configured:
         raise HTTPException(503, "AI not configured")
     
     # Determine access level based on plan
@@ -396,4 +421,112 @@ def get_thread(
             }
             for m in messages
         ],
+    }
+
+
+# ============================================================================
+# Image Generation Endpoint
+# ============================================================================
+
+class ImageRequest(BaseModel):
+    """Request body for image generation."""
+    prompt: str
+    size: str = "1024x1024"  # 1024x1024, 1024x1792, 1792x1024
+
+
+@router.post("/image")
+def generate_image(
+    req: ImageRequest,
+    user=Depends(get_current_user),
+    s: Session = Depends(db),
+):
+    """
+    Generate an image from a text prompt.
+    
+    Access: Constellation tier only.
+    Requires SYNTH_AI_IMAGE_ENABLED=true and a provider that supports image generation.
+    
+    Returns:
+    - status: "success" | "error" | "not_enabled"
+    - image_url: URL to generated image (if success)
+    - error: Error message (if error)
+    """
+    # Check tier access - Constellation only
+    plan = R.plan_for_user(s, user.id)
+    if plan != "constellation":
+        raise HTTPException(
+            status_code=402,
+            detail="Image generation requires the Constellation tier. Visit /billing/checkout?price_tier=constellation to upgrade.",
+        )
+    
+    # Check if image generation is enabled
+    if not settings.ai_image_enabled:
+        return {
+            "status": "not_enabled",
+            "error": "Image generation is not enabled. Contact support to request access.",
+        }
+    
+    # Check provider supports image generation
+    provider = _get_provider()
+    if not provider.is_configured:
+        return {
+            "status": "not_enabled",
+            "error": "AI provider is not configured.",
+        }
+    
+    if not provider.supports_image_generation:
+        return {
+            "status": "not_enabled",
+            "error": f"The current AI provider ({provider.name}) does not support image generation.",
+        }
+    
+    # Generate image
+    try:
+        response = provider.image_generate(
+            prompt=req.prompt,
+            size=req.size,
+            model=settings.ai_image_model or None,
+        )
+        
+        # Record usage
+        R.record_usage(s, user.id, "ai_image", units=1)
+        
+        return {
+            "status": "success",
+            "image_url": response.url,
+            "model": response.model,
+        }
+        
+    except ProviderError as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }
+    except Exception as e:
+        print(f"Image generation error: {e}", flush=True)
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "error": "An unexpected error occurred during image generation.",
+        }
+
+
+# ============================================================================
+# Provider Info Endpoint (for debugging)
+# ============================================================================
+
+@router.get("/status")
+def ai_status(user=Depends(get_current_user)):
+    """
+    Get AI provider status (what's available).
+    
+    Does NOT expose sensitive config - just capabilities.
+    """
+    provider = _get_provider()
+    return {
+        "provider": provider.name,
+        "configured": provider.is_configured,
+        "supports_chat": provider.is_configured,
+        "supports_vision": provider.supports_vision,
+        "supports_image": provider.supports_image_generation and settings.ai_image_enabled,
     }

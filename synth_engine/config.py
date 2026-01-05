@@ -34,9 +34,27 @@ class Settings(BaseSettings):
     app_base_url: str = "https://defrag.app"
     api_base_url: str = "https://api.defrag.app"
 
-    # OpenAI (for AI synthesis)
+    # AI Provider configuration
+    # SYNTH_AI_PROVIDER: disabled | serverless_gpu | openai | gemini | auto
+    # "auto" = use OpenAI if OPENAI_API_KEY set, else disabled
+    ai_provider: str = "auto"
+    
+    # OpenAI (for AI synthesis) - used when ai_provider=openai or auto
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
+    
+    # Serverless GPU (vendor-neutral) - used when ai_provider=serverless_gpu
+    # Works with Modal, RunPod, Replicate, Together, or any OpenAI-compatible endpoint
+    serverless_gpu_api_key: str = ""
+    serverless_gpu_endpoint: str = ""  # e.g., https://your-endpoint.modal.run
+    
+    # AI model overrides (optional)
+    ai_default_model: str = ""  # Override default chat model
+    ai_image_model: str = ""    # Model for image generation
+    ai_vision_model: str = ""   # Model for vision/multimodal
+    
+    # Feature flags for multimedia
+    ai_image_enabled: bool = False  # Enable /ai/image endpoint
 
     # Free tier limits
     free_chat_daily_limit: int = 10

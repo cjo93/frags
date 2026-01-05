@@ -135,19 +135,63 @@ HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 BODY=$(echo "$RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" = "200" ]; then
-    AI_CONFIGURED=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['openai_configured'])" 2>/dev/null || echo "unknown")
-    MODEL=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['openai_model'])" 2>/dev/null || echo "unknown")
+    AI_PROVIDER=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['ai_provider'])" 2>/dev/null || echo "unknown")
+    AI_CONFIGURED=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['ai_configured'])" 2>/dev/null || echo "unknown")
+    IMAGE_ENABLED=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin)['image_enabled'])" 2>/dev/null || echo "unknown")
     if [ "$AI_CONFIGURED" = "True" ]; then
-        pass "AI configured (model: $MODEL)"
+        pass "AI configured (provider: $AI_PROVIDER, image_enabled: $IMAGE_ENABLED)"
     else
-        info "AI not configured (model: $MODEL)"
+        info "AI not configured (provider: $AI_PROVIDER)"
         pass "AI config endpoint accessible"
     fi
 else
     fail "AI config returned $HTTP_CODE"
 fi
 
-# Test 7: Invalid token rejection
+# Test 7: AI Chat endpoint (if configured)
+echo ""
+echo "--- Test 7: AI Chat (Dev Admin) ---"
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/ai/chat" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "message=Hello")
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" = "200" ]; then
+    pass "AI chat endpoint returned 200"
+elif [ "$HTTP_CODE" = "503" ]; then
+    info "AI chat returned 503 (not configured) - expected if no AI key set"
+    pass "AI chat endpoint accessible"
+else
+    warn "AI chat returned $HTTP_CODE"
+fi
+
+# Test 8: AI Image endpoint (should return not_enabled)
+echo ""
+echo "--- Test 8: AI Image Generation ---"
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/ai/image" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"prompt":"test"}')
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" = "200" ]; then
+    STATUS=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null || echo "unknown")
+    if [ "$STATUS" = "not_enabled" ]; then
+        pass "AI image endpoint returns 'not_enabled' (expected until configured)"
+    elif [ "$STATUS" = "success" ]; then
+        pass "AI image generation working!"
+    else
+        info "AI image status: $STATUS"
+        pass "AI image endpoint accessible"
+    fi
+else
+    warn "AI image returned $HTTP_CODE"
+fi
+
+# Test 9: Invalid token rejection
 echo ""
 echo "--- Test 7: Invalid Token Rejection ---"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/dashboard" -H "Authorization: Bearer invalid_token")
@@ -157,9 +201,9 @@ else
     warn "Invalid token returned $HTTP_CODE (expected 401)"
 fi
 
-# Test 8: Old DEV_ADMIN token rejection
+# Test 10: Old DEV_ADMIN token rejection
 echo ""
-echo "--- Test 8: Legacy 'DEV_ADMIN' Token Rejection ---"
+echo "--- Test 10: Legacy 'DEV_ADMIN' Token Rejection ---"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/dashboard" -H "Authorization: Bearer DEV_ADMIN")
 if [ "$HTTP_CODE" = "401" ]; then
     pass "Legacy 'DEV_ADMIN' token correctly rejected"
