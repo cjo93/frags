@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
@@ -36,7 +36,7 @@ export default function DevPage() {
   const [validating, setValidating] = useState(false);
   const [configStatus, setConfigStatus] = useState<ConfigStatus | null>(null);
   const [testingToken, setTestingToken] = useState(false);
-  const { login, isAuthenticated, logout } = useAuth();
+  const { login, logout } = useAuth();
   const router = useRouter();
 
   // Redirect if dev mode is disabled
@@ -46,22 +46,17 @@ export default function DevPage() {
     }
   }, [router]);
 
-  // If already authenticated, show exit option
-  const [currentToken, setCurrentToken] = useState<string | null>(null);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentToken(localStorage.getItem('token'));
-    }
-  }, [isAuthenticated]);
+  // Sync current token from localStorage using useSyncExternalStore
+  const currentToken = useSyncExternalStore(
+    (callback) => {
+      window.addEventListener('storage', callback);
+      return () => window.removeEventListener('storage', callback);
+    },
+    () => localStorage.getItem('token'),
+    () => null  // Server snapshot
+  );
 
-  // Fetch config status if we have a token
-  useEffect(() => {
-    if (currentToken && currentToken.length >= 32) {
-      fetchConfigStatus(currentToken);
-    }
-  }, [currentToken]);
-
-  const fetchConfigStatus = async (authToken: string) => {
+  const fetchConfigStatus = useCallback(async (authToken: string) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
       const res = await fetch(`${apiUrl}/admin/config`, {
@@ -69,12 +64,22 @@ export default function DevPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setConfigStatus(data);
+        startTransition(() => {
+          setConfigStatus(data);
+        });
       }
     } catch {
       // Ignore errors
     }
-  };
+  }, []);
+
+  // Fetch config status if we have a token
+  useEffect(() => {
+    if (currentToken && currentToken.length >= 32) {
+      // Using void to explicitly ignore the promise
+      void fetchConfigStatus(currentToken);
+    }
+  }, [currentToken, fetchConfigStatus]);
 
   if (!DEV_MODE_ENABLED) {
     return (
@@ -164,7 +169,7 @@ export default function DevPage() {
       // Token works - store it and redirect
       login(token);
       router.push('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Network error - check API URL');
       setValidating(false);
     }
@@ -172,7 +177,7 @@ export default function DevPage() {
 
   const handleLogout = () => {
     logout();
-    setCurrentToken(null);
+    // Token will be cleared from localStorage by logout(), useSyncExternalStore will pick up the change
   };
 
   const isDevAdminSession = currentToken && currentToken.length >= 32 && currentToken !== 'DEV_ADMIN';

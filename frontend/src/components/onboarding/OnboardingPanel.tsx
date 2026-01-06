@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface OnboardingPanelProps {
   onDismiss: () => void;
@@ -9,12 +9,11 @@ interface OnboardingPanelProps {
 const STORAGE_KEY = 'defrag_onboarding_seen';
 
 export function useOnboardingState() {
-  const [hasSeen, setHasSeen] = useState(true); // Default true to prevent flash
-
-  useEffect(() => {
-    const seen = localStorage.getItem(STORAGE_KEY);
-    setHasSeen(seen === 'true');
-  }, []);
+  const [hasSeen, setHasSeen] = useState(() => {
+    // Initialize from localStorage (SSR-safe: default to true)
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem(STORAGE_KEY) === 'true';
+  });
 
   const markSeen = () => {
     localStorage.setItem(STORAGE_KEY, 'true');

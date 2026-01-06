@@ -50,7 +50,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
 const DEV_MODE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEV === 'true';
 
 export default function AdminPage() {
-  const { token, isAuthenticated, billing } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const router = useRouter();
   
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -103,7 +103,7 @@ export default function AdminPage() {
       setConfig(configData);
       setAIConfig(aiConfigData);
       setUsers(usersData.users);
-    } catch (e) {
+    } catch {
       setError('Network error');
     } finally {
       setLoading(false);
@@ -146,7 +146,7 @@ export default function AdminPage() {
       const result = await res.json();
       setImpersonateResult(result);
       setSelectedUser(user);
-    } catch (e) {
+    } catch {
       alert('Network error');
     }
   };

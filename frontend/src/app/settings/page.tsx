@@ -158,11 +158,11 @@ export default function SettingsPage() {
               </p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                 <strong className="text-neutral-900 dark:text-white">AI is interpretation only.</strong>{' '}
-                AI explains computed data; it doesn't generate placements or make predictions.
+                AI explains computed data; it doesn&apos;t generate placements or make predictions.
               </p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                 <strong className="text-neutral-900 dark:text-white">Your data stays yours.</strong>{' '}
-                No cross-user data sharing. AI providers don't store or train on your data.
+                No cross-user data sharing. AI providers don&apos;t store or train on your data.
               </p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                 <strong className="text-neutral-900 dark:text-white">Not medical or financial advice.</strong>{' '}

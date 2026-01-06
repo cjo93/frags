@@ -58,7 +58,7 @@ export function ConstellationCanvas({
   };
 
   // Structured layout: horizontal bands by role
-  const getNodePosition = (member: ConstellationMember, index: number): { x: number; y: number } => {
+  const getNodePosition = (member: ConstellationMember): { x: number; y: number } => {
     const role = member.role || 'extended';
     
     // Primary band (top center)
@@ -86,9 +86,9 @@ export function ConstellationCanvas({
 
   // Build node positions from members or use placeholder
   const nodes = memberCount > 0 
-    ? members.map((m, i) => ({ 
+    ? members.map((m) => ({ 
         ...m, 
-        ...getNodePosition(m, i),
+        ...getNodePosition(m),
         initial: m.name.charAt(0).toUpperCase(),
       }))
     : [

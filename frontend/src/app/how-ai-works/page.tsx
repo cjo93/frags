@@ -62,7 +62,7 @@ export default function HowAIWorksPage() {
             <p>
               Defrag uses <strong className="text-neutral-900 dark:text-white">deterministic synthesis</strong> as its foundation. 
               Your natal chart, numerology profile, Human Design, and Gene Keys are computed using established algorithms—not AI. 
-              These calculations are reproducible, auditable, and don't change based on model updates.
+              These calculations are reproducible, auditable, and don&apos;t change based on model updates.
             </p>
             <p>
               AI enters only as an <strong className="text-neutral-900 dark:text-white">interpretation layer</strong>—an assistant that 
@@ -101,7 +101,7 @@ export default function HowAIWorksPage() {
 
         {/* Section: What AI Cannot Do */}
         <div>
-          <h2 className="text-xl font-medium mb-4">What AI doesn't do</h2>
+          <h2 className="text-xl font-medium mb-4">What AI doesn&apos;t do</h2>
           <ul className="space-y-3 text-neutral-600 dark:text-neutral-400">
             <li className="flex items-start gap-3">
               <span className="text-red-600 dark:text-red-400 mt-1">✗</span>
@@ -138,11 +138,11 @@ export default function HowAIWorksPage() {
               <li>• <strong className="text-neutral-900 dark:text-white">Not stored</strong> by the AI provider beyond the request</li>
               <li>• <strong className="text-neutral-900 dark:text-white">Not used</strong> to train AI models</li>
               <li>• <strong className="text-neutral-900 dark:text-white">Encrypted</strong> in transit via TLS</li>
-              <li>• <strong className="text-neutral-900 dark:text-white">Scoped</strong> to only the profile you're viewing</li>
+              <li>• <strong className="text-neutral-900 dark:text-white">Scoped</strong> to only the profile you&apos;re viewing</li>
             </ul>
             <p>
               We currently use <strong className="text-neutral-900 dark:text-white">Cloudflare Workers AI</strong> for inference. 
-              Your data never leaves Cloudflare's network and is processed on their secure edge infrastructure.
+              Your data never leaves Cloudflare&apos;s network and is processed on their secure edge infrastructure.
             </p>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function HowAIWorksPage() {
                 <code className="text-sm text-neutral-500 dark:text-neutral-400">Llama 3.1 8B</code>
               </div>
               <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                Open-source model from Meta, run on Cloudflare's infrastructure
+                Open-source model from Meta, run on Cloudflare&apos;s infrastructure
               </p>
             </div>
             <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
@@ -166,7 +166,7 @@ export default function HowAIWorksPage() {
                 <code className="text-sm text-neutral-500 dark:text-neutral-400">Whisper</code>
               </div>
               <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                OpenAI's open-source speech recognition model
+                OpenAI&apos;s open-source speech recognition model
               </p>
             </div>
             <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg opacity-50">
@@ -246,11 +246,11 @@ export default function HowAIWorksPage() {
             </p>
             <p>
               Every AI response in Defrag includes citations to the specific computed layers it drew from. 
-              You can always trace an interpretation back to its source data. This isn't about blind trust; 
-              it's about informed exploration.
+              You can always trace an interpretation back to its source data. This isn&apos;t about blind trust; 
+              it&apos;s about informed exploration.
             </p>
             <p>
-              We'll continue to be transparent about what models we use, how your data flows, and what 
+              We&apos;ll continue to be transparent about what models we use, how your data flows, and what 
               limitations exist. AI is a tool, and tools work best when you understand how they work.
             </p>
           </div>
@@ -262,7 +262,7 @@ export default function HowAIWorksPage() {
             <div>
               <h3 className="font-medium">Questions?</h3>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                We're happy to explain anything in more detail.
+                We&apos;re happy to explain anything in more detail.
               </p>
             </div>
             <Link

@@ -1,7 +1,7 @@
 'use client';
 
+// Note: error prop is required by Next.js but not used in this component
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
