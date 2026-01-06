@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     cloudflare_api_token: str = ""
     cloudflare_chat_model: str = "@cf/meta/llama-3.1-8b-instruct"
     cloudflare_embed_model: str = "@cf/baai/bge-large-en-v1.5"
+    cloudflare_image_model: str = "@cf/stabilityai/stable-diffusion-xl-base-1.0"
+    cloudflare_stt_model: str = "@cf/openai/whisper"  # Speech-to-text
+    cloudflare_tts_model: str = ""  # Text-to-speech (not yet available on CF)
     
     # OpenAI (for AI synthesis) - used when ai_provider=openai or auto
     openai_api_key: str = ""
@@ -62,6 +65,7 @@ class Settings(BaseSettings):
     
     # Feature flags for multimedia
     ai_image_enabled: bool = False  # Enable /ai/image endpoint
+    ai_audio_enabled: bool = False  # Enable /ai/transcribe and /ai/speak endpoints
 
     # Free tier limits
     free_chat_daily_limit: int = 10

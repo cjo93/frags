@@ -1,6 +1,7 @@
 """Cloudflare Workers AI Provider - free tier with OpenAI-compatible API."""
 from __future__ import annotations
 
+import base64
 import logging
 from typing import List, Optional, Union
 import httpx
@@ -11,6 +12,8 @@ from synth_engine.ai.providers.base import (
     ChatResponse,
     VisionResponse,
     ImageGenerationResponse,
+    TranscriptionResponse,
+    SpeechResponse,
     ProviderError,
 )
 
@@ -29,6 +32,8 @@ class CloudflareProvider(AIProvider):
     - SYNTH_CLOUDFLARE_API_TOKEN: API token with Workers AI permissions
     - SYNTH_CLOUDFLARE_CHAT_MODEL: Model for chat (default: @cf/meta/llama-3.1-8b-instruct)
     - SYNTH_CLOUDFLARE_EMBED_MODEL: Model for embeddings (default: @cf/baai/bge-large-en-v1.5)
+    - SYNTH_CLOUDFLARE_IMAGE_MODEL: Model for images (default: @cf/stabilityai/stable-diffusion-xl-base-1.0)
+    - SYNTH_CLOUDFLARE_STT_MODEL: Model for speech-to-text (default: @cf/openai/whisper)
     
     Free tier includes:
     - 10,000 neurons/day for most models
@@ -45,16 +50,24 @@ class CloudflareProvider(AIProvider):
         api_token: str,
         chat_model: str = "@cf/meta/llama-3.1-8b-instruct",
         embed_model: str = "@cf/baai/bge-large-en-v1.5",
+        image_model: str = "@cf/stabilityai/stable-diffusion-xl-base-1.0",
+        stt_model: str = "@cf/openai/whisper",
+        tts_model: str = "",  # Not yet available on CF
         timeout: float = 60.0,
     ):
         self._account_id = account_id
         self._api_token = api_token
         self._chat_model = chat_model
         self._embed_model = embed_model
+        self._image_model = image_model
+        self._stt_model = stt_model
+        self._tts_model = tts_model
         self._timeout = timeout
         
         # Base URL for Cloudflare Workers AI OpenAI-compatible endpoint
         self._base_url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1"
+        # Native endpoint for non-OpenAI-compatible APIs
+        self._native_url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run"
     
     @property
     def name(self) -> str:
@@ -71,8 +84,18 @@ class CloudflareProvider(AIProvider):
     
     @property
     def supports_image_generation(self) -> bool:
-        # Cloudflare has image models but requires different API
-        return False
+        # Cloudflare supports SDXL via native API
+        return bool(self._image_model)
+    
+    @property
+    def supports_speech_to_text(self) -> bool:
+        # Cloudflare has Whisper
+        return bool(self._stt_model)
+    
+    @property
+    def supports_text_to_speech(self) -> bool:
+        # Cloudflare doesn't have TTS yet
+        return bool(self._tts_model)
     
     def _headers(self) -> dict:
         """Build auth headers. Never log the actual token."""
@@ -212,6 +235,185 @@ class CloudflareProvider(AIProvider):
         except httpx.TimeoutException:
             raise ProviderError(
                 message="Embedding request timed out",
+                provider=self.name,
+                status_code=504,
+            )
+        except httpx.RequestError as e:
+            raise ProviderError(
+                message=f"Network error: {str(e)}",
+                provider=self.name,
+                status_code=502,
+            )
+    
+    def image_generate(
+        self,
+        prompt: str,
+        model: Optional[str] = None,
+        size: str = "1024x1024",
+        quality: str = "standard",
+        n: int = 1,
+    ) -> ImageGenerationResponse:
+        """
+        Generate an image using Cloudflare's Stable Diffusion models.
+        
+        Uses the native Cloudflare /ai/run endpoint.
+        Returns base64-encoded PNG image data.
+        """
+        model_name = model or self._image_model
+        if not model_name:
+            raise ProviderError(
+                message="No image model configured",
+                provider=self.name,
+                status_code=400,
+            )
+        
+        url = f"{self._native_url}/{model_name}"
+        
+        # Parse size (Cloudflare uses width/height)
+        width, height = 1024, 1024
+        if "x" in size:
+            try:
+                width, height = map(int, size.split("x"))
+            except ValueError:
+                pass
+        
+        payload = {
+            "prompt": prompt,
+            "width": width,
+            "height": height,
+        }
+        
+        try:
+            with httpx.Client(timeout=120.0) as client:  # Image gen can take longer
+                response = client.post(url, json=payload, headers=self._headers())
+                
+                if response.status_code == 401:
+                    raise ProviderError(
+                        message="Invalid Cloudflare API token",
+                        provider=self.name,
+                        status_code=401,
+                    )
+                
+                if response.status_code == 429:
+                    raise ProviderError(
+                        message="Rate limit exceeded",
+                        provider=self.name,
+                        status_code=429,
+                    )
+                
+                if response.status_code != 200:
+                    raise ProviderError(
+                        message=f"Image generation failed: {response.status_code}",
+                        provider=self.name,
+                        status_code=response.status_code,
+                    )
+                
+                # Cloudflare returns binary image data directly
+                image_bytes = response.content
+                b64_data = base64.b64encode(image_bytes).decode("utf-8")
+                
+                return ImageGenerationResponse(
+                    b64_json=b64_data,
+                    model=model_name,
+                    raw={"size": len(image_bytes)},
+                )
+                
+        except httpx.TimeoutException:
+            raise ProviderError(
+                message="Image generation timed out",
+                provider=self.name,
+                status_code=504,
+            )
+        except httpx.RequestError as e:
+            raise ProviderError(
+                message=f"Network error: {str(e)}",
+                provider=self.name,
+                status_code=502,
+            )
+    
+    def transcribe(
+        self,
+        audio_bytes: bytes,
+        model: Optional[str] = None,
+        language: Optional[str] = None,
+    ) -> TranscriptionResponse:
+        """
+        Transcribe audio using Cloudflare's Whisper model.
+        
+        Uses the native Cloudflare /ai/run endpoint.
+        Accepts various audio formats (mp3, wav, webm, etc.)
+        """
+        model_name = model or self._stt_model
+        if not model_name:
+            raise ProviderError(
+                message="No speech-to-text model configured",
+                provider=self.name,
+                status_code=400,
+            )
+        
+        url = f"{self._native_url}/{model_name}"
+        
+        # Cloudflare Whisper accepts audio as base64 or binary
+        # Using binary upload via multipart form
+        try:
+            with httpx.Client(timeout=120.0) as client:
+                # Cloudflare expects raw binary audio with appropriate content-type
+                headers = {
+                    "Authorization": f"Bearer {self._api_token}",
+                }
+                
+                # Try binary upload first (simpler)
+                response = client.post(
+                    url,
+                    content=audio_bytes,
+                    headers={**headers, "Content-Type": "application/octet-stream"},
+                )
+                
+                if response.status_code == 401:
+                    raise ProviderError(
+                        message="Invalid Cloudflare API token",
+                        provider=self.name,
+                        status_code=401,
+                    )
+                
+                if response.status_code == 429:
+                    raise ProviderError(
+                        message="Rate limit exceeded",
+                        provider=self.name,
+                        status_code=429,
+                    )
+                
+                if response.status_code != 200:
+                    error_detail = ""
+                    try:
+                        error_data = response.json()
+                        if "errors" in error_data:
+                            error_detail = str(error_data["errors"])
+                    except Exception:
+                        error_detail = response.text[:200]
+                    
+                    raise ProviderError(
+                        message=f"Transcription failed: {response.status_code} - {error_detail}",
+                        provider=self.name,
+                        status_code=response.status_code,
+                    )
+                
+                data = response.json()
+                
+                # Cloudflare returns {"result": {"text": "...", "word_timestamps": [...]}}
+                text = ""
+                if "result" in data:
+                    text = data["result"].get("text", "")
+                
+                return TranscriptionResponse(
+                    text=text,
+                    model=model_name,
+                    raw=data.get("result"),
+                )
+                
+        except httpx.TimeoutException:
+            raise ProviderError(
+                message="Transcription timed out",
                 provider=self.name,
                 status_code=504,
             )

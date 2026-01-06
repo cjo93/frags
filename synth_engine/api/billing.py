@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from synth_engine.api.deps import db, get_current_user, require_role
+from synth_engine.api.deps import db, get_current_user, require_role, is_dev_admin_user
 from synth_engine.config import settings
 from synth_engine.storage import repo as R
 from synth_engine.storage.models import StripeWebhookEvent
@@ -114,6 +114,10 @@ def create_checkout(
     Accepts tier names: insight, integration, constellation
     Also accepts legacy names: basic, pro, family (for backwards compatibility)
     """
+    # Block DEV_ADMIN from billing operations
+    if is_dev_admin_user(user):
+        raise HTTPException(403, "Billing operations not available for DEV_ADMIN")
+    
     _stripe_init()
 
     # Map tier name to price_id (support both new and legacy tier names)
@@ -160,6 +164,10 @@ def create_portal(
     s: Session = Depends(db),
 ):
     """Create a Stripe billing portal session."""
+    # Block DEV_ADMIN from billing operations
+    if is_dev_admin_user(user):
+        raise HTTPException(403, "Billing operations not available for DEV_ADMIN")
+    
     _stripe_init()
 
     customer_id = R.get_stripe_customer_id(s, user.id)

@@ -512,6 +512,226 @@ def generate_image(
 
 
 # ============================================================================
+# Audio Endpoints
+# ============================================================================
+
+from fastapi import Request as FastAPIRequest
+
+
+@router.post("/transcribe")
+async def transcribe_audio(
+    request: FastAPIRequest,
+    language: Optional[str] = None,
+    user=Depends(get_current_user),
+    s: Session = Depends(db),
+):
+    """
+    Transcribe audio to text using speech-to-text AI.
+    
+    Access: Constellation tier only
+    
+    Accepts audio as binary upload with Content-Type: audio/* or application/octet-stream
+    
+    Supported formats: mp3, wav, webm, ogg, m4a
+    Max size: 25MB
+    
+    Returns:
+    - status: "success" | "error" | "not_enabled"
+    - text: Transcribed text (if success)
+    - language: Detected language (if available)
+    - error: Error message (if error)
+    """
+    import base64
+    
+    # Check tier access - Constellation only
+    plan = R.plan_for_user(s, user.id)
+    if plan != "constellation":
+        raise HTTPException(
+            status_code=402,
+            detail="Audio transcription requires the Constellation tier. Visit /billing/checkout?price_tier=constellation to upgrade.",
+        )
+    
+    # Check if audio features are enabled
+    if not settings.ai_audio_enabled:
+        return {
+            "status": "not_enabled",
+            "error": "Audio transcription is not enabled. Contact support to request access.",
+        }
+    
+    # Check provider supports speech-to-text
+    provider = _get_provider()
+    if not provider.is_configured:
+        return {
+            "status": "not_enabled",
+            "error": "AI provider is not configured.",
+        }
+    
+    if not provider.supports_speech_to_text:
+        return {
+            "status": "not_enabled",
+            "error": f"The current AI provider ({provider.name}) does not support speech-to-text.",
+        }
+    
+    # Get audio data from request body
+    content_type = request.headers.get("content-type", "")
+    body = await request.body()
+    
+    if not body:
+        raise HTTPException(400, "No audio data provided")
+    
+    # Check size limit (25MB)
+    if len(body) > 25 * 1024 * 1024:
+        raise HTTPException(413, "Audio file too large. Maximum size is 25MB.")
+    
+    # Handle JSON body with base64 audio
+    audio_bytes: bytes
+    if "application/json" in content_type:
+        import json
+        try:
+            data = json.loads(body)
+            if "audio" not in data:
+                raise HTTPException(400, "JSON body must contain 'audio' field with base64-encoded audio")
+            audio_bytes = base64.b64decode(data["audio"])
+            language = data.get("language", language)
+        except json.JSONDecodeError:
+            raise HTTPException(400, "Invalid JSON body")
+        except Exception as e:
+            raise HTTPException(400, f"Failed to decode audio: {str(e)}")
+    else:
+        # Binary upload
+        audio_bytes = body
+    
+    # Transcribe
+    try:
+        response = provider.transcribe(
+            audio_bytes=audio_bytes,
+            language=language,
+        )
+        
+        # Record usage
+        R.record_usage(s, user.id, "ai_transcribe", units=1)
+        
+        result = {
+            "status": "success",
+            "text": response.text,
+            "model": response.model,
+        }
+        if response.language:
+            result["language"] = response.language
+        if response.duration:
+            result["duration_seconds"] = response.duration
+            
+        return result
+        
+    except ProviderError as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }
+    except Exception as e:
+        print(f"Transcription error: {e}", flush=True)
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "error": "An unexpected error occurred during transcription.",
+        }
+
+
+@router.post("/speak")
+async def text_to_speech(
+    text: str,
+    voice: str = "alloy",
+    speed: float = 1.0,
+    format: str = "mp3",
+    user=Depends(get_current_user),
+    s: Session = Depends(db),
+):
+    """
+    Convert text to speech using text-to-speech AI.
+    
+    Access: Constellation tier only
+    
+    Args:
+    - text: Text to synthesize (max 4096 characters)
+    - voice: Voice ID (provider-specific, default: "alloy")
+    - speed: Speed multiplier (0.5 to 2.0, default: 1.0)
+    - format: Output format (mp3, wav, ogg)
+    
+    Returns audio bytes as response with appropriate content-type.
+    """
+    from fastapi.responses import Response
+    
+    # Check tier access - Constellation only
+    plan = R.plan_for_user(s, user.id)
+    if plan != "constellation":
+        raise HTTPException(
+            status_code=402,
+            detail="Text-to-speech requires the Constellation tier. Visit /billing/checkout?price_tier=constellation to upgrade.",
+        )
+    
+    # Check if audio features are enabled
+    if not settings.ai_audio_enabled:
+        raise HTTPException(503, "Text-to-speech is not enabled.")
+    
+    # Check provider supports TTS
+    provider = _get_provider()
+    if not provider.is_configured:
+        raise HTTPException(503, "AI provider is not configured.")
+    
+    if not provider.supports_text_to_speech:
+        raise HTTPException(
+            503,
+            f"The current AI provider ({provider.name}) does not support text-to-speech.",
+        )
+    
+    # Validate inputs
+    if not text or len(text) > 4096:
+        raise HTTPException(400, "Text must be 1-4096 characters")
+    
+    if speed < 0.5 or speed > 2.0:
+        raise HTTPException(400, "Speed must be between 0.5 and 2.0")
+    
+    if format not in ("mp3", "wav", "ogg"):
+        raise HTTPException(400, "Format must be mp3, wav, or ogg")
+    
+    # Generate speech
+    try:
+        response = provider.speak(
+            text=text,
+            voice=voice,
+            speed=speed,
+            format=format,
+        )
+        
+        # Record usage
+        R.record_usage(s, user.id, "ai_speak", units=1)
+        
+        # Return audio bytes
+        content_type = {
+            "mp3": "audio/mpeg",
+            "wav": "audio/wav",
+            "ogg": "audio/ogg",
+        }.get(format, "audio/mpeg")
+        
+        return Response(
+            content=response.audio_bytes,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"attachment; filename=speech.{format}",
+            },
+        )
+        
+    except ProviderError as e:
+        raise HTTPException(503, str(e))
+    except NotImplementedError:
+        raise HTTPException(503, "Text-to-speech is not available with the current provider.")
+    except Exception as e:
+        print(f"TTS error: {e}", flush=True)
+        traceback.print_exc()
+        raise HTTPException(500, "An unexpected error occurred during speech synthesis.")
+
+
+# ============================================================================
 # Provider Info Endpoint (for debugging)
 # ============================================================================
 
@@ -529,4 +749,6 @@ def ai_status(user=Depends(get_current_user)):
         "supports_chat": provider.is_configured,
         "supports_vision": provider.supports_vision,
         "supports_image": provider.supports_image_generation and settings.ai_image_enabled,
+        "supports_transcribe": provider.supports_speech_to_text and settings.ai_audio_enabled,
+        "supports_speak": provider.supports_text_to_speech and settings.ai_audio_enabled,
     }

@@ -147,19 +147,36 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Data & computation */}
+        {/* Data & Privacy */}
         <section className="mb-12">
-          <h2 className="text-lg font-medium mb-4">Data & computation</h2>
-          <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-3">
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              AI features generate interpretations, not advice or diagnosis.
-            </p>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              All synthesis is deterministic. The same inputs produce the same outputs.
-            </p>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              No data is shared between users.
-            </p>
+          <h2 className="text-lg font-medium mb-4">Data & Privacy</h2>
+          <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-4">
+            <div className="space-y-3">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <strong className="text-neutral-900 dark:text-white">Deterministic synthesis.</strong>{' '}
+                Chart calculations use established algorithms—same inputs always produce same outputs.
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <strong className="text-neutral-900 dark:text-white">AI is interpretation only.</strong>{' '}
+                AI explains computed data; it doesn't generate placements or make predictions.
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <strong className="text-neutral-900 dark:text-white">Your data stays yours.</strong>{' '}
+                No cross-user data sharing. AI providers don't store or train on your data.
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <strong className="text-neutral-900 dark:text-white">Not medical or financial advice.</strong>{' '}
+                Defrag is a tool for self-reflection, not a substitute for professional guidance.
+              </p>
+            </div>
+            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <Link
+                href="/how-ai-works"
+                className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4"
+              >
+                Learn how AI works in Defrag →
+              </Link>
+            </div>
           </div>
         </section>
       </div>

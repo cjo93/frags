@@ -40,6 +40,25 @@ class ImageGenerationResponse:
     raw: Optional[Any] = None
 
 
+@dataclass
+class TranscriptionResponse:
+    """Response from speech-to-text transcription."""
+    text: str
+    language: Optional[str] = None  # Detected language
+    duration: Optional[float] = None  # Audio duration in seconds
+    model: str = ""
+    raw: Optional[Any] = None
+
+
+@dataclass
+class SpeechResponse:
+    """Response from text-to-speech generation."""
+    audio_bytes: bytes  # Raw audio data
+    format: str = "mp3"  # Audio format (mp3, wav, ogg)
+    model: str = ""
+    raw: Optional[Any] = None
+
+
 class AIProvider(ABC):
     """
     Abstract base class for AI providers.
@@ -76,6 +95,16 @@ class AIProvider(ABC):
     @property
     def supports_image_generation(self) -> bool:
         """Whether this provider supports image generation."""
+        return False
+    
+    @property
+    def supports_speech_to_text(self) -> bool:
+        """Whether this provider supports speech-to-text transcription."""
+        return False
+    
+    @property
+    def supports_text_to_speech(self) -> bool:
+        """Whether this provider supports text-to-speech synthesis."""
         return False
     
     @abstractmethod
@@ -132,6 +161,56 @@ class AIProvider(ABC):
         Default implementation raises NotImplementedError.
         """
         raise NotImplementedError(f"{self.name} does not support image generation")
+    
+    def transcribe(
+        self,
+        audio_bytes: bytes,
+        model: Optional[str] = None,
+        language: Optional[str] = None,
+    ) -> "TranscriptionResponse":
+        """
+        Transcribe audio to text (optional capability).
+        
+        Args:
+            audio_bytes: Raw audio file bytes (mp3, wav, webm, etc.)
+            model: Model identifier, uses default if None
+            language: Optional language hint (ISO 639-1 code)
+            
+        Returns:
+            TranscriptionResponse with transcribed text
+            
+        Raises:
+            NotImplementedError: If provider doesn't support STT
+            ProviderError: If the request fails
+        """
+        raise NotImplementedError(f"{self.name} does not support speech-to-text")
+    
+    def speak(
+        self,
+        text: str,
+        model: Optional[str] = None,
+        voice: str = "alloy",
+        speed: float = 1.0,
+        format: str = "mp3",
+    ) -> "SpeechResponse":
+        """
+        Convert text to speech (optional capability).
+        
+        Args:
+            text: Text to synthesize
+            model: Model identifier, uses default if None
+            voice: Voice name/ID (provider-specific)
+            speed: Speech speed multiplier (0.5-2.0)
+            format: Output format (mp3, wav, ogg)
+            
+        Returns:
+            SpeechResponse with audio bytes
+            
+        Raises:
+            NotImplementedError: If provider doesn't support TTS
+            ProviderError: If the request fails
+        """
+        raise NotImplementedError(f"{self.name} does not support text-to-speech")
 
 
 class ProviderError(Exception):

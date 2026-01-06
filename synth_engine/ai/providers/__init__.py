@@ -37,6 +37,9 @@ def get_ai_provider(settings: "Settings") -> AIProvider:
             api_token=settings.cloudflare_api_token,
             chat_model=settings.cloudflare_chat_model,
             embed_model=settings.cloudflare_embed_model,
+            image_model=settings.cloudflare_image_model,
+            stt_model=settings.cloudflare_stt_model,
+            tts_model=settings.cloudflare_tts_model,
         )
     
     if provider_name == "serverless_gpu":
@@ -69,6 +72,9 @@ def get_ai_provider(settings: "Settings") -> AIProvider:
                 api_token=settings.cloudflare_api_token,
                 chat_model=settings.cloudflare_chat_model,
                 embed_model=settings.cloudflare_embed_model,
+                image_model=settings.cloudflare_image_model,
+                stt_model=settings.cloudflare_stt_model,
+                tts_model=settings.cloudflare_tts_model,
             )
         
         # 2. Try OpenAI (backwards compat)
