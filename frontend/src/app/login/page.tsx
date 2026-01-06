@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login as apiLogin, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,14 +14,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    // Check Turnstile if enabled
+    if (isTurnstileEnabled() && !turnstileToken) {
+      setError('Please complete the verification');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      const { token } = await apiLogin(email, password);
+      const { token } = await apiLogin(email, password, turnstileToken || undefined);
       login(token);
       router.push('/dashboard');
     } catch (err) {
@@ -88,6 +97,16 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-base focus:border-neutral-900 dark:focus:border-white transition-colors"
               />
             </div>
+
+            {/* Turnstile CAPTCHA */}
+            {isTurnstileEnabled() && (
+              <Turnstile
+                siteKey={getTurnstileSiteKey()}
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken(null)}
+                className="flex justify-center"
+              />
+            )}
 
             <button
               type="submit"

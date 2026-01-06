@@ -428,6 +428,101 @@ def get_thread(
 # Image Generation Endpoint
 # ============================================================================
 
+# ============================================================================
+# Embeddings Endpoint
+# ============================================================================
+
+class EmbedRequest(BaseModel):
+    """Request body for text embeddings."""
+    texts: List[str]  # List of texts to embed (max 100)
+
+
+@router.post("/embed")
+def embed_texts(
+    req: EmbedRequest,
+    user=Depends(get_current_user),
+    s: Session = Depends(db),
+):
+    """
+    Generate embeddings for text inputs.
+    
+    Access: Integration tier and above.
+    
+    Args:
+    - texts: List of strings to embed (max 100 texts, max 8000 chars each)
+    
+    Returns:
+    - status: "success" | "error" | "not_enabled"
+    - embeddings: List of embedding vectors (if success)
+    - model: Model used for embedding
+    - error: Error message (if error)
+    """
+    # Check tier access - Integration or Constellation
+    plan = R.plan_for_user(s, user.id)
+    if plan not in ("integration", "constellation"):
+        raise HTTPException(
+            status_code=402,
+            detail="Embeddings require the Integration tier or above. Visit /billing/checkout?price_tier=integration to upgrade.",
+        )
+    
+    # Validate input
+    if not req.texts:
+        raise HTTPException(400, "No texts provided")
+    
+    if len(req.texts) > 100:
+        raise HTTPException(400, "Maximum 100 texts per request")
+    
+    for i, text in enumerate(req.texts):
+        if len(text) > 8000:
+            raise HTTPException(400, f"Text {i} exceeds maximum length of 8000 characters")
+    
+    # Check provider
+    provider = _get_provider()
+    if not provider.is_configured:
+        return {
+            "status": "not_enabled",
+            "error": "AI provider is not configured.",
+        }
+    
+    # Check if provider has embed method
+    if not hasattr(provider, 'embed'):
+        return {
+            "status": "not_enabled",
+            "error": f"The current AI provider ({provider.name}) does not support embeddings.",
+        }
+    
+    # Generate embeddings
+    try:
+        embeddings = provider.embed(texts=req.texts)
+        
+        # Record usage
+        R.record_usage(s, user.id, "ai_embed", units=len(req.texts))
+        
+        return {
+            "status": "success",
+            "embeddings": embeddings,
+            "model": getattr(provider, '_embed_model', 'unknown'),
+            "count": len(embeddings),
+        }
+        
+    except ProviderError as e:
+        return {
+            "status": "error",
+            "error": str(e),
+        }
+    except Exception as e:
+        print(f"Embedding error: {e}", flush=True)
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "error": "An unexpected error occurred during embedding.",
+        }
+
+
+# ============================================================================
+# Image Generation Endpoint
+# ============================================================================
+
 class ImageRequest(BaseModel):
     """Request body for image generation."""
     prompt: str
@@ -747,6 +842,7 @@ def ai_status(user=Depends(get_current_user)):
         "provider": provider.name,
         "configured": provider.is_configured,
         "supports_chat": provider.is_configured,
+        "supports_embed": provider.is_configured and hasattr(provider, 'embed'),
         "supports_vision": provider.supports_vision,
         "supports_image": provider.supports_image_generation and settings.ai_image_enabled,
         "supports_transcribe": provider.supports_speech_to_text and settings.ai_audio_enabled,

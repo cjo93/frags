@@ -82,6 +82,34 @@ app.add_middleware(
 )
 
 
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers to all responses."""
+    response = await call_next(request)
+    
+    # Prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+    
+    # Prevent MIME type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
+    # Enable XSS filter (legacy, but still useful)
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    # Referrer policy - don't leak full URL to other origins
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # Permissions policy - restrict sensitive APIs
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    
+    # Content Security Policy (report-only first to avoid breaking things)
+    # Once validated, change to Content-Security-Policy
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+    
+    return response
+
+
 def new_id() -> str:
     return str(uuid.uuid4())
 
@@ -212,20 +240,35 @@ async def rate_limit_middleware(request: Request, call_next):
 class AuthCredentials(BaseModel):
     email: str
     password: str
+    turnstile_token: Optional[str] = None  # Cloudflare Turnstile response
+
+
+from synth_engine.api.turnstile import verify_turnstile_token_sync, is_turnstile_enabled
 
 
 @app.post("/auth/register")
 def register(
+    request: Request,
     email: str = Query(default=None),
     password: str = Query(default=None),
+    turnstile_token: str = Query(default=None),
     body: AuthCredentials = Body(default=None),
     s: Session = Depends(db),
 ):
     # Accept both query params and JSON body
     email = email or (body.email if body else None)
     password = password or (body.password if body else None)
+    turnstile_token = turnstile_token or (body.turnstile_token if body else None)
+    
     if not email or not password:
         raise HTTPException(400, "email and password required")
+    
+    # Verify Turnstile if enabled
+    if is_turnstile_enabled():
+        client_ip = request.client.host if request.client else None
+        success, error = verify_turnstile_token_sync(turnstile_token, client_ip)
+        if not success:
+            raise HTTPException(403, error or "Bot protection verification failed")
     
     uid = new_id()
     try:
@@ -248,16 +291,27 @@ def register(
 
 @app.post("/auth/login")
 def login(
+    request: Request,
     email: str = Query(default=None),
     password: str = Query(default=None),
+    turnstile_token: str = Query(default=None),
     body: AuthCredentials = Body(default=None),
     s: Session = Depends(db),
 ):
     # Accept both query params and JSON body
     email = email or (body.email if body else None)
     password = password or (body.password if body else None)
+    turnstile_token = turnstile_token or (body.turnstile_token if body else None)
+    
     if not email or not password:
         raise HTTPException(400, "email and password required")
+    
+    # Verify Turnstile if enabled
+    if is_turnstile_enabled():
+        client_ip = request.client.host if request.client else None
+        success, error = verify_turnstile_token_sync(turnstile_token, client_ip)
+        if not success:
+            raise HTTPException(403, error or "Bot protection verification failed")
     
     u = s.query(User).filter(User.email == email).first()
     if not u or not verify_password(password, u.password_hash):

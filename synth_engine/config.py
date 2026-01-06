@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     ai_image_enabled: bool = False  # Enable /ai/image endpoint
     ai_audio_enabled: bool = False  # Enable /ai/transcribe and /ai/speak endpoints
 
+    # Cloudflare Turnstile (bot protection)
+    # https://developers.cloudflare.com/turnstile/
+    turnstile_secret_key: str = ""  # Server-side secret key
+    turnstile_enabled: bool = False  # Enable turnstile verification on register/login
+
     # Free tier limits
     free_chat_daily_limit: int = 10
     free_compute_daily_limit: int = 3

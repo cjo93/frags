@@ -44,17 +44,17 @@ async function request<T>(
 }
 
 // Auth
-export async function register(email: string, password: string) {
+export async function register(email: string, password: string, turnstileToken?: string) {
   return request<{ token: string; user_id: string }>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, turnstile_token: turnstileToken }),
   });
 }
 
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string, turnstileToken?: string) {
   return request<{ token: string }>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, turnstile_token: turnstileToken }),
   });
 }
 

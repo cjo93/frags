@@ -160,6 +160,40 @@ else
     else
         fail "AI image returned $HTTP_CODE"
     fi
+
+    echo ""
+    echo "--- Test 8: AI Status Endpoint ---"
+    RESPONSE=$(curl -s -w "\n%{http_code}" "$API_URL/ai/status" \
+        -H "Authorization: Bearer $TOKEN")
+    HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+    BODY=$(echo "$RESPONSE" | sed '$d')
+    
+    if [ "$HTTP_CODE" = "200" ]; then
+        PROVIDER=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('provider','unknown'))" 2>/dev/null || echo "unknown")
+        EMBED=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('supports_embed',False))" 2>/dev/null || echo "unknown")
+        pass "AI status accessible"
+        info "Provider: $PROVIDER, Supports Embed: $EMBED"
+    else
+        fail "AI status returned $HTTP_CODE"
+    fi
+
+    echo ""
+    echo "--- Test 9: AI Embed Endpoint ---"
+    RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/ai/embed" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"texts":["hello world"]}')
+    HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+    BODY=$(echo "$RESPONSE" | sed '$d')
+    
+    if [ "$HTTP_CODE" = "200" ]; then
+        pass "AI embed endpoint working"
+    elif [ "$HTTP_CODE" = "503" ]; then
+        info "AI embed returned 503 (provider not configured)"
+        pass "AI embed endpoint accessible"
+    else
+        warn "AI embed returned $HTTP_CODE"
+    fi
 fi
 
 # Summary

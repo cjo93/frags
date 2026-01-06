@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { register as apiRegister, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,14 +14,22 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    // Check Turnstile if enabled
+    if (isTurnstileEnabled() && !turnstileToken) {
+      setError('Please complete the verification');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      const { token } = await apiRegister(email, password);
+      const { token } = await apiRegister(email, password, turnstileToken || undefined);
       login(token);
       router.push('/dashboard');
     } catch (err) {
@@ -93,6 +102,16 @@ export default function RegisterPage() {
               />
               <p className="mt-1 text-xs text-neutral-400">Minimum 8 characters</p>
             </div>
+
+            {/* Turnstile CAPTCHA */}
+            {isTurnstileEnabled() && (
+              <Turnstile
+                siteKey={getTurnstileSiteKey()}
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken(null)}
+                className="flex justify-center"
+              />
+            )}
 
             <button
               type="submit"
