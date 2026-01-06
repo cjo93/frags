@@ -43,8 +43,8 @@ export default function ProfileAskPage() {
         </div>
       </header>
 
-      {/* Chat area - full height minus header */}
-      <main className="flex-1 max-w-3xl w-full mx-auto flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
+      {/* Chat area - full height minus header, with bottom padding for fixed input */}
+      <main className="flex-1 max-w-3xl w-full mx-auto flex flex-col pb-32" style={{ height: 'calc(100dvh - 57px)' }}>
         <ChatContainer profileId={profileId} />
       </main>
     </div>

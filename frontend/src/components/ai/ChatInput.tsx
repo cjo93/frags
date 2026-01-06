@@ -39,7 +39,7 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about this prof
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-neutral-200 dark:border-neutral-800 p-4">
+    <form onSubmit={handleSubmit} className="p-4">
       <div className="flex gap-3 items-end">
         <textarea
           ref={textareaRef}
@@ -49,13 +49,14 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about this prof
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
+          enterKeyHint="send"
           className="
-            flex-1 px-4 py-3 text-sm
+            flex-1 px-4 py-3 text-base
             border border-neutral-200 dark:border-neutral-700
             bg-white dark:bg-neutral-900
             text-neutral-900 dark:text-white
             placeholder:text-neutral-400 dark:placeholder:text-neutral-500
-            resize-none
+            resize-none min-h-[44px]
             focus:outline-none focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-500
             disabled:opacity-50 disabled:cursor-not-allowed
           "
@@ -64,7 +65,7 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about this prof
           type="submit"
           disabled={disabled || !message.trim()}
           className="
-            px-4 py-3 text-sm font-medium
+            px-4 py-3 text-sm font-medium min-h-[44px]
             bg-neutral-900 dark:bg-white
             text-white dark:text-neutral-900
             hover:opacity-80 transition-opacity

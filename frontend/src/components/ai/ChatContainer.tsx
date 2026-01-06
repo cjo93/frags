@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { sendChatMessage, type ChatResponse, type ChatMessage as ChatMessageType } from '@/lib/api';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
+import { FixedBottomComposer } from '@/components/ui';
 
 interface Message extends ChatMessageType {
   id: string;
@@ -122,12 +123,14 @@ export function ChatContainer({ profileId, constellationId, initialMessage }: Ch
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <ChatInput 
-        onSend={handleSend} 
-        disabled={isLoading || messages.some(m => m.isPreview)} 
-        previewLocked={messages.some(m => m.isPreview)}
-      />
+      {/* Input area - fixed to bottom with keyboard awareness */}
+      <FixedBottomComposer>
+        <ChatInput 
+          onSend={handleSend} 
+          disabled={isLoading || messages.some(m => m.isPreview)} 
+          previewLocked={messages.some(m => m.isPreview)}
+        />
+      </FixedBottomComposer>
     </div>
   );
 }
