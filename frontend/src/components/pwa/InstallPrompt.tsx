@@ -1,31 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { isIOSSafari, isStandalone } from "@/lib/displayMode";
 
 const DISMISS_KEY = "defrag-install-prompt-dismissed";
-
-function isIOSSafari(): boolean {
-  if (typeof window === "undefined") return false;
-  
-  const ua = window.navigator.userAgent;
-  const isIOS = /iPad|iPhone|iPod/.test(ua) || 
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS/.test(ua);
-  
-  return isIOS && isSafari;
-}
-
-function isStandalone(): boolean {
-  if (typeof window === "undefined") return false;
-  
-  // Check iOS standalone mode
-  if ("standalone" in window.navigator) {
-    return (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-  }
-  
-  // Check display-mode media query (Android PWA)
-  return window.matchMedia("(display-mode: standalone)").matches;
-}
 
 export function InstallPrompt() {
   const [show, setShow] = useState(false);

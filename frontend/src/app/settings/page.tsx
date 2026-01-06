@@ -6,11 +6,22 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createPortal } from '@/lib/api';
 import { resetInstallPrompt } from '@/components/pwa';
+import { isStandalone, isIOS } from '@/lib/displayMode';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { token, user, billing, refresh, logout } = useAuth();
   const [portalLoading, setPortalLoading] = useState(false);
+  
+  // Initialize on client only using lazy initializer
+  const [installed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return isStandalone();
+  });
+  const [isiOSDevice] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return isIOS();
+  });
 
   useEffect(() => {
     if (!token) {
@@ -185,22 +196,68 @@ export default function SettingsPage() {
         <section className="mb-12">
           <h2 className="text-lg font-medium mb-4">App</h2>
           <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-4">
-            <div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Install on your device</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                Add Defrag to your home screen for a faster, full-screen experience.
-              </p>
-              <button
-                onClick={() => {
-                  resetInstallPrompt();
-                  // Reload to trigger the prompt
-                  window.location.reload();
-                }}
-                className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4"
-              >
-                Show install instructions
-              </button>
+            {/* Install Status */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Status</p>
+                <p className="text-neutral-900 dark:text-white">
+                  {installed ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full" />
+                      Installed
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-2 h-2 bg-neutral-400 rounded-full" />
+                      Browser mode
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
+
+            {/* Install Instructions (only show if not installed) */}
+            {!installed && (
+              <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Install on your device</p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                  Add Defrag to your home screen for a faster, full-screen experience.
+                </p>
+                
+                {isiOSDevice ? (
+                  <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-3 mb-3">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Tap <span className="font-medium text-neutral-900 dark:text-white">Share</span> → <span className="font-medium text-neutral-900 dark:text-white">Add to Home Screen</span>
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-3 mb-3">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Look for the install icon in your browser&apos;s address bar or menu.
+                    </p>
+                  </div>
+                )}
+                
+                <button
+                  onClick={() => {
+                    resetInstallPrompt();
+                    window.location.reload();
+                  }}
+                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4"
+                >
+                  Show install prompt
+                </button>
+              </div>
+            )}
+
+            {/* Benefits when installed */}
+            {installed && (
+              <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  You&apos;re using Defrag as an installed app. Enjoy the full-screen experience!
+                </p>
+              </div>
+            )}
           </div>
         </section>
       </div>

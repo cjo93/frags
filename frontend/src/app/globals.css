@@ -173,3 +173,14 @@ select:focus {
 .animate-slide-up {
   animation: slideUp 0.3s ease-out;
 }
+
+/* Chat scroll container - prevents last message from hiding behind composer */
+.chat-scroll {
+  scroll-padding-bottom: 140px; /* composer height + safe area */
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+}
+
+/* Scroll container that respects safe areas */
+.scroll-safe {
+  padding-bottom: calc(var(--safe-area-inset-bottom) + 100px);
+}
