@@ -45,6 +45,11 @@ from synth_engine.api.ratelimit import TokenBucketLimiter
 from synth_engine.api.auth import decode_token
 from synth_engine.api.entitlements import require_entitlement, require_plan
 from synth_engine.fusion.synthesis import synthesize_profile, synthesize_constellation
+from synth_engine.api.abuse import (
+    RequestIDMiddleware, 
+    AbuseControlMiddleware,
+    get_abuse_metrics,
+)
 
 # Import routers
 from synth_engine.api.billing import router as billing_router
@@ -60,13 +65,18 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Synthesis Engine API", version="0.7.0", lifespan=lifespan)
+app = FastAPI(title="Synthesis Engine API", version="0.7.1", lifespan=lifespan)
 limiter = TokenBucketLimiter()
 
 # Include routers
 app.include_router(billing_router)
 app.include_router(admin_router)
 app.include_router(ai_router)
+
+# Add abuse control middleware (order matters: RequestID first, then AbuseControl)
+# Note: Starlette middleware is added in reverse order (last added = first executed)
+app.add_middleware(AbuseControlMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

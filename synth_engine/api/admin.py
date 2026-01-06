@@ -14,6 +14,7 @@ from synth_engine.api.auth import create_token
 from synth_engine.storage import repo as R
 from synth_engine.storage.models import User, UserRole, StripeCustomer
 from synth_engine.config import settings
+from synth_engine.api.abuse import get_abuse_metrics, reset_abuse_metrics
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -257,3 +258,39 @@ def set_role(
     )
     
     return {"id": updated.id, "email": updated.email, "role": updated.role.value}
+
+
+# ----- AI Abuse Metrics -----
+
+@router.get("/metrics/abuse")
+def get_ai_abuse_metrics(
+    _user=Depends(require_role("admin")),
+):
+    """
+    Get AI endpoint abuse control metrics.
+    
+    Returns counters for:
+    - Total requests
+    - Requests blocked by rate limit
+    - Requests blocked by concurrency limit
+    - Requests blocked by size limit
+    - Requests by endpoint
+    """
+    return get_abuse_metrics()
+
+
+@router.post("/metrics/abuse/reset")
+def reset_ai_abuse_metrics(
+    admin_user=Depends(require_admin_mutations()),
+):
+    """
+    Reset AI abuse metrics (requires admin mutations enabled).
+    """
+    reset_abuse_metrics()
+    
+    audit_logger.info(
+        f"ADMIN_MUTATION: reset_abuse_metrics | "
+        f"admin={getattr(admin_user, 'email', 'unknown')}"
+    )
+    
+    return {"status": "ok", "message": "Abuse metrics reset"}

@@ -15,6 +15,7 @@ from synth_engine.storage import repo as R
 from synth_engine.storage.models import User, Profile, ComputedLayer
 from synth_engine.ai.providers import get_ai_provider
 from synth_engine.ai.providers.base import ChatMessage, ProviderError
+from synth_engine.api.abuse import validate_chat_input, validate_embed_input, INPUT_LIMITS
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -284,6 +285,14 @@ def chat(
     
     Returns 503 if AI provider is not configured.
     """
+    # Input validation: single message length
+    limits = INPUT_LIMITS.get("/ai/chat")
+    if limits and limits.max_chars_per_item and len(message) > limits.max_chars_per_item:
+        raise HTTPException(
+            413,
+            f"Message too long: {len(message)} chars exceeds limit of {limits.max_chars_per_item}",
+        )
+    
     # Check AI provider is configured
     provider = _get_provider()
     if not provider.is_configured:
@@ -325,10 +334,13 @@ def chat(
     elif constellation_id:
         context = _build_context_for_constellation(s, constellation_id)
 
-    # Get conversation history
+    # Get conversation history (limited to 20 most recent)
     history = R.get_chat_messages(s, thread.id, limit=20)
     messages = [{"role": m.role, "content": m.content} for m in history]
     messages.append({"role": "user", "content": message})
+    
+    # Validate total conversation size
+    validate_chat_input(messages)
 
     # Store user message
     R.add_chat_message(s, thread.id, "user", message)
@@ -449,7 +461,7 @@ def embed_texts(
     Access: Integration tier and above.
     
     Args:
-    - texts: List of strings to embed (max 100 texts, max 8000 chars each)
+    - texts: List of strings to embed (max 256 texts, max 2000 chars each)
     
     Returns:
     - status: "success" | "error" | "not_enabled"
@@ -465,16 +477,11 @@ def embed_texts(
             detail="Embeddings require the Integration tier or above. Visit /billing/checkout?price_tier=integration to upgrade.",
         )
     
-    # Validate input
+    # Validate input using centralized limits
     if not req.texts:
         raise HTTPException(400, "No texts provided")
     
-    if len(req.texts) > 100:
-        raise HTTPException(400, "Maximum 100 texts per request")
-    
-    for i, text in enumerate(req.texts):
-        if len(text) > 8000:
-            raise HTTPException(400, f"Text {i} exceeds maximum length of 8000 characters")
+    validate_embed_input(req.texts)
     
     # Check provider
     provider = _get_provider()
