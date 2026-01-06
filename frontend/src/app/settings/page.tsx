@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createPortal } from '@/lib/api';
+import { resetInstallPrompt } from '@/components/pwa';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -176,6 +177,29 @@ export default function SettingsPage() {
               >
                 Learn how AI works in Defrag →
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* App */}
+        <section className="mb-12">
+          <h2 className="text-lg font-medium mb-4">App</h2>
+          <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-4">
+            <div>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Install on your device</p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                Add Defrag to your home screen for a faster, full-screen experience.
+              </p>
+              <button
+                onClick={() => {
+                  resetInstallPrompt();
+                  // Reload to trigger the prompt
+                  window.location.reload();
+                }}
+                className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4"
+              >
+                Show install instructions
+              </button>
             </div>
           </div>
         </section>
