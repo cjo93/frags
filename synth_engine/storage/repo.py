@@ -824,8 +824,12 @@ def is_entitled(s: Session, user_id: str, action: str) -> bool:
         return True  # Unknown actions allowed by default
 
 
-def record_usage(s: Session, user_id: str, action: str, units: int = 1, meta: Optional[Dict[str, Any]] = None) -> UsageLedger:
-    """Record usage in the ledger."""
+def record_usage(s: Session, user_id: str, action: str, units: int = 1, meta: Optional[Dict[str, Any]] = None) -> Optional[UsageLedger]:
+    """Record usage in the ledger. Skips for dev admin (not a real DB user)."""
+    # Skip recording for dev admin since they don't exist in the users table
+    if user_id == DEV_ADMIN_USER_ID:
+        return None
+    
     entry = UsageLedger(
         id=new_id(),
         user_id=user_id,
@@ -851,6 +855,12 @@ def get_usage_summary(s: Session, user_id: str, days: int = 30) -> Dict[str, int
 # -------------------------
 # AI Chat
 # -------------------------
+
+# In-memory storage for dev admin chat (not persisted)
+_dev_admin_threads: Dict[str, ChatThread] = {}
+_dev_admin_messages: Dict[str, List[ChatMessage]] = {}
+
+
 def create_chat_thread(
     s: Session,
     user_id: str,
@@ -858,19 +868,32 @@ def create_chat_thread(
     constellation_id: Optional[str] = None,
     title: str = "",
 ) -> ChatThread:
+    """Create a chat thread. For dev admin, uses in-memory storage."""
+    thread_id = new_id()
     thread = ChatThread(
-        id=new_id(),
+        id=thread_id,
         user_id=user_id,
         profile_id=profile_id,
         constellation_id=constellation_id,
         title=title,
     )
+    
+    # Dev admin: store in memory (no DB constraint issues)
+    if user_id == DEV_ADMIN_USER_ID:
+        _dev_admin_threads[thread_id] = thread
+        _dev_admin_messages[thread_id] = []
+        return thread
+    
     s.add(thread)
     s.commit()
     return thread
 
 
 def get_chat_thread(s: Session, thread_id: str, user_id: str) -> Optional[ChatThread]:
+    # Dev admin: check in-memory first
+    if user_id == DEV_ADMIN_USER_ID and thread_id in _dev_admin_threads:
+        return _dev_admin_threads[thread_id]
+    
     return (
         s.query(ChatThread)
         .filter(ChatThread.id == thread_id, ChatThread.user_id == user_id)
@@ -885,6 +908,7 @@ def add_chat_message(
     content: str,
     citations: Optional[List[Dict[str, Any]]] = None,
 ) -> ChatMessage:
+    """Add a message to a chat thread. For dev admin threads, uses in-memory storage."""
     msg = ChatMessage(
         id=new_id(),
         thread_id=thread_id,
@@ -892,12 +916,24 @@ def add_chat_message(
         content=content,
         citations_json=json.dumps(citations or []),
     )
+    
+    # Dev admin: store in memory
+    if thread_id in _dev_admin_messages:
+        _dev_admin_messages[thread_id].append(msg)
+        return msg
+    
     s.add(msg)
     s.commit()
     return msg
 
 
 def get_chat_messages(s: Session, thread_id: str, limit: int = 50) -> List[ChatMessage]:
+    """Get messages for a thread. For dev admin threads, uses in-memory storage."""
+    # Dev admin: check in-memory first
+    if thread_id in _dev_admin_messages:
+        messages = _dev_admin_messages[thread_id]
+        return messages[-limit:] if len(messages) > limit else messages
+    
     return (
         s.query(ChatMessage)
         .filter(ChatMessage.thread_id == thread_id)

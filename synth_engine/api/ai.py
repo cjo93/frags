@@ -221,11 +221,11 @@ USER'S CONTEXT:
         traceback.print_exc()
         if e.status_code == 503:
             raise HTTPException(503, str(e))
-        raise HTTPException(500, f"Chat failed: {type(e).__name__}: {str(e)[:200]}")
+        return f"Sorry, I encountered an error processing your request. Please try again."
     except Exception as e:
         print(f"LLM error: {type(e).__name__}: {e}", flush=True)
         traceback.print_exc()
-        raise HTTPException(500, f"Chat failed: {type(e).__name__}: {str(e)[:200]}")
+        return f"Sorry, I encountered an error processing your request. Please try again."
 
 
 def _truncate_to_preview(text: str, max_chars: int = 280) -> str:
@@ -515,7 +515,7 @@ def embed_texts(
         traceback.print_exc()
         return {
             "status": "error",
-            "error": f"Embed failed: {type(e).__name__}: {str(e)[:200]}",
+            "error": "An unexpected error occurred during embedding.",
         }
 
 
