@@ -19,7 +19,7 @@ from synth_engine.storage.db import engine
 from synth_engine.storage.models import Base, User, Profile, Constellation
 from synth_engine.storage import repo as R
 
-from synth_engine.api.auth import hash_password, verify_password, create_token
+from synth_engine.api.auth import hash_password, verify_password, create_token, create_agent_token
 from synth_engine.api.deps import db, me_user_id, get_current_user
 
 from synth_engine.schemas.person import PersonInput
@@ -253,6 +253,11 @@ class AuthCredentials(BaseModel):
     turnstile_token: Optional[str] = None  # Cloudflare Turnstile response
 
 
+class AgentTokenRequest(BaseModel):
+    mem: Optional[bool] = True
+    tools: Optional[bool] = True
+
+
 from synth_engine.api.turnstile import verify_turnstile_token_sync, is_turnstile_enabled
 
 
@@ -327,6 +332,16 @@ def login(
     if not u or not verify_password(password, u.password_hash):
         raise HTTPException(401, "Invalid credentials")
     return {"token": create_token(u.id)}
+
+
+@app.post("/auth/agent-token")
+def agent_token(
+    body: AgentTokenRequest = Body(default=None),
+    user_id: str = Depends(me_user_id),
+):
+    scopes = ["agent:chat", "agent:tool"]
+    req = body or AgentTokenRequest()
+    return create_agent_token(user_id, scopes=scopes, mem=req.mem is not False, tools=req.tools is not False)
 
 
 # -------------------------

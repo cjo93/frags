@@ -2,3 +2,5 @@ synth.db
 *.db
 __pycache__/
 .env
+node_modules/
+.wrangler/

@@ -27,3 +27,18 @@ def create_token(user_id: str) -> str:
 def decode_token(token: str) -> str:
     payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     return payload["sub"]
+
+def create_agent_token(user_id: str, scopes: list[str], mem: bool = True, tools: bool = True) -> dict:
+    exp = datetime.now(timezone.utc) + timedelta(minutes=settings.agent_jwt_exp_minutes)
+    secret = settings.agent_jwt_secret or settings.jwt_secret
+    payload = {
+        "sub": user_id,
+        "aud": settings.agent_jwt_audience,
+        "iss": settings.agent_jwt_issuer,
+        "scope": scopes,
+        "mem": mem,
+        "tools": tools,
+        "exp": exp,
+    }
+    token = jwt.encode(payload, secret, algorithm="HS256")
+    return {"agent_token": token, "expires_at": exp.isoformat()}

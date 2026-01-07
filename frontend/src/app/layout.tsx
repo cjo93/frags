@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { AuthProvider } from "@/lib/auth-context";
 import { InstallPrompt } from "@/components/pwa";
+import { AgentDock } from "@/components/agent/AgentDock";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -59,6 +60,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <AgentDock />
           <InstallPrompt />
         </AuthProvider>
       </body>

@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(48))
     jwt_algorithm: str = "HS256"
     jwt_exp_minutes: int = 60 * 24 * 7
+    agent_jwt_secret: str = ""
+    agent_jwt_issuer: str = "defrag-api"
+    agent_jwt_audience: str = "agent-worker"
+    agent_jwt_exp_minutes: int = 15
 
     # Stripe
     stripe_secret_key: str = ""

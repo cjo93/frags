@@ -5,13 +5,17 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createPortal } from '@/lib/api';
+import { runAgentTool } from '@/lib/agentClient';
+import { useAgentSettings } from '@/lib/agent-settings';
 import { resetInstallPrompt } from '@/components/pwa';
 import { isStandalone, isIOS } from '@/lib/displayMode';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { token, user, billing, refresh, logout } = useAuth();
+  const { enabled, memoryEnabled, setEnabled, setMemoryEnabled } = useAgentSettings();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   
   // Initialize on client only using lazy initializer
   const [installed] = useState(() => {
@@ -55,6 +59,25 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Portal error:', err);
       setPortalLoading(false);
+    }
+  };
+
+  const handleExportSafeJson = async () => {
+    const profileId = window.prompt('Enter profile id to export (optional):') || undefined;
+    setExportLoading(true);
+    try {
+      const res = await runAgentTool('natal_export_full', profileId ? { profile_id: profileId } : undefined);
+      const blob = new Blob([JSON.stringify(res.result, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'safe-export.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export error:', err);
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -188,6 +211,46 @@ export default function SettingsPage() {
               >
                 Learn how AI works in Defrag →
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* AI Settings */}
+        <section className="mb-12">
+          <h2 className="text-lg font-medium mb-4">AI Settings</h2>
+          <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-6">
+            <label className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-neutral-900 dark:text-white">AgentDock</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Show the global assistant dock.</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={enabled}
+                onChange={(e) => setEnabled(e.target.checked)}
+                className="h-5 w-5 accent-neutral-900"
+              />
+            </label>
+            <label className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-neutral-900 dark:text-white">Memory</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Allow the agent to recall past context.</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={memoryEnabled}
+                onChange={(e) => setMemoryEnabled(e.target.checked)}
+                className="h-5 w-5 accent-neutral-900"
+              />
+            </label>
+            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <button
+                onClick={handleExportSafeJson}
+                disabled={exportLoading}
+                className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 disabled:opacity-50"
+              >
+                {exportLoading ? 'Exporting...' : 'Export safe JSON'}
+              </button>
             </div>
           </div>
         </section>
