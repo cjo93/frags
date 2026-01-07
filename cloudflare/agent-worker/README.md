@@ -43,3 +43,7 @@ Local setup:
 - copy database_id into wrangler.toml
 - ./scripts/d1-migrate.sh (set `D1_MODE=--local` for local dev)
 - wrangler dev --local
+
+Remote dev:
+- Set `preview_database_id` and `preview_bucket_name` in `wrangler.toml` (TODO: confirm preview resources).
+- Run `wrangler dev` with remote bindings enabled for D1/R2 if needed.

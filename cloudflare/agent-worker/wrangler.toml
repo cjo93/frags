@@ -4,7 +4,7 @@ compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Account settings (set via environment or wrangler login)
-# account_id = ""
+account_id = "01bd220f56d573a14428d86f654e49eb"
 
 [observability]
 enabled = true
@@ -26,7 +26,7 @@ new_classes = ["UserAgentDO"]
 [[d1_databases]]
 binding = "AGENT_DB"
 database_name = "defrag-agent-db"
-database_id = "" # Set after creating: wrangler d1 create defrag-agent-db
+database_id = "956fd4b3-e16c-41f6-a658-07b5e97a50b4"
 
 # R2 Bucket for artifacts
 [[r2_buckets]]
