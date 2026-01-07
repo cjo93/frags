@@ -163,7 +163,7 @@ export default {
           return jsonError("Forbidden", "forbidden", 403, requestId);
         }
         if (!env.AGENT_R2) {
-          return jsonError("R2 binding required", "missing_binding", 500, requestId);
+          return jsonResponse({ ok: false, error: "R2_DISABLED", requestId }, { status: 503, requestId });
         }
 
         const body = await readJsonWithLimit<{ title?: string; safe_json?: unknown; safeJson?: unknown }>(
@@ -219,7 +219,7 @@ export default {
 
       if (req.method === "GET" && url.pathname.startsWith("/agent/artifacts/")) {
         if (!env.AGENT_R2) {
-          return jsonError("R2 binding required", "missing_binding", 500, requestId);
+          return jsonResponse({ ok: false, error: "R2_DISABLED", requestId }, { status: 503, requestId });
         }
         const ip = getClientIp(req);
         const abuse = enforceRateAndConcurrency({

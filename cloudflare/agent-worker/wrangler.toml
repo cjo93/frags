@@ -28,16 +28,6 @@ binding = "AGENT_DB"
 database_name = "defrag-agent-db"
 database_id = "956fd4b3-e16c-41f6-a658-07b5e97a50b4"
 
-# R2 Bucket for artifacts
-[[r2_buckets]]
-binding = "AGENT_R2"
-bucket_name = "defrag-agent-artifacts"
-
-# Vectorize Index for semantic memory
-[[vectorize]]
-binding = "AGENT_MEM_INDEX"
-index_name = "defrag-memory-index"
-
 # Workers AI binding
 [ai]
 binding = "AI"
@@ -49,6 +39,14 @@ binding = "AI"
 # Production overrides
 [env.production]
 vars = { ENVIRONMENT = "production", BACKEND_URL = "https://api.defrag.app" }
+
+[[env.production.r2_buckets]]
+binding = "AGENT_R2"
+bucket_name = "defrag-agent-artifacts"
+
+[[env.production.vectorize]]
+binding = "AGENT_MEM_INDEX"
+index_name = "defrag-memory-index"
 
 # Development overrides
 [env.development]
