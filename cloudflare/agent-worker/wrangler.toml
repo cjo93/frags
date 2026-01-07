@@ -22,11 +22,11 @@ class_name = "UserAgentDO"
 tag = "v1"
 new_classes = ["UserAgentDO"]
 
-# D1 Database (commented out for local dev until provisioned)
-# [[d1_databases]]
-# binding = "AGENT_DB"
-# database_name = "defrag-agent-db"
-# database_id = "" # Set after creating: wrangler d1 create defrag-agent-db
+# D1 Database
+[[d1_databases]]
+binding = "AGENT_DB"
+database_name = "defrag-agent-db"
+database_id = "" # Set after creating: wrangler d1 create defrag-agent-db
 
 # R2 Bucket for artifacts
 [[r2_buckets]]

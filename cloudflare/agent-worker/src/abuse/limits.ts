@@ -13,6 +13,15 @@ export const LIMITS = {
     ratePerMin: 30,
     concurrency: 3
   },
+  export: {
+    maxBodyBytes: 96 * 1024,
+    ratePerMin: 10,
+    concurrency: 2
+  },
+  artifact: {
+    ratePerMin: 60,
+    concurrency: 6
+  },
   memory: {
     maxItems: 200
   },

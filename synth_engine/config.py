@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     agent_jwt_issuer: str = "defrag-api"
     agent_jwt_audience: str = "agent-worker"
     agent_jwt_exp_minutes: int = 15
+    backend_hmac_secret: str = ""
 
     # Stripe
     stripe_secret_key: str = ""

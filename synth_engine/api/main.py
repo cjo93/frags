@@ -2,18 +2,21 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 import json
+import base64
+import hashlib
+import hmac
 import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from fastapi import FastAPI, Depends, HTTPException, Request, Body, Query
+from fastapi import FastAPI, Depends, HTTPException, Request, Body, Query, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 from jose import JWTError
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from synth_engine.storage.db import engine
 from synth_engine.storage.models import Base, User, Profile, Constellation
@@ -21,6 +24,7 @@ from synth_engine.storage import repo as R
 
 from synth_engine.api.auth import hash_password, verify_password, create_token, create_agent_token
 from synth_engine.api.deps import db, me_user_id, get_current_user
+from synth_engine.config import settings
 
 from synth_engine.schemas.person import PersonInput
 from synth_engine.parsing.natal_text import parse_natal_text
@@ -256,6 +260,7 @@ class AuthCredentials(BaseModel):
 class AgentTokenRequest(BaseModel):
     mem: Optional[bool] = True
     tools: Optional[bool] = True
+    export: Optional[bool] = True
 
 
 from synth_engine.api.turnstile import verify_turnstile_token_sync, is_turnstile_enabled
@@ -339,9 +344,143 @@ def agent_token(
     body: AgentTokenRequest = Body(default=None),
     user_id: str = Depends(me_user_id),
 ):
-    scopes = ["agent:chat", "agent:tool"]
+    scopes = ["agent:chat", "agent:tool", "agent:export"]
     req = body or AgentTokenRequest()
-    return create_agent_token(user_id, scopes=scopes, mem=req.mem is not False, tools=req.tools is not False)
+    return create_agent_token(
+        user_id,
+        scopes=scopes,
+        mem=req.mem is not False,
+        tools=req.tools is not False,
+        export=req.export is not False,
+    )
+
+
+# -------------------------
+# Tools (agent gateway)
+# -------------------------
+class ToolExportRequest(BaseModel):
+    profile_id: Optional[str] = None
+    include_family: Optional[bool] = False
+
+
+@app.post("/tools/natal/export_full")
+async def tool_natal_export_full(
+    request: Request,
+    x_user_id: str = Header(default=""),
+    x_tool_timestamp: str = Header(default=""),
+    x_tool_signature: str = Header(default=""),
+    s: Session = Depends(db),
+):
+    if not x_user_id:
+        raise HTTPException(400, "Missing x-user-id")
+
+    raw_body = await request.body()
+    _verify_tool_signature(x_user_id, raw_body, x_tool_timestamp, x_tool_signature)
+
+    try:
+        payload = json.loads(raw_body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        raise HTTPException(400, "Invalid JSON")
+
+    args = payload.get("args") or {}
+    if not isinstance(args, dict):
+        raise HTTPException(400, "Invalid tool args")
+    try:
+        parsed = ToolExportRequest(**args)
+    except ValidationError:
+        raise HTTPException(400, "Invalid tool args")
+
+    profile_id = parsed.profile_id
+    include_family = bool(parsed.include_family)
+
+    if profile_id:
+        prof = require_profile(s, x_user_id, profile_id)
+    else:
+        prof = (
+            s.query(Profile)
+            .filter(Profile.user_id == x_user_id)
+            .order_by(Profile.created_at.desc())
+            .first()
+        )
+        if not prof:
+            raise HTTPException(404, "Profile not found")
+
+    export_payload = _build_natal_export_payload(s, prof, include_family=include_family)
+    redacted = _redact_export_payload(export_payload)
+    return redacted
+
+
+def _verify_tool_signature(user_id: str, body: bytes, ts_header: str, sig_header: str) -> None:
+    secret = settings.backend_hmac_secret
+    if not secret:
+        raise HTTPException(500, "Tool gateway not configured")
+    if not ts_header or not sig_header:
+        raise HTTPException(401, "Missing tool signature")
+    try:
+        ts = int(ts_header)
+    except ValueError:
+        raise HTTPException(401, "Invalid tool timestamp")
+    now = int(datetime.now(timezone.utc).timestamp())
+    if abs(now - ts) > 300:
+        raise HTTPException(401, "Tool signature expired")
+    payload = f"{ts}.{user_id}.{body.decode('utf-8')}"
+    expected = _hmac_base64url(secret, payload)
+    if not hmac.compare_digest(expected, sig_header):
+        raise HTTPException(401, "Invalid tool signature")
+
+
+def _hmac_base64url(secret: str, payload: str) -> str:
+    digest = hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(digest).decode("utf-8").rstrip("=")
+
+
+def _build_natal_export_payload(s: Session, prof: Profile, include_family: bool = False) -> Dict[str, Any]:
+    try:
+        person = json.loads(prof.person_json)
+    except Exception:
+        person = {}
+
+    layers = {}
+    for layer in ["natal_astro", "timing", "latent", "numerology", "humandesign", "genekeys", "symbolic"]:
+        payload = R.latest_layer_payload(s, prof.id, layer)
+        if payload is not None:
+            layers[layer] = payload
+
+    created_at = prof.created_at
+    if created_at and created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+
+    export_payload = {
+        "profile": {
+            "name": prof.name,
+            "created_at": created_at.astimezone(timezone.utc).isoformat() if created_at else None,
+        },
+        "person": person,
+        "layers": layers,
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "include_family": include_family,
+    }
+    return export_payload
+
+
+def _redact_export_payload(value: Any, depth: int = 0) -> Any:
+    if depth > 6:
+        return "[truncated]"
+    if isinstance(value, list):
+        return [_redact_export_payload(v, depth + 1) for v in value[:80]]
+    if isinstance(value, dict):
+        out = {}
+        for k, v in value.items():
+            key = str(k).lower()
+            if key in {"id", "user_id", "profile_id", "reading_id", "inputs_hash", "internal", "debug"}:
+                continue
+            if "token" in key or "secret" in key or "api_key" in key or key.endswith("_id"):
+                continue
+            out[k] = _redact_export_payload(v, depth + 1)
+        return out
+    if isinstance(value, str):
+        return value if len(value) <= 2000 else f"{value[:2000]}..."
+    return value
 
 
 # -------------------------

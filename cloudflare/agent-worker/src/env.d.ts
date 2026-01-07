@@ -16,8 +16,8 @@ declare global {
 
     USER_AGENT_DO: DurableObjectNamespace;
 
-    AGENT_DB: D1Database;
-    AGENT_R2: R2Bucket;
+    AGENT_DB?: D1Database;
+    AGENT_R2?: R2Bucket;
 
     // Optional at runtime
     AGENT_MEM_INDEX?: VectorizeIndex;
@@ -29,6 +29,7 @@ declare global {
     AGENT_JWT_AUD?: string; // expected audience
     DEV_ADMIN_TOKEN?: string;
     BACKEND_HMAC_SECRET?: string; // optional (future signing)
+    EXPORT_SIGNING_SECRET?: string;
     BUILD_VERSION?: string;
   }
 }

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createPortal } from '@/lib/api';
-import { runAgentTool } from '@/lib/agentClient';
+import { exportNatalSafeJson } from '@/lib/agentClient';
 import { useAgentSettings } from '@/lib/agent-settings';
 import { resetInstallPrompt } from '@/components/pwa';
 import { isStandalone, isIOS } from '@/lib/displayMode';
@@ -66,14 +66,8 @@ export default function SettingsPage() {
     const profileId = window.prompt('Enter profile id to export (optional):') || undefined;
     setExportLoading(true);
     try {
-      const res = await runAgentTool('natal_export_full', profileId ? { profile_id: profileId } : undefined);
-      const blob = new Blob([JSON.stringify(res.result, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'safe-export.json';
-      link.click();
-      URL.revokeObjectURL(url);
+      const res = await exportNatalSafeJson(profileId);
+      window.open(res.artifact.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
       console.error('Export error:', err);
     } finally {

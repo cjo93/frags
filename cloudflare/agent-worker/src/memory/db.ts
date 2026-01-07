@@ -8,14 +8,30 @@ function id(prefix: string): string {
   return `${prefix}_${hex}`;
 }
 
-export async function writeMemoryEvent(env: Env, userId: string, eventType: string, payload: unknown): Promise<void> {
+export async function writeMemoryEvent(
+  env: Env,
+  userId: string,
+  eventType: string,
+  payload: unknown,
+  meta?: { source?: string; confidence?: number }
+): Promise<void> {
   if (!env.AGENT_DB) return;
   const eventId = id("mev");
-  await env.AGENT_DB.prepare(
-    "INSERT INTO memory_events (id, user_id, event_type, payload_json, created_at) VALUES (?, ?, ?, ?, ?)"
-  )
-    .bind(eventId, userId, eventType, JSON.stringify(payload), nowIso())
-    .run();
+  const payloadJson = JSON.stringify(payload);
+  const ts = nowIso();
+  try {
+    await env.AGENT_DB.prepare(
+      "INSERT INTO memory_events (id, user_id, event_type, payload_json, created_at, source, confidence) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    )
+      .bind(eventId, userId, eventType, payloadJson, ts, meta?.source ?? null, meta?.confidence ?? null)
+      .run();
+  } catch {
+    await env.AGENT_DB.prepare(
+      "INSERT INTO memory_events (id, user_id, event_type, payload_json, created_at) VALUES (?, ?, ?, ?, ?)"
+    )
+      .bind(eventId, userId, eventType, payloadJson, ts)
+      .run();
+  }
 }
 
 export type MemoryRow = {
@@ -110,23 +126,45 @@ export async function insertConversationTurn(env: Env, params: {
   content: string;
   tokensEst?: number;
   maxTurns: number;
+  requestId?: string;
+  tokenBudget?: number;
+  model?: string;
 }): Promise<void> {
   if (!env.AGENT_DB) return;
   const turnId = id("turn");
   const ts = nowIso();
-  await env.AGENT_DB.prepare(
-    "INSERT INTO conversation_turns (id, user_id, thread_id, role, content, tokens_est, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  )
-    .bind(
-      turnId,
-      params.userId,
-      params.threadId,
-      params.role,
-      params.content,
-      params.tokensEst ?? null,
-      ts
+  try {
+    await env.AGENT_DB.prepare(
+      "INSERT INTO conversation_turns (id, user_id, thread_id, role, content, tokens_est, created_at, request_id, token_budget, model) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
-    .run();
+      .bind(
+        turnId,
+        params.userId,
+        params.threadId,
+        params.role,
+        params.content,
+        params.tokensEst ?? null,
+        ts,
+        params.requestId ?? null,
+        params.tokenBudget ?? null,
+        params.model ?? null
+      )
+      .run();
+  } catch {
+    await env.AGENT_DB.prepare(
+      "INSERT INTO conversation_turns (id, user_id, thread_id, role, content, tokens_est, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    )
+      .bind(
+        turnId,
+        params.userId,
+        params.threadId,
+        params.role,
+        params.content,
+        params.tokensEst ?? null,
+        ts
+      )
+      .run();
+  }
 
   await env.AGENT_DB.prepare(
     "DELETE FROM conversation_turns WHERE user_id = ? AND id NOT IN (SELECT id FROM conversation_turns WHERE user_id = ? ORDER BY created_at DESC LIMIT ?)"
@@ -152,29 +190,57 @@ export async function insertToolAudit(env: Env, params: {
   tool: string;
   requestId: string;
   status: "ok" | "error";
+  argsJson?: unknown;
+  durationMs?: number;
+  redactionApplied?: boolean;
   redactedOutputRef?: string | null;
   redactedOutputJson?: unknown;
 }): Promise<void> {
   if (!env.AGENT_DB) return;
   const auditId = id("tad");
+  const argsJson = params.argsJson ? JSON.stringify(params.argsJson) : null;
+  const trimmedArgs = argsJson && argsJson.length > 2000
+    ? `${argsJson.slice(0, 2000)}...`
+    : argsJson;
   const redactedJson = params.redactedOutputJson
     ? JSON.stringify(params.redactedOutputJson)
     : null;
   const trimmedJson = redactedJson && redactedJson.length > 4000
     ? `${redactedJson.slice(0, 4000)}...`
     : redactedJson;
-  await env.AGENT_DB.prepare(
-    "INSERT INTO tool_audit (id, user_id, tool, request_id, status, redacted_output_ref, redacted_output_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  )
-    .bind(
-      auditId,
-      params.userId,
-      params.tool,
-      params.requestId,
-      params.status,
-      params.redactedOutputRef ?? null,
-      trimmedJson,
-      nowIso()
+  const ts = nowIso();
+  try {
+    await env.AGENT_DB.prepare(
+      "INSERT INTO tool_audit (id, user_id, tool, request_id, status, args_json, duration_ms, redaction_applied, redacted_output_ref, redacted_output_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
-    .run();
+      .bind(
+        auditId,
+        params.userId,
+        params.tool,
+        params.requestId,
+        params.status,
+        trimmedArgs,
+        params.durationMs ?? null,
+        params.redactionApplied ?? null,
+        params.redactedOutputRef ?? null,
+        trimmedJson,
+        ts
+      )
+      .run();
+  } catch {
+    await env.AGENT_DB.prepare(
+      "INSERT INTO tool_audit (id, user_id, tool, request_id, status, redacted_output_ref, redacted_output_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+      .bind(
+        auditId,
+        params.userId,
+        params.tool,
+        params.requestId,
+        params.status,
+        params.redactedOutputRef ?? null,
+        trimmedJson,
+        ts
+      )
+      .run();
+  }
 }

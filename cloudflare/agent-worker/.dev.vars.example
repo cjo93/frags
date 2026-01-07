@@ -1,0 +1,7 @@
+ENVIRONMENT=development
+BACKEND_URL=http://localhost:8000
+AGENT_JWT_SECRET=change_me
+BACKEND_HMAC_SECRET=change_me
+EXPORT_SIGNING_SECRET=change_me
+AGENT_JWT_AUD=agent-worker
+AGENT_JWT_ISS=defrag-api

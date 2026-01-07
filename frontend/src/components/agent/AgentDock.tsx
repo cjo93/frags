@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { AgentChatPanel, AgentMessage } from './AgentChatPanel';
-import { chatAgent } from '@/lib/agentClient';
+import { chatAgent, exportNatalSafeJson } from '@/lib/agentClient';
 import { useAgentSettings } from '@/lib/agent-settings';
 
 export function AgentDock() {
@@ -11,6 +11,9 @@ export function AgentDock() {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [requestId, setRequestId] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const [exportArtifact, setExportArtifact] = useState<{ url: string; expires_at?: string } | null>(null);
 
   const pageContext = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -38,6 +41,23 @@ export function AgentDock() {
     }
   }, [pageContext, memoryEnabled]);
 
+  const handleExport = useCallback(async () => {
+    if (exporting) return;
+    setExportError('');
+    setExportArtifact(null);
+    const profileId = window.prompt('Enter profile id to export (optional):') || undefined;
+    setExporting(true);
+    try {
+      const res = await exportNatalSafeJson(profileId);
+      setExportArtifact({ url: res.artifact.url, expires_at: res.artifact.expires_at });
+      setRequestId(res.requestId);
+    } catch {
+      setExportError('Export failed. Try again.');
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting]);
+
   if (!enabled) return null;
 
   return (
@@ -61,6 +81,10 @@ export function AgentDock() {
         requestId={requestId}
         memoryEnabled={memoryEnabled}
         toolsUsed={[]}
+        onExport={handleExport}
+        exportLoading={exporting}
+        exportError={exportError}
+        exportArtifact={exportArtifact}
       />
     </>
   );

@@ -4,6 +4,15 @@ import { jsonResponse } from "./util/respond";
 import { requireAuth } from "./auth/verify";
 import { enforceRateAndConcurrency, releaseConcurrency } from "./abuse/enforce";
 import { LIMITS } from "./abuse/limits";
+import { readJsonWithLimit } from "./util/body";
+import {
+  buildArtifactKey,
+  getSignedArtifactUrl,
+  renderExportToSvg,
+  sanitizeExportPayload,
+  verifySignedArtifactUrl,
+  writeArtifact
+} from "./export";
 
 export { UserAgentDO };
 
@@ -12,8 +21,11 @@ const metrics = {
   errors: 0,
   rateLimited: 0,
   toolCalls: 0,
+  exports: 0,
   memoryRecalls: 0
 };
+
+let warnedMissingD1 = false;
 
 function getClientIp(req: Request): string {
   return (
@@ -27,9 +39,18 @@ export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const requestId = getOrCreateRequestId(req);
     const url = new URL(req.url);
+    const isProd = (env.ENVIRONMENT || "development") === "production";
     metrics.requests += 1;
 
     try {
+      if (isProd && !env.AGENT_DB) {
+        return jsonError("D1 binding required", "missing_binding", 500, requestId);
+      }
+      if (!isProd && !env.AGENT_DB && !warnedMissingD1) {
+        console.warn("D1 binding missing; running in limited dev mode.");
+        warnedMissingD1 = true;
+      }
+
       if (req.method === "GET" && url.pathname === "/health") {
         return jsonResponse({ ok: true }, { status: 200, requestId });
       }
@@ -40,7 +61,9 @@ export default {
             ok: true,
             do: true,
             d1: Boolean(env.AGENT_DB),
+            r2: Boolean(env.AGENT_R2),
             vectorize: Boolean(env.AGENT_MEM_INDEX),
+            ai: Boolean(env.AI),
             tools: true,
             build: env.BUILD_VERSION || env.ENVIRONMENT || "unknown",
             metrics
@@ -54,6 +77,7 @@ export default {
         if (!hasScope(auth.scopes, "agent:chat")) {
           return jsonError("Forbidden", "forbidden", 403, requestId);
         }
+        const exportAllowed = auth.exportAllowed && hasScope(auth.scopes, "agent:export");
 
         const body = await readBodyWithLimit(req, LIMITS.chat.maxBodyBytes);
 
@@ -77,12 +101,13 @@ export default {
             method: "POST",
             headers: forwardHeaders(req.headers, requestId, auth.userId, {
               memoryAllowed: auth.memoryAllowed,
-              toolsAllowed: auth.toolsAllowed
+              toolsAllowed: auth.toolsAllowed,
+              exportAllowed,
+              origin: url.origin
             }),
             body
           });
           const res = await stub.fetch(doReq);
-          if (res.ok) metrics.toolCalls += 1;
           return withReqId(res, requestId);
         } finally {
           releaseConcurrency(abuse.releaseKey);
@@ -94,6 +119,7 @@ export default {
         if (!hasScope(auth.scopes, "agent:tool") || !auth.toolsAllowed) {
           return jsonError("Forbidden", "forbidden", 403, requestId);
         }
+        const exportAllowed = auth.exportAllowed && hasScope(auth.scopes, "agent:export");
 
         const body = await readBodyWithLimit(req, LIMITS.tool.maxBodyBytes);
 
@@ -117,12 +143,111 @@ export default {
             method: "POST",
             headers: forwardHeaders(req.headers, requestId, auth.userId, {
               memoryAllowed: auth.memoryAllowed,
-              toolsAllowed: auth.toolsAllowed
+              toolsAllowed: auth.toolsAllowed,
+              exportAllowed,
+              origin: url.origin
             }),
             body
           });
           const res = await stub.fetch(doReq);
+          if (res.ok) metrics.toolCalls += 1;
           return withReqId(res, requestId);
+        } finally {
+          releaseConcurrency(abuse.releaseKey);
+        }
+      }
+
+      if (url.pathname === "/agent/export" && req.method === "POST") {
+        const auth = await requireAuth(env, req);
+        if (!hasScope(auth.scopes, "agent:export") || !auth.exportAllowed) {
+          return jsonError("Forbidden", "forbidden", 403, requestId);
+        }
+        if (!env.AGENT_R2) {
+          return jsonError("R2 binding required", "missing_binding", 500, requestId);
+        }
+
+        const body = await readJsonWithLimit<{ title?: string; safe_json?: unknown; safeJson?: unknown }>(
+          req,
+          LIMITS.export.maxBodyBytes
+        );
+        const safeJson = body.safe_json ?? body.safeJson;
+        if (safeJson == null) {
+          return jsonError("Missing safe_json", "bad_request", 400, requestId);
+        }
+
+        const ip = getClientIp(req);
+        const abuse = enforceRateAndConcurrency({
+          endpoint: "export",
+          userId: auth.userId,
+          ip,
+          isDevAdmin: auth.isDevAdmin
+        });
+        if (!abuse.ok) {
+          metrics.rateLimited += 1;
+          return rateLimitResponse(abuse.response, requestId);
+        }
+
+        ctx.waitUntil(logRequest("agent.export", requestId, auth.userId));
+        try {
+          const sanitized = sanitizeExportPayload(safeJson);
+          const rendered = renderExportToSvg(body.title ?? "Safe Export", sanitized);
+          const key = buildArtifactKey(auth.userId, "svg");
+          await writeArtifact(env, key, rendered.bytes, rendered.contentType, {
+            requestId,
+            userId: auth.userId
+          });
+          const signed = await getSignedArtifactUrl(env, key, 900, url.origin);
+          metrics.exports += 1;
+          return jsonResponse(
+            {
+              ok: true,
+              artifact: {
+                key,
+                url: signed.url,
+                expires_at: signed.expiresAt,
+                content_type: rendered.contentType
+              },
+              truncated: rendered.truncated,
+              bytes: sanitized.bytes
+            },
+            { status: 200, requestId }
+          );
+        } finally {
+          releaseConcurrency(abuse.releaseKey);
+        }
+      }
+
+      if (req.method === "GET" && url.pathname.startsWith("/agent/artifacts/")) {
+        if (!env.AGENT_R2) {
+          return jsonError("R2 binding required", "missing_binding", 500, requestId);
+        }
+        const ip = getClientIp(req);
+        const abuse = enforceRateAndConcurrency({
+          endpoint: "artifact",
+          userId: `artifact:${ip}`,
+          ip,
+          isDevAdmin: false
+        });
+        if (!abuse.ok) {
+          metrics.rateLimited += 1;
+          return rateLimitResponse(abuse.response, requestId);
+        }
+        try {
+          const key = decodeURIComponent(url.pathname.replace("/agent/artifacts/", ""));
+          const exp = Number(url.searchParams.get("exp"));
+          const sig = url.searchParams.get("sig") || "";
+          const ok = await verifySignedArtifactUrl(env, key, exp, sig);
+          if (!ok) return jsonError("Forbidden", "forbidden", 403, requestId);
+
+          const obj = await env.AGENT_R2.get(key);
+          if (!obj) return jsonError("Not Found", "not_found", 404, requestId);
+
+          const headers = new Headers();
+          obj.writeHttpMetadata(headers);
+          headers.set("etag", obj.httpEtag);
+          headers.set("cache-control", "private, max-age=3600");
+          headers.set("x-request-id", requestId);
+          return new Response(obj.body, { status: 200, headers });
         } finally {
           releaseConcurrency(abuse.releaseKey);
         }
@@ -141,7 +266,7 @@ function forwardHeaders(
   src: Headers,
   requestId: string,
   userId: string,
-  flags?: { memoryAllowed?: boolean; toolsAllowed?: boolean }
+  flags?: { memoryAllowed?: boolean; toolsAllowed?: boolean; exportAllowed?: boolean; origin?: string }
 ): Headers {
   const h = new Headers();
   h.set("content-type", src.get("content-type") || "application/json");
@@ -152,6 +277,12 @@ function forwardHeaders(
   }
   if (typeof flags?.toolsAllowed === "boolean") {
     h.set("x-tools-allowed", flags.toolsAllowed ? "true" : "false");
+  }
+  if (typeof flags?.exportAllowed === "boolean") {
+    h.set("x-export-allowed", flags.exportAllowed ? "true" : "false");
+  }
+  if (flags?.origin) {
+    h.set("x-origin", flags.origin);
   }
   return h;
 }

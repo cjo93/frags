@@ -18,6 +18,9 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const CHAT_MAX_TOKENS = 400;
+
 export class UserAgentDO {
   private state: DurableObjectState;
   private env: Env;
@@ -118,7 +121,10 @@ export class UserAgentDO {
         role: "user",
         content: message,
         tokensEst: estimateTokens(message),
-        maxTurns: LIMITS.chat.maxTurns
+        maxTurns: LIMITS.chat.maxTurns,
+        requestId,
+        tokenBudget: CHAT_MAX_TOKENS,
+        model: CHAT_MODEL
       });
       await insertConversationTurn(this.env, {
         userId,
@@ -126,7 +132,10 @@ export class UserAgentDO {
         role: "assistant",
         content: aiText,
         tokensEst: estimateTokens(aiText),
-        maxTurns: LIMITS.chat.maxTurns
+        maxTurns: LIMITS.chat.maxTurns,
+        requestId,
+        tokenBudget: CHAT_MAX_TOKENS,
+        model: CHAT_MODEL
       });
     }
 
@@ -157,18 +166,24 @@ export class UserAgentDO {
     const requestId = req.headers.get("x-request-id") ?? "missing";
     const userId = req.headers.get("x-user-id") ?? "";
     const toolsAllowed = getBoolHeader(req.headers.get("x-tools-allowed"), true);
+    const exportAllowed = getBoolHeader(req.headers.get("x-export-allowed"), false);
+    const origin = req.headers.get("x-origin") || undefined;
     if (!userId) return jsonResponse({ error: "Missing x-user-id", code: "bad_request", requestId }, { status: 400, requestId });
     if (!toolsAllowed) {
       return jsonResponse({ error: "Forbidden", code: "forbidden", requestId }, { status: 403, requestId });
     }
 
-    const body = await readJsonSafe<{ name: string; args?: unknown }>(req, LIMITS.tool.maxBodyBytes, requestId);
-    const name = (body.name ?? "").toString();
+    const body = await readJsonSafe<{ name?: string; tool?: string; args?: unknown }>(
+      req,
+      LIMITS.tool.maxBodyBytes,
+      requestId
+    );
+    const name = (body.name ?? body.tool ?? "").toString();
     if (!name) return jsonResponse({ error: "Missing tool name", code: "bad_request", requestId }, { status: 400, requestId });
 
     let out: unknown;
     try {
-      out = await runTool(this.env, userId, requestId, name, body.args);
+      out = await runTool(this.env, userId, requestId, name, body.args, { origin, exportAllowed });
     } catch (e) {
       if (e instanceof Response) {
         const status = e.status || 500;
@@ -211,9 +226,9 @@ async function runTextModel(env: Env, prompt: string): Promise<string> {
 
   // Model choice can be changed later; keep minimal.
   const result: any = await withTimeout(
-    env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+    env.AI.run(CHAT_MODEL, {
       prompt,
-      max_tokens: 400,
+      max_tokens: CHAT_MAX_TOKENS,
       temperature: 0.6
     }),
     15000

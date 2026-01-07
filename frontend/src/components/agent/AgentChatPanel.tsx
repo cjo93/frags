@@ -17,6 +17,10 @@ type Props = {
   requestId: string;
   memoryEnabled: boolean;
   toolsUsed: string[];
+  onExport?: () => void;
+  exportLoading?: boolean;
+  exportError?: string;
+  exportArtifact?: { url: string; expires_at?: string } | null;
 };
 
 export function AgentChatPanel({
@@ -28,6 +32,10 @@ export function AgentChatPanel({
   requestId,
   memoryEnabled,
   toolsUsed,
+  onExport,
+  exportLoading,
+  exportError,
+  exportArtifact,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -112,6 +120,35 @@ export function AgentChatPanel({
           <div className="text-xs text-neutral-500 dark:text-neutral-400">
             Used: {toolsUsed.join(', ')}
           </div>
+        )}
+        {exportArtifact && (
+          <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-xs text-neutral-600 dark:text-neutral-300 space-y-2">
+            <div className="text-sm text-neutral-900 dark:text-neutral-100">Safe export ready</div>
+            <a
+              href={exportArtifact.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-neutral-900 dark:text-neutral-100 underline underline-offset-4"
+            >
+              Download image
+            </a>
+            {exportArtifact.expires_at && (
+              <div>Expires: {new Date(exportArtifact.expires_at).toLocaleString()}</div>
+            )}
+          </div>
+        )}
+        {exportError && (
+          <div className="text-xs text-red-600 dark:text-red-400">{exportError}</div>
+        )}
+        {onExport && (
+          <button
+            type="button"
+            onClick={onExport}
+            disabled={exportLoading}
+            className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 disabled:opacity-50"
+          >
+            {exportLoading ? 'Exporting...' : 'Export safe JSON'}
+          </button>
         )}
         <form
           onSubmit={(e) => {

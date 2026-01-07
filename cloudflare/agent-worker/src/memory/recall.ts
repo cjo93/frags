@@ -2,6 +2,8 @@ import { getPinnedMemories, getMemoriesByIds } from "./db";
 import { writeMemoryEvent } from "./db";
 import { embedText } from "./embed";
 
+let warnedVectorizeMissing = false;
+
 export async function recallMemorySnippets(env: Env, userId: string, query: string): Promise<string[]> {
   const snippets: string[] = [];
 
@@ -20,6 +22,9 @@ export async function recallMemorySnippets(env: Env, userId: string, query: stri
       const rows = await getMemoriesByIds(env, userId, ids);
       for (const r of rows) snippets.push(formatMemoryRow(r.type, r.content_json));
     }
+  } else if (!warnedVectorizeMissing) {
+    console.warn("Vectorize binding missing; semantic recall disabled.");
+    warnedVectorizeMissing = true;
   }
 
   await writeMemoryEvent(env, userId, "recall", {

@@ -1,5 +1,21 @@
 # Deployment & Billing Guide
 
+## Cloudflare Agent Worker: Role in Development
+
+The Cloudflare agent-worker is **first-class for persistent agent features** (continuity, Durable Object state, D1 memory, R2 artifacts, tool gateway). It is **optional for basic local development**—frontend and backend can run without it for core UI, non-agent APIs, and general frontend work.
+
+**Required when working on:**
+- Persistent agent continuity (per-user state)
+- Durable Object logic, D1 memory, R2 artifacts
+- Tool gateway (worker↔backend HMAC, export flows)
+
+**Optional when working on:**
+- Core site UI
+- Non-agent backend APIs
+- General frontend pages
+
+See .github/copilot-instructions.md for more on cross-service contracts and agent workflows.
+
 ## Architecture
 
 ```
@@ -48,7 +64,7 @@
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_API_BASE` | API URL | `https://api.defrag.app` |
+| `NEXT_PUBLIC_API_URL` | API URL | `https://api.defrag.app` |
 
 ---
 

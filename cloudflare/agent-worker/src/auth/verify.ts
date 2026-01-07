@@ -6,6 +6,7 @@ export type AuthContext = {
   scopes: string[];
   memoryAllowed: boolean;
   toolsAllowed: boolean;
+  exportAllowed: boolean;
 };
 
 export async function requireAuth(env: Env, req: Request): Promise<AuthContext> {
@@ -14,7 +15,14 @@ export async function requireAuth(env: Env, req: Request): Promise<AuthContext> 
 
   // Dev bypass (explicit token)
   if (devToken && authz === `Bearer ${devToken}`) {
-    return { userId: "DEV_ADMIN", isDevAdmin: true, scopes: ["*"], memoryAllowed: true, toolsAllowed: true };
+    return {
+      userId: "DEV_ADMIN",
+      isDevAdmin: true,
+      scopes: ["*"],
+      memoryAllowed: true,
+      toolsAllowed: true,
+      exportAllowed: true
+    };
   }
 
   const token = parseBearer(authz);
@@ -43,8 +51,9 @@ export async function requireAuth(env: Env, req: Request): Promise<AuthContext> 
   const scopes = normalizeScopes(payload.scope);
   const memoryAllowed = payload.mem !== false;
   const toolsAllowed = payload.tools !== false;
+  const exportAllowed = payload.export !== false;
 
-  return { userId: sub, isDevAdmin: false, scopes, memoryAllowed, toolsAllowed };
+  return { userId: sub, isDevAdmin: false, scopes, memoryAllowed, toolsAllowed, exportAllowed };
 }
 
 function parseBearer(authz: string): string | null {

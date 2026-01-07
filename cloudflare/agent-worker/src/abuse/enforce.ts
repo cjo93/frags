@@ -4,12 +4,14 @@ import { ConcurrencyLimiter } from "./concurrency";
 
 const chatBucket = new TokenBucket(LIMITS.chat.ratePerMin, LIMITS.chat.ratePerMin / 60);
 const toolBucket = new TokenBucket(LIMITS.tool.ratePerMin, LIMITS.tool.ratePerMin / 60);
+const exportBucket = new TokenBucket(LIMITS.export.ratePerMin, LIMITS.export.ratePerMin / 60);
+const artifactBucket = new TokenBucket(LIMITS.artifact.ratePerMin, LIMITS.artifact.ratePerMin / 60);
 const ipBucket = new TokenBucket(LIMITS.globalIp.ratePerMin, LIMITS.globalIp.ratePerMin / 60);
 
 const conc = new ConcurrencyLimiter();
 
 export function enforceRateAndConcurrency(params: {
-  endpoint: "chat" | "tool";
+  endpoint: "chat" | "tool" | "export" | "artifact";
   userId: string;
   ip: string;
   isDevAdmin: boolean;
@@ -28,7 +30,14 @@ export function enforceRateAndConcurrency(params: {
     };
   }
 
-  const bucket = params.endpoint === "chat" ? chatBucket : toolBucket;
+  const bucket =
+    params.endpoint === "chat"
+      ? chatBucket
+      : params.endpoint === "tool"
+        ? toolBucket
+        : params.endpoint === "export"
+          ? exportBucket
+          : artifactBucket;
   const rateRes = bucket.allow(`user:${params.userId}:${params.endpoint}`);
   if (!rateRes.ok) {
     return {
@@ -40,7 +49,14 @@ export function enforceRateAndConcurrency(params: {
     };
   }
 
-  const maxConc = params.endpoint === "chat" ? LIMITS.chat.concurrency : LIMITS.tool.concurrency;
+  const maxConc =
+    params.endpoint === "chat"
+      ? LIMITS.chat.concurrency
+      : params.endpoint === "tool"
+        ? LIMITS.tool.concurrency
+        : params.endpoint === "export"
+          ? LIMITS.export.concurrency
+          : LIMITS.artifact.concurrency;
   const concKey = `user:${params.userId}:${params.endpoint}`;
   const acquired = conc.acquire(concKey, maxConc);
   if (!acquired) {

@@ -17,7 +17,9 @@ CREATE TABLE IF NOT EXISTS memory_events (
   user_id TEXT NOT NULL,
   event_type TEXT NOT NULL, -- recall|write|tool|redaction|error
   payload_json TEXT NOT NULL,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  source TEXT,
+  confidence REAL
 );
 
 CREATE INDEX IF NOT EXISTS idx_memory_events_user_created ON memory_events(user_id, created_at);
@@ -29,7 +31,10 @@ CREATE TABLE IF NOT EXISTS conversation_turns (
   role TEXT NOT NULL, -- user|assistant
   content TEXT NOT NULL,
   tokens_est INTEGER,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  request_id TEXT,
+  token_budget INTEGER,
+  model TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_conversation_turns_user_created ON conversation_turns(user_id, created_at);
@@ -41,6 +46,9 @@ CREATE TABLE IF NOT EXISTS tool_audit (
   tool TEXT NOT NULL,
   request_id TEXT NOT NULL,
   status TEXT NOT NULL, -- ok|error
+  args_json TEXT,
+  duration_ms INTEGER,
+  redaction_applied INTEGER,
   redacted_output_ref TEXT,
   redacted_output_json TEXT,
   created_at TEXT NOT NULL

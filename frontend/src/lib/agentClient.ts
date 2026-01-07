@@ -15,6 +15,13 @@ type AgentError = {
   requestId?: string;
 };
 
+type ExportArtifact = {
+  key: string;
+  url: string;
+  expires_at?: string;
+  content_type?: string;
+};
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
 const AGENT_BASE = process.env.NEXT_PUBLIC_AGENT_URL || 'https://agent.defrag.app';
 
@@ -25,9 +32,9 @@ function getAuthToken(): string | null {
   return localStorage.getItem('token');
 }
 
-async function getAgentToken(options?: { mem?: boolean; tools?: boolean }): Promise<string> {
+async function getAgentToken(options?: { mem?: boolean; tools?: boolean; export?: boolean }): Promise<string> {
   const now = Date.now();
-  const key = `${options?.mem ?? true}-${options?.tools ?? true}`;
+  const key = `${options?.mem ?? true}-${options?.tools ?? true}-${options?.export ?? true}`;
   const cached = cachedTokens.get(key);
   if (cached && cached.expiresAt - now > 60_000) return cached.token;
 
@@ -40,7 +47,11 @@ async function getAgentToken(options?: { mem?: boolean; tools?: boolean }): Prom
       'content-type': 'application/json',
       authorization: `Bearer ${authToken}`,
     },
-    body: JSON.stringify({ mem: options?.mem ?? true, tools: options?.tools ?? true }),
+    body: JSON.stringify({
+      mem: options?.mem ?? true,
+      tools: options?.tools ?? true,
+      export: options?.export ?? true,
+    }),
   });
 
   if (!res.ok) {
@@ -53,17 +64,33 @@ async function getAgentToken(options?: { mem?: boolean; tools?: boolean }): Prom
   return data.agent_token;
 }
 
+function makeRequestId(): string {
+  const cryptoObj = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
+  if (cryptoObj?.randomUUID) {
+    return `req_${cryptoObj.randomUUID()}`;
+  }
+  if (cryptoObj?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    cryptoObj.getRandomValues(bytes);
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return `req_${hex}`;
+  }
+  return `req_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
 export async function chatAgent(
   message: string,
   pageContext?: string,
   options?: { memoryEnabled?: boolean }
 ): Promise<{ reply: string; requestId: string }>{
-  const token = await getAgentToken({ mem: options?.memoryEnabled ?? true, tools: true });
+  const token = await getAgentToken({ mem: options?.memoryEnabled ?? true, tools: true, export: false });
+  const reqId = makeRequestId();
   const res = await fetch(`${AGENT_BASE}/agent/chat`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
       authorization: `Bearer ${token}`,
+      'x-request-id': reqId,
     },
     body: JSON.stringify({ message, pageContext, memoryEnabled: options?.memoryEnabled }),
   });
@@ -78,13 +105,19 @@ export async function chatAgent(
   return { reply: data.reply, requestId };
 }
 
-export async function runAgentTool(name: string, args?: Record<string, unknown>): Promise<{ result: unknown; requestId: string }>{
-  const token = await getAgentToken({ mem: true, tools: true });
+export async function runAgentTool(
+  name: string,
+  args?: Record<string, unknown>,
+  options?: { export?: boolean }
+): Promise<{ result: unknown; requestId: string }>{
+  const token = await getAgentToken({ mem: true, tools: true, export: options?.export ?? false });
+  const reqId = makeRequestId();
   const res = await fetch(`${AGENT_BASE}/agent/tool`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
       authorization: `Bearer ${token}`,
+      'x-request-id': reqId,
     },
     body: JSON.stringify({ name, args }),
   });
@@ -97,4 +130,19 @@ export async function runAgentTool(name: string, args?: Record<string, unknown>)
 
   const result = await res.json();
   return { result, requestId };
+}
+
+export async function exportNatalSafeJson(
+  profileId?: string
+): Promise<{ artifact: ExportArtifact; requestId: string }>{
+  const { result, requestId } = await runAgentTool(
+    'natal_export',
+    profileId ? { profile_id: profileId } : undefined,
+    { export: true }
+  );
+  const artifact = (result as { artifact?: ExportArtifact })?.artifact;
+  if (!artifact?.url) {
+    throw new Error('Export failed');
+  }
+  return { artifact, requestId };
 }
