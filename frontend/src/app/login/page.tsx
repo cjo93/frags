@@ -7,6 +7,8 @@ import { login as apiLogin, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
 
+const OAUTH_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
@@ -60,6 +62,21 @@ export default function LoginPage() {
           <h1 className="text-2xl font-light tracking-tight mb-8">
             Sign in
           </h1>
+
+          <div className="space-y-2 mb-6">
+            <a
+              href={`${OAUTH_BASE}/auth/oauth/google/start`}
+              className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
+            >
+              Continue with Google
+            </a>
+            <a
+              href={`${OAUTH_BASE}/auth/oauth/apple/start`}
+              className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
+            >
+              Continue with Apple
+            </a>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (

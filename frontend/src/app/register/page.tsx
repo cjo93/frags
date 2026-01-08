@@ -7,6 +7,8 @@ import { register as apiRegister, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
 
+const OAUTH_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
+
 export default function RegisterPage() {
   const router = useRouter();
   const { login } = useAuth();
@@ -63,6 +65,21 @@ export default function RegisterPage() {
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-8">
             Begin your synthesis.
           </p>
+
+          <div className="space-y-2 mb-6">
+            <a
+              href={`${OAUTH_BASE}/auth/oauth/google/start`}
+              className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
+            >
+              Continue with Google
+            </a>
+            <a
+              href={`${OAUTH_BASE}/auth/oauth/apple/start`}
+              className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
+            >
+              Continue with Apple
+            </a>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
