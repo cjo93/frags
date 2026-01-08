@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createCheckout } from '@/lib/api';
 import { useState } from 'react';
-import TrustStrip from '@/components/trust/TrustStrip';
+import TrustStrip from '@/components/TrustStrip';
+import LegalFooter from '@/components/LegalFooter';
 
 const tiers = [
   {
@@ -87,6 +88,18 @@ export default function PricingPage() {
               </Link>
             ) : (
               <>
+                <Link
+                  href="/how-ai-works"
+                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                >
+                  How it works
+                </Link>
+                <Link
+                  href="/trust"
+                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                >
+                  Trust
+                </Link>
                 <Link 
                   href="/login" 
                   className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
@@ -177,14 +190,16 @@ export default function PricingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800">
+      <section className="border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <p className="text-xs text-neutral-400 dark:text-neutral-600 max-w-2xl">
             Subscriptions are billed monthly. Cancel anytime. Your data remains accessible
             at your current tier level after cancellation.
           </p>
         </div>
-      </footer>
+      </section>
+
+      <LegalFooter className="border-t-0" />
     </main>
   );
 }

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import TrustStrip from '@/components/trust/TrustStrip';
+import TrustStrip from '@/components/TrustStrip';
+import LegalFooter from '@/components/LegalFooter';
 
 export default function HowAIWorksPage() {
   const { isAuthenticated } = useAuth();
@@ -25,6 +26,18 @@ export default function HowAIWorksPage() {
               </Link>
             ) : (
               <>
+                <Link 
+                  href="/pricing" 
+                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                >
+                  Pricing
+                </Link>
+                <Link 
+                  href="/trust" 
+                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                >
+                  Trust
+                </Link>
                 <Link 
                   href="/login" 
                   className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
@@ -279,6 +292,8 @@ export default function HowAIWorksPage() {
         </div>
 
       </section>
+
+      <LegalFooter />
     </main>
   );
 }

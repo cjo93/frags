@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import TrustStrip from '@/components/trust/TrustStrip';
+import TrustStrip from '@/components/TrustStrip';
+import LegalFooter from '@/components/LegalFooter';
 
 export default function Home() {
   return (
@@ -16,6 +17,24 @@ export default function Home() {
               className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
             >
               Pricing
+            </Link>
+            <Link
+              href="/about"
+              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+            >
+              About
+            </Link>
+            <Link
+              href="/how-ai-works"
+              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+            >
+              How it works
+            </Link>
+            <Link
+              href="/trust"
+              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+            >
+              Trust
             </Link>
             <Link 
               href="/login" 
@@ -86,8 +105,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Disclaimer Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-800">
+      {/* Disclaimer */}
+      <section className="border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             <div>
@@ -110,16 +129,10 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <div className="flex gap-6 text-xs text-neutral-400 dark:text-neutral-600">
-            <Link href="/privacy" className="hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors">
-              Terms
-            </Link>
-          </div>
         </div>
-      </footer>
+      </section>
+
+      <LegalFooter className="border-t-0" />
     </main>
   );
 }

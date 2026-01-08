@@ -3,11 +3,11 @@ type TrustStripProps = {
 };
 
 const TRUST_ITEMS = [
-  'Deterministic compute',
-  'Optional memory',
-  'Request IDs + rate limits',
-  'Expiring exports',
-  'No cross-user sharing',
+  'Private by default',
+  'Memory is optional',
+  'Exports are sanitized',
+  'Signed tool calls',
+  'Rate-limited + audited',
 ];
 
 export default function TrustStrip({ className = '' }: TrustStripProps) {

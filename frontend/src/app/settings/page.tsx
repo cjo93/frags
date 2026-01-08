@@ -9,6 +9,7 @@ import { exportNatalSafeJson } from '@/lib/agentClient';
 import { useAgentSettings } from '@/lib/agent-settings';
 import { resetInstallPrompt } from '@/components/pwa';
 import { isStandalone, isIOS } from '@/lib/displayMode';
+import TrustStrip from '@/components/TrustStrip';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -126,6 +127,7 @@ export default function SettingsPage() {
 
       <div className="flex-1 max-w-2xl mx-auto w-full px-6 py-12">
         <h1 className="text-2xl font-light tracking-tight mb-8">Settings</h1>
+        <TrustStrip className="mb-10" />
 
         {/* Account */}
         <section className="mb-12">

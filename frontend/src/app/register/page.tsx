@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { register as apiRegister, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
+import TrustStrip from '@/components/TrustStrip';
+import LegalFooter from '@/components/LegalFooter';
 
 const OAUTH_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
 
@@ -83,6 +85,7 @@ export default function RegisterPage() {
               Google/Apple sign-in is in beta.
             </p>
           </div>
+          <TrustStrip className="mb-6" />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -156,6 +159,8 @@ export default function RegisterPage() {
           </p>
         </div>
       </section>
+
+      <LegalFooter />
     </main>
   );
 }
