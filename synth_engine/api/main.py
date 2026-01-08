@@ -500,6 +500,29 @@ def _redact_export_payload(value: Any, depth: int = 0) -> Any:
 # -------------------------
 # Profiles
 # -------------------------
+@app.get("/profiles")
+def list_profiles(
+    user_id: str = Depends(me_user_id),
+    s: Session = Depends(db),
+):
+    profiles = (
+        s.query(Profile)
+        .filter(Profile.user_id == user_id)
+        .order_by(Profile.created_at.desc())
+        .all()
+    )
+    return {
+        "profiles": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in profiles
+        ]
+    }
+
+
 @app.post("/profiles/from_natal_text")
 def create_profile_from_text(
     name: str,
