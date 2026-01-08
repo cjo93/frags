@@ -169,3 +169,18 @@ export async function createProfileFromText(name: string, natalText: string, tim
     { method: 'POST' }
   );
 }
+
+// Admin beta access
+export async function grantBetaAccess(email: string, planKey: 'beta' | 'pro' = 'beta') {
+  return request<{ ok: boolean; user_id: string; plan_key: string }>('/admin/beta/grant', {
+    method: 'POST',
+    body: JSON.stringify({ email, plan_key: planKey }),
+  });
+}
+
+export async function revokeBetaAccess(email: string) {
+  return request<{ ok: boolean; user_id: string }>('/admin/beta/revoke', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}

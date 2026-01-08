@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { createPortal } from '@/lib/api';
+import { grantBetaAccess, revokeBetaAccess } from '@/lib/api';
 import { exportNatalSafeJson } from '@/lib/agentClient';
 import { useAgentSettings } from '@/lib/agent-settings';
 import { resetInstallPrompt } from '@/components/pwa';
@@ -12,10 +12,13 @@ import { isStandalone, isIOS } from '@/lib/displayMode';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { token, user, billing, refresh, logout } = useAuth();
-  const { enabled, memoryEnabled, setEnabled, setMemoryEnabled } = useAgentSettings();
-  const [portalLoading, setPortalLoading] = useState(false);
+  const { token, user, billing, profiles, refresh, logout } = useAuth();
+  const { enabled, memoryEnabled, selectedProfileId, setEnabled, setMemoryEnabled } = useAgentSettings();
   const [exportLoading, setExportLoading] = useState(false);
+  const [betaEmail, setBetaEmail] = useState('');
+  const [betaPlan, setBetaPlan] = useState<'beta' | 'pro'>('beta');
+  const [betaLoading, setBetaLoading] = useState(false);
+  const [betaMessage, setBetaMessage] = useState('');
   
   // Initialize on client only using lazy initializer
   const [installed] = useState(() => {
@@ -39,6 +42,8 @@ export default function SettingsPage() {
     return null;
   }
 
+  const isDevAdmin = user?.email === 'chadowen93@gmail.com';
+
   const currentPlan = billing?.plan_key || 'free';
   const planName = billing?.plan_name || 'Free';
   const subscription = billing?.subscription;
@@ -51,27 +56,46 @@ export default function SettingsPage() {
     : null;
   const willCancel = subscription?.cancel_at_period_end || false;
 
-  const handleManageBilling = async () => {
-    setPortalLoading(true);
-    try {
-      const { url } = await createPortal();
-      router.push(url);
-    } catch (err) {
-      console.error('Portal error:', err);
-      setPortalLoading(false);
-    }
-  };
-
   const handleExportSafeJson = async () => {
-    const profileId = window.prompt('Enter profile id to export (optional):') || undefined;
     setExportLoading(true);
     try {
+      const profileId = selectedProfileId || (profiles.length === 1 ? profiles[0].id : undefined);
       const res = await exportNatalSafeJson(profileId);
       window.open(res.artifact.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
       console.error('Export error:', err);
     } finally {
       setExportLoading(false);
+    }
+  };
+
+  const handleGrantBeta = async () => {
+    const email = betaEmail.trim().toLowerCase();
+    if (!email) return;
+    setBetaLoading(true);
+    setBetaMessage('');
+    try {
+      await grantBetaAccess(email, betaPlan);
+      setBetaMessage('Beta access granted.');
+    } catch {
+      setBetaMessage('Failed to grant beta access.');
+    } finally {
+      setBetaLoading(false);
+    }
+  };
+
+  const handleRevokeBeta = async () => {
+    const email = betaEmail.trim().toLowerCase();
+    if (!email) return;
+    setBetaLoading(true);
+    setBetaMessage('');
+    try {
+      await revokeBetaAccess(email);
+      setBetaMessage('Beta access revoked.');
+    } catch {
+      setBetaMessage('Failed to revoke beta access.');
+    } finally {
+      setBetaLoading(false);
     }
   };
 
@@ -155,7 +179,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex gap-4">
+            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
               {currentPlan === 'free' ? (
                 <Link
                   href="/pricing"
@@ -164,17 +188,66 @@ export default function SettingsPage() {
                   View plans
                 </Link>
               ) : (
-                <button
-                  onClick={handleManageBilling}
-                  disabled={portalLoading}
-                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 disabled:opacity-50"
-                >
-                  {portalLoading ? 'Loading...' : 'Manage billing'}
-                </button>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  Billing updates are handled through your receipt emails.
+                </p>
               )}
             </div>
           </div>
         </section>
+
+        {isDevAdmin && (
+          <section className="mb-12">
+            <h2 className="text-lg font-medium mb-4">Beta Access</h2>
+            <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-4">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                Grant full-tier access without admin permissions. Changes apply immediately.
+              </p>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium">
+                  Tester email
+                  <input
+                    type="email"
+                    value={betaEmail}
+                    onChange={(e) => setBetaEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    className="mt-2 w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm"
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  Plan
+                  <select
+                    value={betaPlan}
+                    onChange={(e) => setBetaPlan(e.target.value as 'beta' | 'pro')}
+                    className="mt-2 w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm"
+                  >
+                    <option value="beta">Beta (full access)</option>
+                    <option value="pro">Pro (integration)</option>
+                  </select>
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleGrantBeta}
+                  disabled={betaLoading}
+                  className="px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50"
+                >
+                  Grant access
+                </button>
+                <button
+                  onClick={handleRevokeBeta}
+                  disabled={betaLoading}
+                  className="px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50"
+                >
+                  Revoke access
+                </button>
+              </div>
+              {betaMessage && (
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">{betaMessage}</p>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Data & Privacy */}
         <section className="mb-12">

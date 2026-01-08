@@ -62,6 +62,9 @@ export default function LoginPage() {
           <h1 className="text-2xl font-light tracking-tight mb-8">
             Sign in
           </h1>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+            Access your profiles with deterministic compute and optional memory.
+          </p>
 
           <div className="space-y-2 mb-6">
             <a
@@ -76,6 +79,9 @@ export default function LoginPage() {
             >
               Continue with Apple
             </a>
+            <p className="text-xs text-neutral-500 dark:text-neutral-500">
+              Google/Apple sign-in is in beta.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

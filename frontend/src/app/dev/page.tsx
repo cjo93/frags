@@ -9,14 +9,14 @@ import { useAuth } from '@/lib/auth-context';
  * 
  * Security:
  * - Only available when NEXT_PUBLIC_ENABLE_DEV=true
- * - Requires a 32+ character secret token (SYNTH_DEV_ADMIN_TOKEN from backend)
+ * - Requires a valid JWT for the dev admin email
  * - Token is stored in localStorage as the auth token
- * - All access is logged server-side
+ * - Admin access is granted only when the token belongs to SYNTH_DEV_ADMIN_EMAIL
  * 
  * Usage:
  * 1. Set NEXT_PUBLIC_ENABLE_DEV=true in Vercel/local env
  * 2. Visit /dev
- * 3. Paste your SYNTH_DEV_ADMIN_TOKEN value
+ * 3. Paste a JWT for the dev admin email (from /auth/login)
  * 4. Click "Enter Dev Mode" → redirects to /dashboard
  */
 
@@ -24,6 +24,7 @@ const DEV_MODE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEV === 'true';
 
 interface ConfigStatus {
   dev_admin_enabled?: boolean;
+  dev_admin_email?: string | null;
   dev_admin_expires_at?: string;
   ai_provider?: string;
   ai_configured?: boolean;
@@ -94,7 +95,7 @@ export default function DevPage() {
 
   const handleTestToken = async () => {
     if (token.length < 32) {
-      setError('Token must be at least 32 characters');
+      setError('Token looks too short');
       return;
     }
     
@@ -139,12 +140,12 @@ export default function DevPage() {
     setError('');
     
     if (token.length < 32) {
-      setError('Token must be at least 32 characters');
+      setError('Token looks too short');
       return;
     }
     
     if (token === 'DEV_ADMIN') {
-      setError('The hardcoded "DEV_ADMIN" token is no longer supported. Use your actual secret.');
+      setError('The hardcoded "DEV_ADMIN" token is no longer supported.');
       return;
     }
     
@@ -191,7 +192,7 @@ export default function DevPage() {
           </div>
           <h1 className="text-2xl font-bold">Dev Admin Mode</h1>
           <p className="text-gray-400 mt-2 text-sm">
-            Enter your secret token to access the app with full Constellation tier.
+            Paste a session token for the dev admin email to access admin tools.
           </p>
         </div>
 
@@ -199,10 +200,13 @@ export default function DevPage() {
           <div className="space-y-6">
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
               <p className="text-green-400 text-sm">
-                ✓ You are currently in dev admin mode
+                ✓ Session token stored
               </p>
               <p className="text-gray-400 text-xs mt-1">
                 Token: {currentToken?.slice(0, 8)}...{currentToken?.slice(-4)}
+              </p>
+              <p className="text-gray-400 text-xs mt-2">
+                Admin access is granted only when the token belongs to {configStatus?.dev_admin_email || 'the dev admin email'}.
               </p>
             </div>
             
@@ -249,19 +253,19 @@ export default function DevPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="token" className="block text-sm font-medium text-gray-300 mb-2">
-                Dev Admin Token
+                Dev Admin Session Token
               </label>
               <input
                 id="token"
                 type="password"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="Enter your 32+ character secret token"
+                placeholder="Paste a JWT for the dev admin email"
                 className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-500"
                 autoComplete="off"
               />
               <p className="text-gray-500 text-xs mt-2">
-                This is the value of SYNTH_DEV_ADMIN_TOKEN from your backend env vars.
+                Sign in normally, then copy the JWT from localStorage and paste it here.
               </p>
             </div>
 

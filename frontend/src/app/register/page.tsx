@@ -63,7 +63,7 @@ export default function RegisterPage() {
             Create an account
           </h1>
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-8">
-            Begin your synthesis.
+            Deterministic compute with optional memory. No predictions, no diagnoses.
           </p>
 
           <div className="space-y-2 mb-6">
@@ -79,6 +79,9 @@ export default function RegisterPage() {
             >
               Continue with Apple
             </a>
+            <p className="text-xs text-neutral-500 dark:text-neutral-500">
+              Google/Apple sign-in is in beta.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -148,8 +151,8 @@ export default function RegisterPage() {
 
           {/* Disclaimer */}
           <p className="mt-8 text-xs text-neutral-400 dark:text-neutral-600 leading-relaxed">
-            By creating an account, you acknowledge that Defrag is a tool for 
-            self-exploration and is not a substitute for professional mental health care.
+            By creating an account, you acknowledge Defrag is a tool for self-reflection and
+            structured exploration, not a substitute for professional mental health care.
           </p>
         </div>
       </section>

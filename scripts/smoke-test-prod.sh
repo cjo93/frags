@@ -4,17 +4,17 @@
 # Production smoke test for defrag.app
 #
 # Usage:
-#   ./scripts/smoke-test-prod.sh [API_URL] [DEV_ADMIN_TOKEN]
+#   ./scripts/smoke-test-prod.sh [API_URL] [DEV_ADMIN_JWT]
 #
 # Example:
-#   ./scripts/smoke-test-prod.sh https://api.defrag.app my-32-char-token-here
+#   ./scripts/smoke-test-prod.sh https://api.defrag.app <jwt>
 #   ./scripts/smoke-test-prod.sh  # Uses defaults from env vars
 
 set -euo pipefail
 
 # Configuration
 API_URL="${1:-${SYNTH_API_URL:-https://api.defrag.app}}"
-TOKEN="${2:-${SYNTH_DEV_ADMIN_TOKEN:-}}"
+TOKEN="${2:-${SYNTH_DEV_ADMIN_JWT:-${SYNTH_DEV_ADMIN_TOKEN:-}}}"
 
 # Colors
 RED='\033[0;31m'

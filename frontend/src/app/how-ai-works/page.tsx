@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import TrustStrip from '@/components/trust/TrustStrip';
 
 export default function HowAIWorksPage() {
   const { isAuthenticated } = useAuth();
@@ -48,8 +49,9 @@ export default function HowAIWorksPage() {
           How AI works in Defrag
         </h1>
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-          Transparent, grounded, and never the source of truth.
+          Deterministic compute first. AI interpretation second. Clear boundaries throughout.
         </p>
+        <TrustStrip className="mt-6" />
       </section>
 
       {/* Content */}
@@ -67,7 +69,7 @@ export default function HowAIWorksPage() {
             <p>
               AI enters only as an <strong className="text-neutral-900 dark:text-white">interpretation layer</strong>—an assistant that 
               helps you explore and connect the computed data. It can explain what a Sun square Mars means, or how your 
-              Profile 4/6 might express in relationships. But it never invents placements or generates data.
+              Profile 4/6 might express in relationships. It never invents placements or generates data.
             </p>
           </div>
         </div>
@@ -86,7 +88,7 @@ export default function HowAIWorksPage() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
-              <span>Answers questions about your chart with citations to specific placements</span>
+              <span>Answers questions about your chart with citations to computed placements</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
@@ -121,7 +123,7 @@ export default function HowAIWorksPage() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-red-600 dark:text-red-400 mt-1">✗</span>
-              <span>Remember conversations across sessions (each thread is isolated)</span>
+              <span>Remember conversations across sessions without explicit memory opt-in</span>
             </li>
           </ul>
         </div>
@@ -143,6 +145,9 @@ export default function HowAIWorksPage() {
             <p>
               We currently use <strong className="text-neutral-900 dark:text-white">Cloudflare Workers AI</strong> for inference. 
               Your data never leaves Cloudflare&apos;s network and is processed on their secure edge infrastructure.
+            </p>
+            <p>
+              Exports are rendered artifacts with expiring links, and request IDs are attached end-to-end for auditability.
             </p>
           </div>
         </div>
@@ -245,9 +250,8 @@ export default function HowAIWorksPage() {
               systems reveal—not to replace your own discernment.
             </p>
             <p>
-              Every AI response in Defrag includes citations to the specific computed layers it drew from. 
-              You can always trace an interpretation back to its source data. This isn&apos;t about blind trust; 
-              it&apos;s about informed exploration.
+              When available, AI responses include citations to the computed layers they draw from. You can trace
+              an interpretation back to its source data. This isn&apos;t about blind trust; it&apos;s about informed exploration.
             </p>
             <p>
               We&apos;ll continue to be transparent about what models we use, how your data flows, and what 

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from synth_engine.api.deps import db, require_role, require_admin_mutations, audit_logger, is_dev_admin_user
 from synth_engine.api.auth import create_token
 from synth_engine.storage import repo as R
-from synth_engine.storage.models import User, UserRole, StripeCustomer
+from synth_engine.storage.models import User, UserRole, StripeCustomer, StripeSubscription
 from synth_engine.config import settings
 from synth_engine.api.abuse import get_abuse_metrics, reset_abuse_metrics
 from synth_engine.utils.diag import secret_fingerprint
@@ -183,6 +183,75 @@ def hmac_fingerprint(
         "configured": bool(fp),
         "fingerprint": fp
     }
+
+class BetaAccessRequest(BaseModel):
+    email: str
+    plan_key: str = "beta"
+
+
+@router.post("/beta/grant")
+def grant_beta_access(
+    req: BetaAccessRequest,
+    _user=Depends(require_role("admin")),
+    s: Session = Depends(db),
+):
+    plan_key = (req.plan_key or "beta").strip().lower()
+    if plan_key not in ("beta", "pro"):
+        raise HTTPException(400, "Invalid plan_key")
+
+    user = s.query(User).filter(User.email == req.email).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    stripe_customer_id = R.get_stripe_customer_id(s, user.id) or f"beta_{user.id}"
+    if not R.get_stripe_customer_id(s, user.id):
+        R.ensure_stripe_customer(s, user.id, user.email, stripe_customer_id)
+
+    sub_id = f"beta_{user.id}"
+    sub = s.query(StripeSubscription).filter(StripeSubscription.stripe_subscription_id == sub_id).first()
+    if sub:
+        sub.status = "active"
+        sub.price_id = plan_key
+        sub.current_period_end = None
+        sub.cancel_at_period_end = False
+        sub.updated_at = datetime.utcnow()
+    else:
+        sub = StripeSubscription(
+            id=R.new_id(),
+            user_id=user.id,
+            stripe_subscription_id=sub_id,
+            status="active",
+            price_id=plan_key,
+            current_period_end=None,
+            cancel_at_period_end=False,
+        )
+        s.add(sub)
+    s.commit()
+
+    return {"ok": True, "user_id": user.id, "plan_key": plan_key}
+
+
+@router.post("/beta/revoke")
+def revoke_beta_access(
+    req: BetaAccessRequest,
+    _user=Depends(require_role("admin")),
+    s: Session = Depends(db),
+):
+    user = s.query(User).filter(User.email == req.email).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    sub_id = f"beta_{user.id}"
+    sub = s.query(StripeSubscription).filter(StripeSubscription.stripe_subscription_id == sub_id).first()
+    if sub:
+        sub.status = "canceled"
+        sub.price_id = None
+        sub.current_period_end = None
+        sub.cancel_at_period_end = False
+        sub.updated_at = datetime.utcnow()
+        s.commit()
+
+    return {"ok": True, "user_id": user.id}
 
 
 # ----- Mutation endpoints (require admin_mutations_enabled) -----

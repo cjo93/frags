@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import TrustStrip from '@/components/trust/TrustStrip';
 
 export default function Home() {
   return (
@@ -36,10 +37,10 @@ export default function Home() {
       <section className="flex-1 flex items-center">
         <div className="max-w-5xl mx-auto px-6 py-24 md:py-32">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight max-w-3xl">
-            Understand patterns across people, time, and systems.
+            Reproducible synthesis for the spiritual rebel.
           </h1>
           <p className="mt-6 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-            Without prediction, diagnosis, or advice.
+            Deterministic computation first. AI interpretation second. No prediction, diagnosis, or advice.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
             <Link
@@ -55,6 +56,7 @@ export default function Home() {
               View pricing
             </Link>
           </div>
+          <TrustStrip className="mt-10" />
         </div>
       </section>
 
@@ -65,7 +67,7 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-medium mb-3">Profiles</h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Create natal profiles for yourself and others. Track psychological state over time.
+                Create natal profiles and track psychological state with structured check-ins.
               </p>
             </div>
             <div>
@@ -77,7 +79,7 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-medium mb-3">Constellations</h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Map relationships. Understand family dynamics through Bowen theory integration.
+                Map relationships and family dynamics with Bowen-informed structure.
               </p>
             </div>
           </div>
@@ -93,9 +95,9 @@ export default function Home() {
                 Not Medical Advice
               </h4>
               <p className="text-xs text-neutral-400 dark:text-neutral-600 leading-relaxed">
-                Defrag is a tool for self-reflection and personal exploration. It is not a substitute 
-                for professional mental health care, therapy, or medical advice. If you are experiencing 
-                a mental health crisis, please contact a qualified professional.
+                Defrag is a tool for self-reflection and structured exploration. It is not a substitute
+                for professional mental health care, therapy, or medical advice. If you are in crisis,
+                please contact a qualified professional.
               </p>
             </div>
             <div>
@@ -103,8 +105,8 @@ export default function Home() {
                 Your Data
               </h4>
               <p className="text-xs text-neutral-400 dark:text-neutral-600 leading-relaxed">
-                Your birth data and profile information is stored securely and encrypted at rest. 
-                We do not sell your data or share it with third parties. You can delete your data at any time.
+                Your data is protected in transit and access-controlled at rest. We do not sell your data or
+                share it across users. Exports are time-limited, and you can request deletion at any time.
               </p>
             </div>
           </div>

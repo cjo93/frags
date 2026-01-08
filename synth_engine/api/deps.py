@@ -43,52 +43,28 @@ def me_user_id(authorization: str = Header(...)) -> str:
 
 class DevAdminUser:
     """
-    Fake user object for dev admin bypass - mimics User model attributes.
-    
-    Security:
-    - Only instantiated when SYNTH_DEV_ADMIN_ENABLED=true AND
-      Bearer token matches SYNTH_DEV_ADMIN_TOKEN (32+ char secret)
-    - All actions are logged to audit trail
+    Dev admin wrapper that grants admin role to a specific authenticated user.
     """
-    def __init__(self, email: str):
-        self.id = DEV_ADMIN_USER_ID
-        self.email = email
+    def __init__(self, user: User):
+        self.id = user.id
+        self.email = user.email
         self.role = UserRole.admin  # Use actual enum so .value works
-        self.created_at = datetime.utcnow()  # Fake creation time
-        self.is_dev_admin = True  # Flag to identify dev admin bypass
+        self.created_at = user.created_at
+        self.is_dev_admin = True  # Flag to identify dev admin status
         
     def __repr__(self):
-        return f"<DevAdminUser email={self.email}>"
+        return f"<DevAdminUser email={self.email} user_id={self.id}>"
 
 
-def _validate_dev_admin_token(token: str) -> bool:
-    """
-    Validate dev admin token with security checks.
-    
-    Requirements:
-    1. SYNTH_DEV_ADMIN_ENABLED must be true
-    2. SYNTH_DEV_ADMIN_TOKEN must be set (32+ chars)
-    3. SYNTH_DEV_ADMIN_EMAIL must be set
-    4. SYNTH_DEV_ADMIN_EXPIRES_AT not passed (if set)
-    5. Token must match exactly
-    """
+def _dev_admin_active() -> bool:
     if not settings.dev_admin_enabled:
         return False
-    
-    if not settings.dev_admin_token or len(settings.dev_admin_token) < 32:
-        # Token not set or too short - security risk, reject
-        audit_logger.warning("DEV_ADMIN: Attempted access but token not configured or too short")
-        return False
-    
     if not settings.dev_admin_email:
         audit_logger.warning("DEV_ADMIN: Attempted access but email not configured")
         return False
-    
-    # Check expiry time bomb (if set)
     if settings.dev_admin_expires_at:
         try:
             from datetime import datetime, timezone
-            # Parse ISO format (e.g., "2026-01-06T00:00:00Z" or "2026-01-06T00:00:00+00:00")
             expires_str = settings.dev_admin_expires_at.replace('Z', '+00:00')
             expires_at = datetime.fromisoformat(expires_str)
             if datetime.now(timezone.utc) > expires_at:
@@ -98,17 +74,12 @@ def _validate_dev_admin_token(token: str) -> bool:
                 return False
         except ValueError as e:
             audit_logger.warning(f"DEV_ADMIN: Invalid expires_at format: {e}")
-            # Invalid format = fail closed (deny access)
             return False
-    
-    # Reject the old insecure "DEV_ADMIN" string
-    if token == "DEV_ADMIN":
-        audit_logger.warning("DEV_ADMIN: Rejected insecure 'DEV_ADMIN' token - use proper secret")
-        return False
-    
-    # Constant-time comparison to prevent timing attacks
-    import secrets
-    return secrets.compare_digest(token, settings.dev_admin_token)
+    return True
+
+
+def _is_dev_admin_email(email: str) -> bool:
+    return _dev_admin_active() and email == settings.dev_admin_email
 
 
 def is_dev_admin_user(user) -> bool:
@@ -124,28 +95,15 @@ def get_current_user(
     """
     Returns the full User object for the authenticated user.
     
-    Supports dev admin bypass when properly configured:
+    Supports dev admin elevation when properly configured:
     - SYNTH_DEV_ADMIN_ENABLED=true
-    - SYNTH_DEV_ADMIN_TOKEN=<32+ char secret>
-    - SYNTH_DEV_ADMIN_EMAIL=<email>
+    - SYNTH_DEV_ADMIN_EMAIL=<email> (must match authenticated user)
     - Authorization: Bearer <token>
     """
     if not authorization.startswith("Bearer "):
         raise HTTPException(401, "Missing Bearer token")
     
     token = authorization.split(" ", 1)[1]
-    
-    # Dev admin bypass - only if properly secured
-    if _validate_dev_admin_token(token):
-        dev_user = DevAdminUser(settings.dev_admin_email)
-        # Audit log every dev admin access
-        audit_logger.info(
-            f"DEV_ADMIN: Access granted | "
-            f"path={request.url.path} | "
-            f"method={request.method} | "
-            f"email={settings.dev_admin_email}"
-        )
-        return dev_user
     
     # Normal JWT auth flow
     try:
@@ -156,6 +114,16 @@ def get_current_user(
     user = s.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(401, "User not found")
+    if _is_dev_admin_email(user.email or ""):
+        dev_user = DevAdminUser(user)
+        audit_logger.info(
+            f"DEV_ADMIN: Access granted | "
+            f"path={request.url.path} | "
+            f"method={request.method} | "
+            f"email={user.email} | "
+            f"user_id={user.id}"
+        )
+        return dev_user
     return user
 
 

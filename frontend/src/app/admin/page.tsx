@@ -82,7 +82,7 @@ export default function AdminPage() {
       if (!statsRes.ok || !configRes.ok || !aiConfigRes.ok || !usersRes.ok) {
         const failedRes = [statsRes, configRes, aiConfigRes, usersRes].find(r => !r.ok);
         if (failedRes?.status === 401) {
-          setError('Not authenticated - please use /dev to enter dev mode');
+          setError('Not authenticated - sign in with the dev admin email');
         } else if (failedRes?.status === 403) {
           setError('Not authorized - admin role required');
         } else {
@@ -117,7 +117,7 @@ export default function AdminPage() {
     }
     
     if (!isAuthenticated) {
-      router.replace('/dev');
+      router.replace('/login');
       return;
     }
     
@@ -175,10 +175,10 @@ export default function AdminPage() {
         <div className="text-center">
           <p className="text-red-400 mb-4">{error}</p>
           <button
-            onClick={() => router.push('/dev')}
+            onClick={() => router.push('/login')}
             className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500"
           >
-            Go to Dev Login
+            Go to Sign In
           </button>
         </div>
       </div>
@@ -204,10 +204,10 @@ export default function AdminPage() {
               ← Dashboard
             </button>
             <button
-              onClick={() => router.push('/dev')}
+              onClick={() => router.push('/settings')}
               className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg text-sm"
             >
-              Exit Admin
+              Back to Settings
             </button>
           </div>
         </div>

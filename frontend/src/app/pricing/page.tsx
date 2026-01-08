@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createCheckout } from '@/lib/api';
 import { useState } from 'react';
+import TrustStrip from '@/components/trust/TrustStrip';
 
 const tiers = [
   {
     name: 'Insight',
     key: 'insight',
     price: 15,
-    description: 'Explore individual patterns with structured, deterministic synthesis.',
+    description: 'Deterministic synthesis for individual profiles with preview interpretation.',
     features: [
       'Up to 3 profiles',
       'Deterministic synthesis',
@@ -23,7 +24,7 @@ const tiers = [
     name: 'Integration',
     key: 'integration',
     price: 29,
-    description: 'Work across multiple profiles and systems with deeper contextual continuity.',
+    description: 'Multi-profile context with cross-system synthesis and broader continuity.',
     features: [
       'Unlimited profiles',
       'Systems view',
@@ -35,7 +36,7 @@ const tiers = [
     name: 'Constellation',
     key: 'constellation',
     price: 59,
-    description: 'Reveal relational patterns that only emerge between people.',
+    description: 'Relational synthesis across people with full interpretation.',
     features: [
       'Full constellation creation',
       'Relational synthesis',
@@ -107,11 +108,12 @@ export default function PricingPage() {
       {/* Pricing Hero */}
       <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
         <h1 className="text-3xl md:text-4xl font-light tracking-tight">
-          Choose your depth.
+          Pricing for the spiritual rebel who wants traceability.
         </h1>
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-          All plans use the same deterministic synthesis engine. Higher tiers unlock broader context and deeper interpretation.
+          Every plan uses the same deterministic synthesis engine. Higher tiers expand context depth, relational tooling, and AI capacity.
         </p>
+        <TrustStrip className="mt-8" />
       </section>
 
       {/* Pricing Cards */}
@@ -163,13 +165,12 @@ export default function PricingPage() {
           <h2 className="text-xl font-medium mb-6">Why tiers?</h2>
           <div className="grid md:grid-cols-2 gap-8 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
             <p>
-              Self-understanding is a practice, not a product. The tiered model reflects 
-              the natural progression of inner work—from basic awareness, through 
-              temporal sensitivity, to relational mapping.
+              Self-understanding is a practice, not a product. The tiered model reflects the
+              progression from personal patterns to multi-person dynamics and timing sensitivity.
             </p>
             <p>
-              Each tier unlocks computational depth. We don&apos;t believe in restricting 
-              access to insight. We believe in meeting you where you are.
+              Each tier unlocks computational depth and context scope. We aim for clear boundaries,
+              predictable costs, and upgrade paths that respect your pace.
             </p>
           </div>
         </div>
@@ -179,8 +180,8 @@ export default function PricingPage() {
       <footer className="border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <p className="text-xs text-neutral-400 dark:text-neutral-600 max-w-2xl">
-            All subscriptions are billed monthly. Cancel anytime. Your data remains 
-            accessible at your current tier level after cancellation.
+            Subscriptions are billed monthly. Cancel anytime. Your data remains accessible
+            at your current tier level after cancellation.
           </p>
         </div>
       </footer>

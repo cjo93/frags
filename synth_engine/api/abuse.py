@@ -22,7 +22,6 @@ from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from synth_engine.api.deps import DEV_ADMIN_USER_ID
 
 
 # Set up structured logger for abuse events
@@ -257,8 +256,6 @@ def _get_client_ip(request: Request) -> str:
 def _get_user_id_from_auth(request: Request) -> Optional[str]:
     """Extract user_id from Authorization header (without full validation)."""
     from synth_engine.api.auth import decode_token
-    from synth_engine.config import settings
-    import secrets
     
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
@@ -266,17 +263,32 @@ def _get_user_id_from_auth(request: Request) -> Optional[str]:
     
     token = auth.split(" ", 1)[1]
     
-    # Check dev admin token
-    if settings.dev_admin_enabled and settings.dev_admin_token:
-        if len(settings.dev_admin_token) >= 32 and token != "DEV_ADMIN":
-            if secrets.compare_digest(token, settings.dev_admin_token):
-                return DEV_ADMIN_USER_ID
-    
     # Try to decode JWT
     try:
         return decode_token(token)
     except Exception:
         return None
+
+
+def _is_dev_admin_user_id(user_id: Optional[str]) -> bool:
+    if not user_id:
+        return False
+    from synth_engine.config import settings
+    from synth_engine.storage.db import SessionLocal
+    from synth_engine.storage.models import User
+
+    if not settings.dev_admin_enabled or not settings.dev_admin_email:
+        return False
+    s = SessionLocal()
+    try:
+        return (
+            s.query(User)
+            .filter(User.id == user_id, User.email == settings.dev_admin_email)
+            .first()
+            is not None
+        )
+    finally:
+        s.close()
 
 
 class AbuseControlMiddleware(BaseHTTPMiddleware):
@@ -311,7 +323,7 @@ class AbuseControlMiddleware(BaseHTTPMiddleware):
         rate_limit_key = user_id or f"ip:{client_ip}"
         
         # Check if DEV_ADMIN (bypasses rate/concurrency but not input limits)
-        is_dev_admin = user_id == DEV_ADMIN_USER_ID
+        is_dev_admin = _is_dev_admin_user_id(user_id)
         
         # =========================================================
         # Check 1: Input size limits (before reading body)

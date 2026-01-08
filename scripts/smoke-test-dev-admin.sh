@@ -4,17 +4,17 @@
 # Quick smoke test for dev admin functionality
 #
 # Usage:
-#   ./scripts/smoke-test-dev-admin.sh [API_URL] [DEV_ADMIN_TOKEN]
+#   ./scripts/smoke-test-dev-admin.sh [API_URL] [DEV_ADMIN_JWT]
 #
 # Example:
-#   ./scripts/smoke-test-dev-admin.sh https://api.defrag.app my-32-char-token-here
+#   ./scripts/smoke-test-dev-admin.sh https://api.defrag.app <jwt>
 #   ./scripts/smoke-test-dev-admin.sh  # Uses defaults from env vars
 
 set -euo pipefail
 
 # Configuration
 API_URL="${1:-${SYNTH_API_URL:-https://api.defrag.app}}"
-TOKEN="${2:-${SYNTH_DEV_ADMIN_TOKEN:-}}"
+TOKEN="${2:-${SYNTH_DEV_ADMIN_JWT:-${SYNTH_DEV_ADMIN_TOKEN:-}}}"
 
 # Colors
 RED='\033[0;31m'
@@ -30,11 +30,11 @@ info() { echo -e "  INFO: $1"; }
 
 # Validate inputs
 if [ -z "$TOKEN" ]; then
-    fail "No token provided. Pass as argument or set SYNTH_DEV_ADMIN_TOKEN env var"
+    fail "No token provided. Pass a JWT or set SYNTH_DEV_ADMIN_JWT env var"
 fi
 
 if [ ${#TOKEN} -lt 32 ]; then
-    fail "Token must be at least 32 characters (got ${#TOKEN})"
+    fail "Token looks too short (got ${#TOKEN})"
 fi
 
 if [ "$TOKEN" = "DEV_ADMIN" ]; then

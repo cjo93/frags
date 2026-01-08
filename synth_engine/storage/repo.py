@@ -23,7 +23,7 @@ from synth_engine.storage.models import (
     ConstellationLayer,
 )
 
-# Dev admin user ID constant (imported from deps for consistency)
+# Dev admin user ID constant retained for legacy compatibility
 DEV_ADMIN_USER_ID = "dev-admin-00000000-0000-0000-0000-000000000000"
 
 
@@ -658,7 +658,22 @@ PLAN_NAMES = {
     "insight": "Insight",
     "integration": "Integration",
     "constellation": "Constellation",
+    "beta": "Beta",
 }
+
+
+def is_dev_admin_user_id(s: Session, user_id: Optional[str]) -> bool:
+    from synth_engine.config import settings
+    if not user_id:
+        return False
+    if not settings.dev_admin_enabled or not settings.dev_admin_email:
+        return False
+    return (
+        s.query(User)
+        .filter(User.id == user_id, User.email == settings.dev_admin_email)
+        .first()
+        is not None
+    )
 
 
 def plan_for_user(s: Session, user_id: str) -> str:
@@ -669,7 +684,7 @@ def plan_for_user(s: Session, user_id: str) -> str:
     from synth_engine.config import settings
     
     # Dev admin bypass - always constellation
-    if user_id == DEV_ADMIN_USER_ID:
+    if is_dev_admin_user_id(s, user_id):
         return "constellation"
 
     sub = (
@@ -688,6 +703,8 @@ def plan_for_user(s: Session, user_id: str) -> str:
         settings.stripe_price_basic: "insight",
         settings.stripe_price_pro: "integration",
         settings.stripe_price_family: "constellation",
+        "beta": "beta",
+        "pro": "integration",
     }
     return price_to_plan.get(sub.price_id, "free")
 
@@ -707,9 +724,9 @@ def get_active_subscription(s: Session, user_id: str) -> Optional[StripeSubscrip
 def _feature_flags_for_plan(plan: str) -> Dict[str, bool]:
     """Return feature flags based on plan tier."""
     # Plan hierarchy: free < insight < integration < constellation
-    is_paid = plan in ("insight", "integration", "constellation")
-    is_integration = plan in ("integration", "constellation")
-    is_constellation = plan == "constellation"
+    is_paid = plan in ("insight", "integration", "constellation", "beta")
+    is_integration = plan in ("integration", "constellation", "beta")
+    is_constellation = plan in ("constellation", "beta")
     
     return {
         "synthesis_profile": True,  # Free for all
@@ -727,7 +744,7 @@ def _feature_flags_for_plan(plan: str) -> Dict[str, bool]:
 def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
     """Get billing status for a user."""
     # Dev admin bypass - return full constellation access
-    if user_id == DEV_ADMIN_USER_ID:
+    if is_dev_admin_user_id(s, user_id):
         return {
             "has_stripe": True,
             "subscription": {"status": "active", "price_id": "dev_admin", "current_period_end": None, "cancel_at_period_end": False},
@@ -793,7 +810,7 @@ def is_entitled(s: Session, user_id: str, action: str) -> bool:
     from synth_engine.config import settings
     
     # Dev admin bypass - always entitled
-    if user_id == DEV_ADMIN_USER_ID:
+    if is_dev_admin_user_id(s, user_id):
         return True
 
     sub = (
@@ -826,8 +843,8 @@ def is_entitled(s: Session, user_id: str, action: str) -> bool:
 
 def record_usage(s: Session, user_id: str, action: str, units: int = 1, meta: Optional[Dict[str, Any]] = None) -> Optional[UsageLedger]:
     """Record usage in the ledger. Skips for dev admin (not a real DB user)."""
-    # Skip recording for dev admin since they don't exist in the users table
-    if user_id == DEV_ADMIN_USER_ID:
+    # Skip recording for dev admin
+    if is_dev_admin_user_id(s, user_id):
         return None
     
     entry = UsageLedger(
@@ -878,8 +895,8 @@ def create_chat_thread(
         title=title,
     )
     
-    # Dev admin: store in memory (no DB constraint issues)
-    if user_id == DEV_ADMIN_USER_ID:
+    # Dev admin: store in memory
+    if is_dev_admin_user_id(s, user_id):
         _dev_admin_threads[thread_id] = thread
         _dev_admin_messages[thread_id] = []
         return thread
@@ -891,7 +908,7 @@ def create_chat_thread(
 
 def get_chat_thread(s: Session, thread_id: str, user_id: str) -> Optional[ChatThread]:
     # Dev admin: check in-memory first
-    if user_id == DEV_ADMIN_USER_ID and thread_id in _dev_admin_threads:
+    if is_dev_admin_user_id(s, user_id) and thread_id in _dev_admin_threads:
         return _dev_admin_threads[thread_id]
     
     return (
