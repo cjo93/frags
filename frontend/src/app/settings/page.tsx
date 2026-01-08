@@ -209,6 +209,28 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        <section className="mb-12">
+          <h2 className="text-lg font-medium mb-4">Privacy & Security</h2>
+          <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-3 text-sm text-neutral-600 dark:text-neutral-400">
+            <div className="flex items-start gap-2">
+              <span className="text-neutral-400">•</span>
+              <span>Encrypted in transit (TLS).</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-neutral-400">•</span>
+              <span>Export links expire automatically.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-neutral-400">•</span>
+              <span>Memory is optional and can be disabled anytime.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-neutral-400">•</span>
+              <span>Request deletion of your history at any time.</span>
+            </div>
+          </div>
+        </section>
+
         {/* AI Settings */}
         <section className="mb-12">
           <h2 className="text-lg font-medium mb-4">AI Settings</h2>
@@ -228,7 +250,7 @@ export default function SettingsPage() {
             <label className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-neutral-900 dark:text-white">Memory</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">Allow the agent to recall past context.</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">On: remembers preferences and context. Off: session-only.</p>
               </div>
               <input
                 type="checkbox"

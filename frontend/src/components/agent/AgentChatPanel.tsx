@@ -19,8 +19,11 @@ type Props = {
   toolsUsed: string[];
   onExport?: () => void;
   exportLoading?: boolean;
-  exportError?: string;
+  exportError?: { message: string; requestId?: string; code?: string } | null;
   exportArtifact?: { url: string; expires_at?: string } | null;
+  profiles?: { id: string; name: string; created_at?: string | null }[];
+  selectedProfileId?: string | null;
+  onSelectProfile?: (id: string | null) => void;
 };
 
 export function AgentChatPanel({
@@ -36,6 +39,9 @@ export function AgentChatPanel({
   exportLoading,
   exportError,
   exportArtifact,
+  profiles,
+  selectedProfileId,
+  onSelectProfile,
 }: Props) {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -121,9 +127,36 @@ export function AgentChatPanel({
             Used: {toolsUsed.join(', ')}
           </div>
         )}
+        {profiles && profiles.length > 0 && onSelectProfile && (
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">
+            {profiles.length === 1 ? (
+              <span>Profile: {profiles[0].name}</span>
+            ) : (
+              <label className="flex items-center gap-2">
+                <span className="text-xs">Profile</span>
+                <select
+                  value={selectedProfileId || ''}
+                  onChange={(e) => onSelectProfile(e.target.value || null)}
+                  className="text-xs rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-2 py-1"
+                >
+                  <option value="">Select…</option>
+                  {profiles.map((profile) => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.name || 'Untitled profile'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+        )}
         {exportArtifact && (
           <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-xs text-neutral-600 dark:text-neutral-300 space-y-2">
             <div className="text-sm text-neutral-900 dark:text-neutral-100">Safe export ready</div>
+            <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+              Secure export
+            </div>
             <a
               href={exportArtifact.url}
               target="_blank"
@@ -138,7 +171,34 @@ export function AgentChatPanel({
           </div>
         )}
         {exportError && (
-          <div className="text-xs text-red-600 dark:text-red-400">{exportError}</div>
+          <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-xl p-3 text-xs text-red-700 dark:text-red-300 space-y-2">
+            <div>{exportError.message || 'I couldn’t fetch that yet.'}</div>
+            {exportError.requestId && (
+              <div className="text-[11px] text-red-600 dark:text-red-400">
+                Request: {exportError.requestId}
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              {onExport && (
+                <button
+                  type="button"
+                  onClick={onExport}
+                  className="text-[11px] underline underline-offset-4"
+                >
+                  Retry
+                </button>
+              )}
+              {profiles && profiles.length > 1 && onSelectProfile && (
+                <button
+                  type="button"
+                  onClick={() => onSelectProfile(null)}
+                  className="text-[11px] underline underline-offset-4"
+                >
+                  Pick profile
+                </button>
+              )}
+            </div>
+          </div>
         )}
         {onExport && (
           <button

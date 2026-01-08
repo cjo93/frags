@@ -78,6 +78,18 @@ function makeRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+export class AgentRequestError extends Error {
+  requestId?: string;
+  code?: string;
+
+  constructor(message: string, requestId?: string, code?: string) {
+    super(message);
+    this.name = 'AgentRequestError';
+    this.requestId = requestId;
+    this.code = code;
+  }
+}
+
 export async function chatAgent(
   message: string,
   pageContext?: string,
@@ -98,7 +110,7 @@ export async function chatAgent(
   const requestId = res.headers.get('x-request-id') || '';
   if (!res.ok) {
     const err = (await res.json().catch(() => ({ error: 'Request failed' }))) as AgentError;
-    throw new Error(err.error || 'Request failed');
+    throw new AgentRequestError(err.error || 'Request failed', err.requestId || requestId, err.code);
   }
 
   const data = (await res.json()) as AgentChatResponse;
@@ -125,7 +137,7 @@ export async function runAgentTool(
   const requestId = res.headers.get('x-request-id') || '';
   if (!res.ok) {
     const err = (await res.json().catch(() => ({ error: 'Request failed' }))) as AgentError;
-    throw new Error(err.error || 'Request failed');
+    throw new AgentRequestError(err.error || 'Request failed', err.requestId || requestId, err.code);
   }
 
   const result = await res.json();

@@ -1,24 +1,34 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AgentChatPanel, AgentMessage } from './AgentChatPanel';
-import { chatAgent, exportNatalSafeJson } from '@/lib/agentClient';
+import { AgentRequestError, chatAgent, exportNatalSafeJson } from '@/lib/agentClient';
 import { useAgentSettings } from '@/lib/agent-settings';
+import { useAuth } from '@/lib/auth-context';
+
+type ToolError = { message: string; requestId?: string; code?: string };
 
 export function AgentDock() {
-  const { enabled, memoryEnabled } = useAgentSettings();
+  const { enabled, memoryEnabled, selectedProfileId, setSelectedProfileId } = useAgentSettings();
+  const { profiles, isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [requestId, setRequestId] = useState('');
   const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState('');
+  const [exportError, setExportError] = useState<ToolError | null>(null);
   const [exportArtifact, setExportArtifact] = useState<{ url: string; expires_at?: string } | null>(null);
 
   const pageContext = useMemo(() => {
     if (typeof window === 'undefined') return '';
     return `${document.title} - ${window.location.pathname}`;
   }, []);
+
+  useEffect(() => {
+    if (!selectedProfileId && profiles.length === 1) {
+      setSelectedProfileId(profiles[0].id);
+    }
+  }, [profiles, selectedProfileId, setSelectedProfileId]);
 
   const handleSend = useCallback(async (text: string) => {
     const id = `m_${Date.now()}`;
@@ -31,7 +41,10 @@ export function AgentDock() {
         { id: `a_${Date.now()}`, role: 'assistant', content: res.reply },
       ]);
       setRequestId(res.requestId);
-    } catch {
+    } catch (err) {
+      if (err instanceof AgentRequestError && err.requestId) {
+        setRequestId(err.requestId);
+      }
       setMessages((prev) => [
         ...prev,
         { id: `e_${Date.now()}`, role: 'assistant', content: 'Something went wrong. Try again.' },
@@ -43,20 +56,40 @@ export function AgentDock() {
 
   const handleExport = useCallback(async () => {
     if (exporting) return;
-    setExportError('');
+    setExportError(null);
     setExportArtifact(null);
-    const profileId = window.prompt('Enter profile id to export (optional):') || undefined;
+    if (!isAuthenticated) {
+      setRequestId('');
+      setExportError({ message: 'Sign in to export your profile.' });
+      return;
+    }
+    if (profiles.length === 0) {
+      setRequestId('');
+      setExportError({ message: 'Create a profile to export.' });
+      return;
+    }
+    if (!selectedProfileId && profiles.length > 1) {
+      setRequestId('');
+      setExportError({ message: 'Select a profile to export.' });
+      return;
+    }
+    const profileId = selectedProfileId || (profiles.length === 1 ? profiles[0].id : undefined);
     setExporting(true);
     try {
       const res = await exportNatalSafeJson(profileId);
       setExportArtifact({ url: res.artifact.url, expires_at: res.artifact.expires_at });
       setRequestId(res.requestId);
-    } catch {
-      setExportError('Export failed. Try again.');
+    } catch (err) {
+      if (err instanceof AgentRequestError) {
+        if (err.requestId) setRequestId(err.requestId);
+        setExportError({ message: err.message || 'Export failed. Try again.', requestId: err.requestId, code: err.code });
+      } else {
+        setExportError({ message: 'I couldn’t fetch that yet. Try again.' });
+      }
     } finally {
       setExporting(false);
     }
-  }, [exporting]);
+  }, [exporting, isAuthenticated, profiles, selectedProfileId]);
 
   if (!enabled) return null;
 
@@ -85,6 +118,9 @@ export function AgentDock() {
         exportLoading={exporting}
         exportError={exportError}
         exportArtifact={exportArtifact}
+        profiles={profiles}
+        selectedProfileId={selectedProfileId}
+        onSelectProfile={setSelectedProfileId}
       />
     </>
   );

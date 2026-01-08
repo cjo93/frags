@@ -5,10 +5,11 @@ import { useCallback, useState } from 'react';
 type AgentSettings = {
   enabled: boolean;
   memoryEnabled: boolean;
+  selectedProfileId: string | null;
 };
 
 const STORAGE_KEY = 'agent_settings_v1';
-const DEFAULTS: AgentSettings = { enabled: true, memoryEnabled: true };
+const DEFAULTS: AgentSettings = { enabled: true, memoryEnabled: true, selectedProfileId: null };
 
 function readSettings(): AgentSettings {
   if (typeof window === 'undefined') return DEFAULTS;
@@ -19,6 +20,7 @@ function readSettings(): AgentSettings {
     return {
       enabled: parsed.enabled ?? DEFAULTS.enabled,
       memoryEnabled: parsed.memoryEnabled ?? DEFAULTS.memoryEnabled,
+      selectedProfileId: parsed.selectedProfileId ?? DEFAULTS.selectedProfileId,
     };
   } catch {
     return DEFAULTS;
@@ -49,10 +51,20 @@ export function useAgentSettings() {
     });
   }, []);
 
+  const setSelectedProfileId = useCallback((selectedProfileId: string | null) => {
+    setSettings((prev) => {
+      const next = { ...prev, selectedProfileId };
+      writeSettings(next);
+      return next;
+    });
+  }, []);
+
   return {
     enabled: settings.enabled,
     memoryEnabled: settings.memoryEnabled,
+    selectedProfileId: settings.selectedProfileId,
     setEnabled,
     setMemoryEnabled,
+    setSelectedProfileId,
   };
 }
