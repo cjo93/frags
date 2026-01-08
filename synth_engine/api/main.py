@@ -75,6 +75,7 @@ async def lifespan(app: FastAPI):
         diag_logger.info("backend_hmac_secret_fingerprint=%s", fp)
     else:
         diag_logger.info("backend_hmac_secret_configured=false")
+    print(f"backend_hmac_secret_fingerprint={fp} configured={bool(fp)}", flush=True)
     yield
 
 
