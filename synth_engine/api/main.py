@@ -322,16 +322,20 @@ def register(
 @app.post("/auth/login")
 def login(
     request: Request,
-    email: str = Query(default=None),
-    password: str = Query(default=None),
-    turnstile_token: str = Query(default=None),
-    body: AuthCredentials = Body(default=None),
+    body: AuthCredentials = Body(...),
     s: Session = Depends(db),
 ):
-    # Accept both query params and JSON body
-    email = email or (body.email if body else None)
-    password = password or (body.password if body else None)
-    turnstile_token = turnstile_token or (body.turnstile_token if body else None)
+    # Reject credentials in query params to avoid leaking into logs.
+    if (
+        request.query_params.get("email") is not None or
+        request.query_params.get("password") is not None or
+        request.query_params.get("turnstile_token") is not None
+    ):
+        raise HTTPException(400, "Credentials must be sent in JSON body")
+
+    email = body.email
+    password = body.password
+    turnstile_token = body.turnstile_token
     
     if not email or not password:
         raise HTTPException(400, "email and password required")
