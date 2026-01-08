@@ -25,6 +25,7 @@ from synth_engine.storage import repo as R
 
 from synth_engine.api.auth import hash_password, verify_password, create_token, create_agent_token
 from synth_engine.api.deps import db, me_user_id, get_current_user
+from synth_engine.api.oauth import verify_google_id_token, verify_apple_id_token
 from synth_engine.config import settings
 
 from synth_engine.schemas.person import PersonInput
@@ -278,6 +279,12 @@ class RedeemInviteRequest(BaseModel):
     token: str
 
 
+class OAuthExchangeRequest(BaseModel):
+    provider: str
+    id_token: str
+    invite_token: Optional[str] = None
+
+
 from synth_engine.api.turnstile import verify_turnstile_token_sync, is_turnstile_enabled
 
 
@@ -415,6 +422,49 @@ def redeem_invite(
         "ok": True,
         "email": invite.email,
         "accepted_at": invite.accepted_at.isoformat() if invite.accepted_at else None,
+    }
+
+
+@app.post("/auth/oauth/exchange")
+async def oauth_exchange(
+    body: OAuthExchangeRequest = Body(...),
+    s: Session = Depends(db),
+):
+    provider = (body.provider or "").strip().lower()
+    if provider not in ("google", "apple"):
+        raise HTTPException(400, "Unsupported provider")
+    if not body.id_token:
+        raise HTTPException(400, "Missing id_token")
+
+    if provider == "google":
+        claims = await verify_google_id_token(body.id_token, settings.google_client_id)
+        email_verified = claims.get("email_verified") in (True, "true", "True")
+    else:
+        claims = await verify_apple_id_token(body.id_token, settings.apple_client_id)
+        email_verified = True
+
+    email = (claims.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(401, "Email required")
+    if not email_verified:
+        raise HTTPException(401, "Email not verified")
+
+    user = s.query(User).filter(User.email == email).first()
+    if not user:
+        user = User(id=new_id(), email=email, password_hash=hash_password(uuid.uuid4().hex), tier="standard")
+        s.add(user)
+        s.commit()
+
+    if body.invite_token:
+        try:
+            R.redeem_invite(s, body.invite_token, user.id)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+
+    return {
+        "token": create_token(user.id),
+        "user_id": user.id,
+        "tier": user.tier,
     }
 
 

@@ -44,10 +44,20 @@ async function request<T>(
 }
 
 // Auth
-export async function register(email: string, password: string, turnstileToken?: string) {
+export async function register(
+  email: string,
+  password: string,
+  turnstileToken?: string,
+  inviteToken?: string
+) {
   return request<{ token: string; user_id: string }>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, turnstile_token: turnstileToken }),
+    body: JSON.stringify({
+      email,
+      password,
+      turnstile_token: turnstileToken,
+      invite_token: inviteToken,
+    }),
   });
 }
 
@@ -55,6 +65,17 @@ export async function login(email: string, password: string, turnstileToken?: st
   return request<{ token: string }>('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password, turnstile_token: turnstileToken }),
+  });
+}
+
+export async function exchangeOAuth(provider: string, idToken: string, inviteToken?: string) {
+  return request<{ token: string; user_id: string; tier: string }>('/auth/oauth/exchange', {
+    method: 'POST',
+    body: JSON.stringify({
+      provider,
+      id_token: idToken,
+      invite_token: inviteToken,
+    }),
   });
 }
 

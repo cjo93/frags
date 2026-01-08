@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { AuthProvider } from "@/lib/auth-context";
+import AppProviders from "@/components/AppProviders";
 import { InstallPrompt } from "@/components/pwa";
 import { AgentDock } from "@/components/agent/AgentDock";
 import "./globals.css";
@@ -58,11 +58,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
       >
-        <AuthProvider>
+        <AppProviders>
           {children}
           <AgentDock />
           <InstallPrompt />
-        </AuthProvider>
+        </AppProviders>
       </body>
     </html>
   );

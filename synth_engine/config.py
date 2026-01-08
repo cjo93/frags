@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     app_base_url: str = "https://defrag.app"
     api_base_url: str = "https://api.defrag.app"
 
+    # OAuth (frontend handles login; backend verifies exchange)
+    google_client_id: str = ""
+    apple_client_id: str = ""
+
     # AI Provider configuration
     # SYNTH_AI_PROVIDER: disabled | cloudflare | serverless_gpu | openai | gemini | auto
     # "auto" = try cloudflare first, then openai, then disabled

@@ -1,18 +1,37 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { login as apiLogin, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
 import TrustStrip from '@/components/TrustStrip';
 import LegalFooter from '@/components/LegalFooter';
 
-const OAUTH_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
-
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={(
+        <main className="min-h-screen flex items-center justify-center px-6">
+          <div className="max-w-sm text-center space-y-3">
+            <h1 className="text-xl font-medium">Sign in</h1>
+            <p className="text-sm text-neutral-600">Loading…</p>
+          </div>
+        </main>
+      )}
+    >
+      <LoginInner />
+    </Suspense>
+  );
+}
+
+function LoginInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get('invite');
+  const oauthCallback = inviteToken ? `/auth/complete?invite=${encodeURIComponent(inviteToken)}` : '/auth/complete';
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,13 +42,13 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     // Check Turnstile if enabled
     if (isTurnstileEnabled() && !turnstileToken) {
       setError('Please complete the verification');
       return;
     }
-    
+
     setLoading(true);
 
     try {
@@ -69,18 +88,20 @@ export default function LoginPage() {
           </p>
 
           <div className="space-y-2 mb-6">
-            <a
-              href={`${OAUTH_BASE}/auth/oauth/google/start`}
+            <button
+              type="button"
+              onClick={() => signIn('google', { callbackUrl: oauthCallback })}
               className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
             >
               Continue with Google
-            </a>
-            <a
-              href={`${OAUTH_BASE}/auth/oauth/apple/start`}
+            </button>
+            <button
+              type="button"
+              onClick={() => signIn('apple', { callbackUrl: oauthCallback })}
               className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
             >
               Continue with Apple
-            </a>
+            </button>
             <p className="text-xs text-neutral-500 dark:text-neutral-500">
               Google/Apple sign-in is in beta.
             </p>
