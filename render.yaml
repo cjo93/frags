@@ -11,3 +11,11 @@ services:
         generateValue: true
       - key: SYNTH_JWT_ALGORITHM
         value: HS256
+      - key: SYNTH_BACKEND_HMAC_SECRET
+        sync: false
+      - key: SYNTH_DEV_ADMIN_ENABLED
+        value: "true"
+      - key: SYNTH_DEV_ADMIN_TOKEN
+        sync: false
+      - key: SYNTH_DEV_ADMIN_EMAIL
+        sync: false
