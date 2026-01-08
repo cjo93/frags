@@ -184,3 +184,19 @@ export async function revokeBetaAccess(email: string) {
     body: JSON.stringify({ email }),
   });
 }
+
+export async function createBetaInvite(email: string, ttlHours = 168) {
+  return request<{ ok: boolean; email: string; invite_token: string; expires_at: string | null }>(
+    '/admin/beta/invite',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email, ttl_hours: ttlHours }),
+    }
+  );
+}
+
+export async function listBetaInvites(limit = 50) {
+  return request<{ invites: Array<{ email: string; created_at: string | null; expires_at: string | null; accepted_at: string | null }> }>(
+    `/admin/beta/invites?limit=${limit}`
+  );
+}

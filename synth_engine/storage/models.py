@@ -27,6 +27,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.user, nullable=False, index=True)
+    tier: Mapped[str] = mapped_column(String, default="standard", nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
@@ -193,6 +194,23 @@ class ConstellationLayer(Base):
     payload_json: Mapped[str] = mapped_column(Text)
     inputs_hash: Mapped[str] = mapped_column(String, index=True)
     version: Mapped[str] = mapped_column(String, default="1.0.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+# -------------------------
+# Beta Invites
+# -------------------------
+class Invite(Base):
+    __tablename__ = "invites"
+    __table_args__ = (
+        Index("ix_invites_email_created", "email", "created_at", "id"),
+    )
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    email: Mapped[str] = mapped_column(String, index=True)
+    token_hash: Mapped[str] = mapped_column(String, unique=True, index=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_by: Mapped[str] = mapped_column(String, ForeignKey("users.id"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 

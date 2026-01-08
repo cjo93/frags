@@ -189,12 +189,19 @@ class BetaAccessRequest(BaseModel):
     plan_key: str = "beta"
 
 
+class BetaInviteRequest(BaseModel):
+    email: str
+    ttl_hours: int | None = 168
+
+
 @router.post("/beta/grant")
 def grant_beta_access(
     req: BetaAccessRequest,
     _user=Depends(require_role("admin")),
     s: Session = Depends(db),
 ):
+    if not is_dev_admin_user(_user):
+        raise HTTPException(403, "Dev admin only")
     plan_key = (req.plan_key or "beta").strip().lower()
     if plan_key not in ("beta", "pro"):
         raise HTTPException(400, "Invalid plan_key")
@@ -202,6 +209,11 @@ def grant_beta_access(
     user = s.query(User).filter(User.email == req.email).first()
     if not user:
         raise HTTPException(404, "User not found")
+
+    if plan_key == "beta":
+        user.tier = "beta"
+        s.commit()
+        return {"ok": True, "user_id": user.id, "plan_key": plan_key}
 
     stripe_customer_id = R.get_stripe_customer_id(s, user.id) or f"beta_{user.id}"
     if not R.get_stripe_customer_id(s, user.id):
@@ -237,9 +249,15 @@ def revoke_beta_access(
     _user=Depends(require_role("admin")),
     s: Session = Depends(db),
 ):
+    if not is_dev_admin_user(_user):
+        raise HTTPException(403, "Dev admin only")
     user = s.query(User).filter(User.email == req.email).first()
     if not user:
         raise HTTPException(404, "User not found")
+
+    if user.tier == "beta":
+        user.tier = "standard"
+        s.commit()
 
     sub_id = f"beta_{user.id}"
     sub = s.query(StripeSubscription).filter(StripeSubscription.stripe_subscription_id == sub_id).first()
@@ -252,6 +270,50 @@ def revoke_beta_access(
         s.commit()
 
     return {"ok": True, "user_id": user.id}
+
+
+@router.post("/beta/invite")
+def create_beta_invite(
+    req: BetaInviteRequest,
+    _user=Depends(require_role("admin")),
+    s: Session = Depends(db),
+):
+    if not is_dev_admin_user(_user):
+        raise HTTPException(403, "Dev admin only")
+    email = req.email.strip().lower()
+    if not email:
+        raise HTTPException(400, "Email required")
+    ttl_hours = int(req.ttl_hours or 168)
+    invite, token = R.create_invite(s, email, _user.id, ttl_hours=ttl_hours)
+    return {
+        "ok": True,
+        "email": invite.email,
+        "invite_token": token,
+        "expires_at": invite.expires_at.isoformat() if invite.expires_at else None,
+        "created_at": invite.created_at.isoformat() if invite.created_at else None,
+    }
+
+
+@router.get("/beta/invites")
+def list_beta_invites(
+    limit: int = Query(default=100, ge=1, le=200),
+    _user=Depends(require_role("admin")),
+    s: Session = Depends(db),
+):
+    if not is_dev_admin_user(_user):
+        raise HTTPException(403, "Dev admin only")
+    invites = R.list_invites(s, limit=limit)
+    return {
+        "invites": [
+            {
+                "email": invite.email,
+                "created_at": invite.created_at.isoformat() if invite.created_at else None,
+                "expires_at": invite.expires_at.isoformat() if invite.expires_at else None,
+                "accepted_at": invite.accepted_at.isoformat() if invite.accepted_at else None,
+            }
+            for invite in invites
+        ]
+    }
 
 
 # ----- Mutation endpoints (require admin_mutations_enabled) -----

@@ -265,12 +265,17 @@ class AuthCredentials(BaseModel):
     email: str
     password: str
     turnstile_token: Optional[str] = None  # Cloudflare Turnstile response
+    invite_token: Optional[str] = None
 
 
 class AgentTokenRequest(BaseModel):
     mem: Optional[bool] = True
     tools: Optional[bool] = True
     export: Optional[bool] = True
+
+
+class RedeemInviteRequest(BaseModel):
+    token: str
 
 
 from synth_engine.api.turnstile import verify_turnstile_token_sync, is_turnstile_enabled
@@ -293,6 +298,7 @@ def register(
     email = body.email
     password = body.password
     turnstile_token = body.turnstile_token
+    invite_token = body.invite_token
     
     if not email or not password:
         raise HTTPException(400, "email and password required")
@@ -303,15 +309,29 @@ def register(
         success, error = verify_turnstile_token_sync(turnstile_token, client_ip)
         if not success:
             raise HTTPException(403, error or "Bot protection verification failed")
+
+    if invite_token:
+        invite = R.get_invite_by_token(s, invite_token)
+        if not invite:
+            raise HTTPException(400, "Invalid invite")
+        if invite.accepted_at:
+            raise HTTPException(400, "Invite already used")
+        if invite.expires_at and invite.expires_at < datetime.utcnow():
+            raise HTTPException(400, "Invite expired")
     
     uid = new_id()
     try:
         if s.query(User).filter(User.email == email).first():
             raise HTTPException(400, "Email already registered")
         pw_hash = hash_password(password)
-        user = User(id=uid, email=email, password_hash=pw_hash)
+        user = User(id=uid, email=email, password_hash=pw_hash, tier="standard")
         s.add(user)
         s.commit()
+        if invite_token:
+            try:
+                R.redeem_invite(s, invite_token, user.id)
+            except ValueError as e:
+                raise HTTPException(400, str(e))
         return {"token": create_token(uid)}
     except HTTPException:
         raise
@@ -361,7 +381,12 @@ def login(
 def agent_token(
     body: AgentTokenRequest = Body(default=None),
     user_id: str = Depends(me_user_id),
+    s: Session = Depends(db),
 ):
+    tier = R.get_user_tier(s, user_id)
+    if tier not in ("beta", "dev_admin"):
+        if R.plan_for_user(s, user_id) == "free":
+            raise HTTPException(403, "Invite required")
     scopes = ["agent:chat", "agent:tool", "agent:export"]
     req = body or AgentTokenRequest()
     return create_agent_token(
@@ -371,6 +396,26 @@ def agent_token(
         tools=req.tools is not False,
         export=req.export is not False,
     )
+
+
+@app.post("/auth/redeem-invite")
+def redeem_invite(
+    body: RedeemInviteRequest = Body(...),
+    user_id: str = Depends(me_user_id),
+    s: Session = Depends(db),
+):
+    token = (body.token or "").strip()
+    if not token:
+        raise HTTPException(400, "Invite token required")
+    try:
+        invite = R.redeem_invite(s, token, user_id)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {
+        "ok": True,
+        "email": invite.email,
+        "accepted_at": invite.accepted_at.isoformat() if invite.accepted_at else None,
+    }
 
 
 # -------------------------

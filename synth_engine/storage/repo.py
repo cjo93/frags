@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import uuid
+import hashlib
+import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Any, Dict, List, Tuple
 
@@ -585,7 +587,7 @@ def latest_constellation_layer_payload(s: Session, constellation_id: str, layer:
 # -------------------------
 # Stripe / Billing
 # -------------------------
-from synth_engine.storage.models import StripeCustomer, StripeSubscription, UsageLedger, ChatThread, ChatMessage, User
+from synth_engine.storage.models import StripeCustomer, StripeSubscription, UsageLedger, ChatThread, ChatMessage, User, Invite
 
 
 def ensure_stripe_customer(s: Session, user_id: str, email: str, stripe_customer_id: str) -> StripeCustomer:
@@ -661,6 +663,8 @@ PLAN_NAMES = {
     "beta": "Beta",
 }
 
+VALID_USER_TIERS = {"standard", "beta", "dev_admin"}
+
 
 def is_dev_admin_user_id(s: Session, user_id: Optional[str]) -> bool:
     from synth_engine.config import settings
@@ -676,6 +680,75 @@ def is_dev_admin_user_id(s: Session, user_id: Optional[str]) -> bool:
     )
 
 
+def get_user_tier(s: Session, user_id: str) -> str:
+    if is_dev_admin_user_id(s, user_id):
+        return "dev_admin"
+    user = s.query(User).filter(User.id == user_id).first()
+    return user.tier if user else "standard"
+
+
+def set_user_tier(s: Session, user_id: str, tier: str) -> None:
+    if tier not in VALID_USER_TIERS:
+        raise ValueError("Invalid tier")
+    user = s.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise ValueError("User not found")
+    user.tier = tier
+    s.commit()
+
+
+def _hash_invite_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_invite(s: Session, email: str, created_by: str, ttl_hours: int = 168) -> tuple[Invite, str]:
+    token = secrets.token_urlsafe(32)
+    token_hash = _hash_invite_token(token)
+    expires_at = datetime.utcnow() + timedelta(hours=ttl_hours) if ttl_hours else None
+    invite = Invite(
+        id=new_id(),
+        email=email,
+        token_hash=token_hash,
+        expires_at=expires_at,
+        accepted_at=None,
+        created_by=created_by,
+    )
+    s.add(invite)
+    s.commit()
+    return invite, token
+
+
+def list_invites(s: Session, limit: int = 100) -> List[Invite]:
+    limit = _clamp_limit(limit, default=100, max_limit=500)
+    return (
+        s.query(Invite)
+        .order_by(Invite.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+def get_invite_by_token(s: Session, token: str) -> Optional[Invite]:
+    return s.query(Invite).filter(Invite.token_hash == _hash_invite_token(token)).first()
+
+
+def redeem_invite(s: Session, token: str, user_id: str) -> Invite:
+    invite = s.query(Invite).filter(Invite.token_hash == _hash_invite_token(token)).first()
+    if not invite:
+        raise ValueError("Invalid invite")
+    if invite.accepted_at:
+        raise ValueError("Invite already used")
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        raise ValueError("Invite expired")
+    invite.accepted_at = datetime.utcnow()
+    user = s.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise ValueError("User not found")
+    user.tier = "beta"
+    s.commit()
+    return invite
+
+
 def plan_for_user(s: Session, user_id: str) -> str:
     """
     Returns the plan key for a user based on their active subscription.
@@ -686,6 +759,9 @@ def plan_for_user(s: Session, user_id: str) -> str:
     # Dev admin bypass - always constellation
     if is_dev_admin_user_id(s, user_id):
         return "constellation"
+    # Beta tier bypass
+    if get_user_tier(s, user_id) == "beta":
+        return "beta"
 
     sub = (
         s.query(StripeSubscription)
@@ -753,6 +829,16 @@ def get_billing_status(s: Session, user_id: str) -> Dict[str, Any]:
             "plan_name": "Constellation (Dev Admin)",
             "feature_flags": _feature_flags_for_plan("constellation"),
         }
+
+    if get_user_tier(s, user_id) == "beta":
+        return {
+            "has_stripe": False,
+            "subscription": None,
+            "entitled": True,
+            "plan_key": "beta",
+            "plan_name": PLAN_NAMES.get("beta", "Beta"),
+            "feature_flags": _feature_flags_for_plan("beta"),
+        }
     
     customer = s.query(StripeCustomer).filter(StripeCustomer.user_id == user_id).first()
     plan = "free"
@@ -811,6 +897,8 @@ def is_entitled(s: Session, user_id: str, action: str) -> bool:
     
     # Dev admin bypass - always entitled
     if is_dev_admin_user_id(s, user_id):
+        return True
+    if get_user_tier(s, user_id) == "beta":
         return True
 
     sub = (
