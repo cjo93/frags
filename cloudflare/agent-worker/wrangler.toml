@@ -20,7 +20,7 @@ class_name = "UserAgentDO"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["UserAgentDO"]
+new_sqlite_classes = ["UserAgentDO"]
 
 # D1 Database
 [[d1_databases]]
@@ -51,6 +51,32 @@ binding = "AI"
 # Production overrides
 [env.production]
 vars = { ENVIRONMENT = "production", BACKEND_URL = "https://api.defrag.app" }
+
+[[env.production.durable_objects.bindings]]
+name = "USER_AGENT_DO"
+class_name = "UserAgentDO"
+
+[[env.production.migrations]]
+tag = "v1"
+new_sqlite_classes = ["UserAgentDO"]
+
+[[env.production.d1_databases]]
+binding = "AGENT_DB"
+database_name = "defrag-agent-db"
+database_id = "e33b5cdd-3e49-43f9-980f-7dc3039e43a3"
+preview_database_id = "95a1d1ba-5e7a-46e6-b2a6-0fb2490d4101"
+
+[[env.production.r2_buckets]]
+binding = "AGENT_R2"
+bucket_name = "defrag-agent-artifacts"
+preview_bucket_name = "defrag-agent-artifacts-preview"
+
+[[env.production.vectorize]]
+binding = "AGENT_MEM_INDEX"
+index_name = "defrag-memory-index"
+
+[env.production.ai]
+binding = "AI"
 
 
 # Development overrides
