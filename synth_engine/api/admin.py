@@ -15,6 +15,7 @@ from synth_engine.storage import repo as R
 from synth_engine.storage.models import User, UserRole, StripeCustomer
 from synth_engine.config import settings
 from synth_engine.api.abuse import get_abuse_metrics, reset_abuse_metrics
+from synth_engine.utils.diag import secret_fingerprint
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -170,6 +171,17 @@ def admin_config_status(
         "openai_configured": bool(settings.openai_api_key),
         "app_base_url": settings.app_base_url,
         "api_base_url": settings.api_base_url,
+    }
+
+
+@router.get("/diag/hmac-fingerprint")
+def hmac_fingerprint(
+    _user=Depends(require_role("admin")),
+):
+    fp = secret_fingerprint(settings.backend_hmac_secret)
+    return {
+        "configured": bool(fp),
+        "fingerprint": fp
     }
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import logging
 import json
 import base64
 import hashlib
@@ -54,11 +55,14 @@ from synth_engine.api.abuse import (
     AbuseControlMiddleware,
     get_abuse_metrics,
 )
+from synth_engine.utils.diag import secret_fingerprint
 
 # Import routers
 from synth_engine.api.billing import router as billing_router
 from synth_engine.api.admin import router as admin_router
 from synth_engine.api.ai import router as ai_router
+
+diag_logger = logging.getLogger("synth_engine.diag")
 
 
 @asynccontextmanager
@@ -66,6 +70,11 @@ async def lifespan(app: FastAPI):
     inspector = inspect(engine)
     if not inspector.has_table("users"):
         raise RuntimeError("Database tables missing. Run: alembic upgrade head")
+    fp = secret_fingerprint(settings.backend_hmac_secret)
+    if fp:
+        diag_logger.info("backend_hmac_secret_fingerprint=%s", fp)
+    else:
+        diag_logger.info("backend_hmac_secret_configured=false")
     yield
 
 

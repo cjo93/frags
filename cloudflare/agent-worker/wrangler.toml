@@ -4,7 +4,7 @@ compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Account settings (set via environment or wrangler login)
-account_id = "01bd220f56d573a14428d86f654e49eb"
+account_id = "ae7ec4a41b2c751837a9f06666d58afd"
 
 [observability]
 enabled = true
@@ -26,7 +26,19 @@ new_classes = ["UserAgentDO"]
 [[d1_databases]]
 binding = "AGENT_DB"
 database_name = "defrag-agent-db"
-database_id = "956fd4b3-e16c-41f6-a658-07b5e97a50b4"
+database_id = "e33b5cdd-3e49-43f9-980f-7dc3039e43a3"
+preview_database_id = "95a1d1ba-5e7a-46e6-b2a6-0fb2490d4101"
+
+# R2 Bucket for artifacts
+[[r2_buckets]]
+binding = "AGENT_R2"
+bucket_name = "defrag-agent-artifacts"
+preview_bucket_name = "defrag-agent-artifacts-preview"
+
+# Vectorize Index for semantic memory
+[[vectorize]]
+binding = "AGENT_MEM_INDEX"
+index_name = "defrag-memory-index"
 
 # Workers AI binding
 [ai]
@@ -40,13 +52,6 @@ binding = "AI"
 [env.production]
 vars = { ENVIRONMENT = "production", BACKEND_URL = "https://api.defrag.app" }
 
-[[env.production.r2_buckets]]
-binding = "AGENT_R2"
-bucket_name = "defrag-agent-artifacts"
-
-[[env.production.vectorize]]
-binding = "AGENT_MEM_INDEX"
-index_name = "defrag-memory-index"
 
 # Development overrides
 [env.development]
