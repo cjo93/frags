@@ -10,6 +10,7 @@ import { useAgentSettings } from '@/lib/agent-settings';
 import { resetInstallPrompt } from '@/components/pwa';
 import { isStandalone, isIOS } from '@/lib/displayMode';
 import TrustStrip from '@/components/TrustStrip';
+import { downloadPkpass, WalletError } from '@/lib/wallet';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -27,6 +28,9 @@ export default function SettingsPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [invites, setInvites] = useState<Array<{ email: string; created_at: string | null; expires_at: string | null; accepted_at: string | null }>>([]);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState<{ message: string; requestId?: string } | null>(null);
+  const [walletSuccess, setWalletSuccess] = useState(false);
   
   // Initialize on client only using lazy initializer
   const [installed] = useState(() => {
@@ -89,6 +93,39 @@ export default function SettingsPage() {
       console.error('Export error:', err);
     } finally {
       setExportLoading(false);
+    }
+  };
+
+  const handleWalletPass = async () => {
+    if (walletLoading) return;
+    setWalletError(null);
+    setWalletSuccess(false);
+    if (!token) {
+      setWalletError({ message: 'Sign in to add your Mandala Card.' });
+      return;
+    }
+    if (profiles.length === 0) {
+      setWalletError({ message: 'Create your profile to unlock your Mandala Card.' });
+      return;
+    }
+    if (!selectedProfileId && profiles.length > 1) {
+      setWalletError({ message: 'Select a profile to continue.' });
+      return;
+    }
+    const profileId = selectedProfileId || (profiles.length === 1 ? profiles[0].id : undefined);
+    setWalletLoading(true);
+    try {
+      await downloadPkpass(profileId);
+      setWalletSuccess(true);
+      setTimeout(() => setWalletSuccess(false), 5000);
+    } catch (err) {
+      if (err instanceof WalletError) {
+        setWalletError({ message: err.message, requestId: err.requestId });
+      } else {
+        setWalletError({ message: 'Could not prepare Wallet pass. Try again.' });
+      }
+    } finally {
+      setWalletLoading(false);
     }
   };
 
@@ -486,6 +523,36 @@ export default function SettingsPage() {
               <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
                 Your Wallet card will be the default destination for your computed mandala and key fields. The redacted export is for troubleshooting and data portability (advanced users).
               </p>
+            </div>
+            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 space-y-2">
+              <button
+                onClick={handleWalletPass}
+                disabled={walletLoading}
+                className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 disabled:opacity-50"
+              >
+                {walletLoading
+                  ? 'Preparing Wallet pass...'
+                  : isiOSDevice
+                    ? 'Add Mandala Card to Apple Wallet'
+                    : 'Download Wallet pass'}
+              </button>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                Stores your Mandala and a secure link to your portable data package.
+              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                Share via iMessage or AirDrop. Recipients can view today&apos;s reading only.
+              </p>
+              {walletSuccess && (
+                <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                  Added to Wallet. You can share it from the Wallet app.
+                </div>
+              )}
+              {walletError && (
+                <div className="text-xs text-red-600 dark:text-red-400">
+                  {walletError.message}
+                  {walletError.requestId ? ` (Request ID: ${walletError.requestId})` : ''}
+                </div>
+              )}
             </div>
           </div>
         </section>
