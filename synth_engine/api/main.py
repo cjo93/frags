@@ -144,6 +144,57 @@ def health():
     return {"ok": True, "ts": datetime.now(timezone.utc).isoformat()}
 
 
+def _insight_level(stability: float) -> str:
+    if stability < 0.25:
+        return "grounded"
+    if stability < 0.50:
+        return "technical"
+    if stability < 0.75:
+        return "systems"
+    return "expanded"
+
+
+@app.get("/status/report")
+def status_report(
+    anxiety_index: float = Query(..., ge=0.0, le=1.0, description="0.0 (calm) to 1.0 (high strain)"),
+    active_gate: int = Query(..., ge=1, le=64, description="Active pattern index (1-64)"),
+    concept: Optional[str] = Query("stability", description="Label for the report concept"),
+):
+    """Sanitized, non-identifying status report.
+
+    Returns derived fields only (no secrets, no user identifiers).
+    Intended for UI widgets and demo-safe telemetry.
+    """
+    # Derived fields (do not expose internal coefficients/constants)
+    dos_value = 1.0 - (anxiety_index * 0.85)
+    vortex_sync = (active_gate % 3 == 0)
+    coherence = 0.98 if vortex_sync else 0.42
+    stability_score = float(dos_value * coherence)
+
+    # Returned only as bounded scalar (rounded) for UI.
+    metric_warp = float(-(1.0 - (0.05 * stability_score)))
+
+    return {
+        "concept": concept,
+        "inputs": {
+            "anxiety_index": round(float(anxiety_index), 3),
+            "active_gate": int(active_gate),
+        },
+        "derived": {
+            "dos_value": round(float(dos_value), 4),
+            "vortex_sync": "LOCKED" if vortex_sync else "DRIFT",
+            "stability_score": round(float(stability_score), 4),
+            "metric_warp": round(float(metric_warp), 4),
+            "insight_level": _insight_level(stability_score),
+        },
+        "safety": {
+            "no_prediction": True,
+            "no_user_identifiers": True,
+            "notes": "Sanitized derived fields for UI + correlation. Not medical advice.",
+        },
+    }
+
+
 @app.get("/debug/db")
 def debug_db():
     from synth_engine.config import settings

@@ -390,20 +390,28 @@ export default function SettingsPage() {
           <div className="p-6 border border-neutral-200 dark:border-neutral-800 space-y-4">
             <div className="space-y-3">
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                <strong className="text-neutral-900 dark:text-white">Deterministic synthesis.</strong>{' '}
-                Chart calculations use established algorithms—same inputs always produce same outputs.
+                <strong className="text-neutral-900 dark:text-white">Your blueprint is computed.</strong>{' '}
+                We compute your baseline structure from birth time + location using deterministic astronomy + geometry. Same inputs → same results.
               </p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                <strong className="text-neutral-900 dark:text-white">AI is interpretation only.</strong>{' '}
-                AI explains computed data; it doesn&apos;t generate placements or make predictions.
+                <strong className="text-neutral-900 dark:text-white">Your daily reading is a curriculum.</strong>{' '}
+                Each day you get a short report and a focused 3-day theme (based on your current timing + natal makeup) that guides practical choices.
               </p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                <strong className="text-neutral-900 dark:text-white">Your data stays yours.</strong>{' '}
-                No cross-user data sharing. AI providers don&apos;t store or train on your data.
+                <strong className="text-neutral-900 dark:text-white">Timing is treated like weather.</strong>{' '}
+                We describe pressure windows and themes you can plan around. It&apos;s not a promise of events — it&apos;s a map for self-regulation.
               </p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                <strong className="text-neutral-900 dark:text-white">Not medical or financial advice.</strong>{' '}
-                Defrag is a tool for self-reflection, not a substitute for professional guidance.
+                <strong className="text-neutral-900 dark:text-white">Physiology is optional.</strong>{' '}
+                If you connect wearable/health data, Defrag can correlate your timing with signals like sleep, recovery, HRV, and stress. You control what&apos;s connected and can disconnect anytime.
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <strong className="text-neutral-900 dark:text-white">AI helps you explore.</strong>{' '}
+                The assistant explains what was computed, helps you apply it, and can generate audio/visual summaries. It does not invent placements or fabricate claims.
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <strong className="text-neutral-900 dark:text-white">Privacy by default.</strong>{' '}
+                No cross-user sharing. Your content is not used to train models. Memory is opt-in and reversible.
               </p>
             </div>
             <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
@@ -473,8 +481,11 @@ export default function SettingsPage() {
                 disabled={exportLoading}
                 className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 disabled:opacity-50"
               >
-                {exportLoading ? 'Exporting...' : 'Export safe JSON'}
+                {exportLoading ? 'Exporting...' : 'Download a redacted export (advanced data)'}
               </button>
+              <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                Your Wallet card will be the default destination for your computed mandala and key fields. The redacted export is for troubleshooting and data portability (advanced users).
+              </p>
             </div>
           </div>
         </section>

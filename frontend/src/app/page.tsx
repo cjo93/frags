@@ -56,10 +56,10 @@ export default function Home() {
       <section className="flex-1 flex items-center">
         <div className="max-w-5xl mx-auto px-6 py-24 md:py-32">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight max-w-3xl">
-            Reproducible synthesis for the spiritual rebel.
+            Compute your timing. Follow the curriculum.
           </h1>
           <p className="mt-6 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-            Deterministic computation first. AI interpretation second. No prediction, diagnosis, or advice.
+            Create your profile (birth time/place + preferences), get your Daily Reading + 3-day Curriculum with System Weather, then use AI to explore what the engine computed.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
             <Link
@@ -84,21 +84,21 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 py-24">
           <div className="grid md:grid-cols-3 gap-12">
             <div>
-              <h3 className="text-lg font-medium mb-3">Profiles</h3>
+              <h3 className="text-lg font-medium mb-3">1. Create your profile</h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Create natal profiles and track psychological state with structured check-ins.
+                Enter birth time/place + preferences to generate your Pattern Summary and Calibration baseline.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-medium mb-3">Systems</h3>
+              <h3 className="text-lg font-medium mb-3">2. Daily Reading + 3-day Curriculum</h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Astrology, numerology, and Jungian overlays computed from your birth data.
+                Each day brings System Weather, pressure windows, and a focused theme with micro-reset guidance.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-medium mb-3">Constellations</h3>
+              <h3 className="text-lg font-medium mb-3">3. Use AI to explore</h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Map relationships and family dynamics with Bowen-informed structure.
+                AI helps you explore what the engine computed: explain, apply, and export safely.
               </p>
             </div>
           </div>
