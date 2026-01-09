@@ -559,21 +559,13 @@ async def tool_natal_export_full(
     profile_id = parsed.profile_id
     include_family = bool(parsed.include_family)
 
+    prof = None
     if profile_id:
-        prof = require_profile(s, x_user_id, profile_id)
-    else:
-        profiles = (
-            s.query(Profile)
-            .filter(Profile.user_id == x_user_id)
-            .order_by(Profile.created_at.desc())
-            .limit(2)
-            .all()
-        )
-        if not profiles:
-            raise HTTPException(404, "Profile not found")
-        if len(profiles) > 1:
-            raise HTTPException(400, "Profile selection required")
-        prof = profiles[0]
+        prof = s.query(Profile).filter(Profile.id == profile_id, Profile.user_id == x_user_id).first()
+    if not prof:
+        prof = R.get_latest_profile_for_user(s, x_user_id)
+    if not prof:
+        raise HTTPException(404, "Profile not found")
 
     export_payload = _build_natal_export_payload(s, prof, include_family=include_family)
     redacted = _redact_export_payload(export_payload)

@@ -194,6 +194,40 @@ else
     else
         warn "AI embed returned $HTTP_CODE"
     fi
+
+    if [ -n "${SYNTH_BACKEND_HMAC_SECRET:-}" ] && [ -n "${SYNTH_TOOL_USER_ID:-}" ]; then
+        echo ""
+        echo "--- Test 10: Tool Export (No profile_id) ---"
+        TOOL_BODY='{"args":{}}'
+        TOOL_TS=$(date +%s)
+        TOOL_SIG=$(TOOL_TS="$TOOL_TS" TOOL_BODY="$TOOL_BODY" python3 - <<PY
+import base64, hashlib, hmac, os
+secret = os.environ.get("SYNTH_BACKEND_HMAC_SECRET", "")
+user_id = os.environ.get("SYNTH_TOOL_USER_ID", "")
+ts = os.environ.get("TOOL_TS", "")
+body = os.environ.get("TOOL_BODY", "")
+payload = f"{ts}.{user_id}.{body}".encode("utf-8")
+digest = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).digest()
+print(base64.urlsafe_b64encode(digest).decode("utf-8").rstrip("="))
+PY
+)
+        RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/tools/natal/export_full" \
+            -H "Content-Type: application/json" \
+            -H "X-User-Id: $SYNTH_TOOL_USER_ID" \
+            -H "X-Tool-Timestamp: $TOOL_TS" \
+            -H "X-Tool-Signature: $TOOL_SIG" \
+            -d "$TOOL_BODY")
+        HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+        if [ "$HTTP_CODE" = "200" ]; then
+            pass "Tool export succeeded without profile_id"
+        else
+            warn "Tool export returned $HTTP_CODE"
+        fi
+    else
+        echo ""
+        echo "--- Test 10: Tool Export (SKIPPED - missing HMAC/user) ---"
+        skip "Set SYNTH_BACKEND_HMAC_SECRET and SYNTH_TOOL_USER_ID to run tool export test"
+    fi
 fi
 
 # Summary

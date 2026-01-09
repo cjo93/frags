@@ -24,8 +24,13 @@ type ExportArtifact = {
   content_type?: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
-const AGENT_BASE = process.env.NEXT_PUBLIC_AGENT_URL || 'https://agent.defrag.app';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE ||
+  'https://api.defrag.app';
+const AGENT_BASE =
+  process.env.NEXT_PUBLIC_AGENT_URL ||
+  'https://defrag-agent.defrag-agent.workers.dev';
 
 const cachedTokens = new Map<string, { token: string; expiresAt: number }>();
 

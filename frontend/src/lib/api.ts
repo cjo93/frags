@@ -2,7 +2,10 @@
  * API client for Defrag backend
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE ||
+  'https://api.defrag.app';
 
 export class ApiError extends Error {
   status: number;

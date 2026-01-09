@@ -688,6 +688,15 @@ def get_user_tier(s: Session, user_id: str) -> str:
     return user.tier if user else "standard"
 
 
+def get_latest_profile_for_user(s: Session, user_id: str) -> Optional[Profile]:
+    return (
+        s.query(Profile)
+        .filter(Profile.user_id == user_id)
+        .order_by(Profile.created_at.desc())
+        .first()
+    )
+
+
 def set_user_tier(s: Session, user_id: str, tier: str) -> None:
     if tier not in VALID_USER_TIERS:
         raise ValueError("Invalid tier")
