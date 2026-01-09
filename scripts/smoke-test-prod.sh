@@ -29,10 +29,10 @@ FAILED=0
 SKIPPED=0
 
 # Helpers
-pass() { echo -e "${GREEN}✓ PASS${NC}: $1"; ((PASSED++)); }
-fail() { echo -e "${RED}✗ FAIL${NC}: $1"; ((FAILED++)); }
+pass() { echo -e "${GREEN}✓ PASS${NC}: $1"; PASSED=$((PASSED + 1)); }
+fail() { echo -e "${RED}✗ FAIL${NC}: $1"; FAILED=$((FAILED + 1)); }
 warn() { echo -e "${YELLOW}! WARN${NC}: $1"; }
-skip() { echo -e "${CYAN}○ SKIP${NC}: $1"; ((SKIPPED++)); }
+skip() { echo -e "${CYAN}○ SKIP${NC}: $1"; SKIPPED=$((SKIPPED + 1)); }
 info() { echo -e "  INFO: $1"; }
 
 echo "============================================"
