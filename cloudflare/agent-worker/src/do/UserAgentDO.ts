@@ -187,8 +187,21 @@ export class UserAgentDO {
     } catch (e) {
       if (e instanceof Response) {
         const status = e.status || 500;
-        const code = status === 400 ? "bad_request" : status === 429 ? "rate_limited" : "upstream_error";
-        return jsonResponse({ error: "Tool failed", code, requestId }, { status, requestId });
+        let code = status === 400 ? "bad_request" : status === 429 ? "rate_limited" : "upstream_error";
+        let message = "Tool failed";
+        let requestIdOut = requestId;
+        try {
+          const text = await e.text();
+          const parsed = JSON.parse(text);
+          if (parsed?.code) code = parsed.code;
+          if (parsed?.message || parsed?.error) message = parsed.message || parsed.error;
+          if (parsed?.request_id || parsed?.requestId) {
+            requestIdOut = parsed.request_id || parsed.requestId;
+          }
+        } catch {
+          // Ignore parsing failures and fall back to defaults.
+        }
+        return jsonResponse({ error: message, code, requestId: requestIdOut }, { status, requestId: requestIdOut });
       }
       return jsonResponse({ error: "Tool failed", code: "upstream_error", requestId }, { status: 502, requestId });
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 
 export type AgentMessage = {
@@ -172,32 +173,52 @@ export function AgentChatPanel({
         )}
         {exportError && (
           <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-xl p-3 text-xs text-red-700 dark:text-red-300 space-y-2">
-            <div>{exportError.message || 'I couldn’t fetch that yet.'}</div>
-            {exportError.requestId && (
-              <div className="text-[11px] text-red-600 dark:text-red-400">
-                Request: {exportError.requestId}
-              </div>
+            {exportError.code === 'profile_required' ? (
+              <>
+                <div className="text-sm font-medium text-red-700 dark:text-red-200">Profile required</div>
+                <div>Create your profile to unlock your Daily Reading, curriculum, and exports.</div>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center px-3 py-1 text-[11px] rounded-full border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200"
+                >
+                  Go to Dashboard
+                </Link>
+                {exportError.requestId && (
+                  <div className="text-[11px] text-red-600 dark:text-red-400">
+                    Request ID: {exportError.requestId}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div>{exportError.message || 'I couldn’t fetch that yet.'}</div>
+                {exportError.requestId && (
+                  <div className="text-[11px] text-red-600 dark:text-red-400">
+                    Request: {exportError.requestId}
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  {onExport && (
+                    <button
+                      type="button"
+                      onClick={onExport}
+                      className="text-[11px] underline underline-offset-4"
+                    >
+                      Retry
+                    </button>
+                  )}
+                  {profiles && profiles.length > 1 && onSelectProfile && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectProfile(null)}
+                      className="text-[11px] underline underline-offset-4"
+                    >
+                      Pick profile
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-            <div className="flex items-center gap-3">
-              {onExport && (
-                <button
-                  type="button"
-                  onClick={onExport}
-                  className="text-[11px] underline underline-offset-4"
-                >
-                  Retry
-                </button>
-              )}
-              {profiles && profiles.length > 1 && onSelectProfile && (
-                <button
-                  type="button"
-                  onClick={() => onSelectProfile(null)}
-                  className="text-[11px] underline underline-offset-4"
-                >
-                  Pick profile
-                </button>
-              )}
-            </div>
           </div>
         )}
         {onExport && (

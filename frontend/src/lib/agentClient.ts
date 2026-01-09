@@ -11,8 +11,10 @@ type AgentChatResponse = {
 
 type AgentError = {
   error: string;
+  message?: string;
   code?: string;
   requestId?: string;
+  request_id?: string;
 };
 
 type ExportArtifact = {
@@ -110,7 +112,8 @@ export async function chatAgent(
   const requestId = res.headers.get('x-request-id') || '';
   if (!res.ok) {
     const err = (await res.json().catch(() => ({ error: 'Request failed' }))) as AgentError;
-    throw new AgentRequestError(err.error || 'Request failed', err.requestId || requestId, err.code);
+    const errRequestId = err.requestId || err.request_id || requestId;
+    throw new AgentRequestError(err.error || err.message || 'Request failed', errRequestId, err.code);
   }
 
   const data = (await res.json()) as AgentChatResponse;
@@ -137,7 +140,8 @@ export async function runAgentTool(
   const requestId = res.headers.get('x-request-id') || '';
   if (!res.ok) {
     const err = (await res.json().catch(() => ({ error: 'Request failed' }))) as AgentError;
-    throw new AgentRequestError(err.error || 'Request failed', err.requestId || requestId, err.code);
+    const errRequestId = err.requestId || err.request_id || requestId;
+    throw new AgentRequestError(err.error || err.message || 'Request failed', errRequestId, err.code);
   }
 
   const result = await res.json();

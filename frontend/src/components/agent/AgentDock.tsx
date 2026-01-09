@@ -82,7 +82,8 @@ export function AgentDock() {
     } catch (err) {
       if (err instanceof AgentRequestError) {
         if (err.requestId) setRequestId(err.requestId);
-        setExportError({ message: err.message || 'Export failed. Try again.', requestId: err.requestId, code: err.code });
+        const message = err.code === 'profile_required' ? 'Profile required' : err.message || 'Export failed. Try again.';
+        setExportError({ message, requestId: err.requestId, code: err.code });
       } else {
         setExportError({ message: 'I couldn’t fetch that yet. Try again.' });
       }

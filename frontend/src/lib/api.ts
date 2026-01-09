@@ -7,11 +7,15 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
 export class ApiError extends Error {
   status: number;
   detail: string;
+  code?: string;
+  requestId?: string;
 
-  constructor(status: number, detail: string) {
+  constructor(status: number, detail: string, code?: string, requestId?: string) {
     super(detail);
     this.status = status;
     this.detail = detail;
+    this.code = code;
+    this.requestId = requestId;
   }
 }
 
@@ -36,8 +40,17 @@ async function request<T>(
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new ApiError(res.status, body.detail || 'Request failed');
+    const body = await res.json().catch(() => ({}));
+    const requestId =
+      res.headers.get('x-request-id') ||
+      (body as { request_id?: string; requestId?: string }).request_id ||
+      (body as { request_id?: string; requestId?: string }).requestId;
+    const detail =
+      (body as { detail?: string; error?: string; message?: string }).detail ||
+      (body as { detail?: string; error?: string; message?: string }).error ||
+      (body as { detail?: string; error?: string; message?: string }).message ||
+      'Request failed';
+    throw new ApiError(res.status, detail, (body as { code?: string }).code, requestId || undefined);
   }
 
   return res.json();

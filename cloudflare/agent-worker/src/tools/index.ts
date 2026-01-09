@@ -156,7 +156,28 @@ async function callToolGateway(
   );
 
   if (!res.ok) {
+    const reqId = res.headers.get("x-request-id") || ctx.requestId || crypto.randomUUID();
     const text = await res.text();
+    let detail = "";
+    try {
+      const parsed = JSON.parse(text);
+      detail = (parsed?.detail || parsed?.error || parsed?.message || "").toString();
+    } catch {
+      detail = text;
+    }
+    if (res.status === 404 && (text.includes("Profile not found") || detail === "Profile not found")) {
+      return Promise.reject(
+        new Response(
+          JSON.stringify({
+            ok: false,
+            code: "profile_required",
+            message: "Create your profile to unlock readings and exports.",
+            request_id: reqId
+          }),
+          { status: 400, headers: { "content-type": "application/json", "x-request-id": reqId } }
+        )
+      );
+    }
     throw new Response(`Backend tool failed: ${text}`, { status: 502 });
   }
 
