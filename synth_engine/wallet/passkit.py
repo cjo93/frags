@@ -6,7 +6,6 @@ import hmac
 import io
 import json
 import math
-import os
 import secrets
 import struct
 import zlib
@@ -21,6 +20,7 @@ from synth_engine.compute.astrology import compute_natal
 from synth_engine.config import settings
 from synth_engine.schemas.person import PersonInput
 from synth_engine.utils.timeutils import localize_birth
+from synth_engine.wallet.storage import get_mandala_png, put_mandala_png
 
 
 def make_fingerprint(user_id: str) -> str:
@@ -222,15 +222,12 @@ def render_mandala_png(user_id: str, person: PersonInput) -> bytes:
     return _encode_png(width, height, bytes(rgba))
 
 
-def load_or_create_mandala_png(user_id: str, fingerprint: str, person: PersonInput) -> bytes:
-    os.makedirs(settings.wallet_assets_dir, exist_ok=True)
-    path = os.path.join(settings.wallet_assets_dir, f"{fingerprint}.png")
-    if os.path.exists(path):
-        with open(path, "rb") as handle:
-            return handle.read()
+def load_or_create_mandala_png(user_id: str, profile_id: str, person: PersonInput) -> bytes:
+    cached = get_mandala_png(profile_id)
+    if cached:
+        return cached
     png_bytes = render_mandala_png(user_id, person)
-    with open(path, "wb") as handle:
-        handle.write(png_bytes)
+    put_mandala_png(profile_id, png_bytes)
     return png_bytes
 
 

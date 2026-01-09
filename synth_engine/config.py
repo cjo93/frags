@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     wallet_fingerprint_salt: str = ""
     wallet_daily_token_secret: str = ""
     wallet_assets_dir: str = "/tmp/defrag_wallet"
+    wallet_r2_account_id: str = ""
+    wallet_r2_access_key_id: str = ""
+    wallet_r2_secret_access_key: str = ""
+    wallet_r2_bucket: str = ""
 
     # OAuth (frontend handles login; backend verifies exchange)
     google_client_id: str = ""

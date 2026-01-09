@@ -64,7 +64,7 @@ def create_wallet_pass(
         )
 
     barcode_message = f"defrag:{fingerprint}:{token}"
-    mandala_png = load_or_create_mandala_png(user.id, fingerprint, person)
+    mandala_png = load_or_create_mandala_png(user.id, profile.id, person)
     assets = build_default_assets(mandala_png)
     pass_json = build_pass_json(pass_serial, fingerprint, token, barcode_message)
     pkpass_bytes = build_pkpass(pass_json, assets)
