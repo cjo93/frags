@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 import { register as apiRegister, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
@@ -31,7 +30,6 @@ function RegisterInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite');
-  const oauthCallback = inviteToken ? `/auth/complete?invite=${encodeURIComponent(inviteToken)}` : '/auth/complete';
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,25 +90,6 @@ function RegisterInner() {
             Deterministic compute with optional memory. No predictions, no diagnoses.
           </p>
 
-          <div className="space-y-2 mb-6">
-            <button
-              type="button"
-              onClick={() => signIn('google', { callbackUrl: oauthCallback })}
-              className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
-            >
-              Continue with Google
-            </button>
-            <button
-              type="button"
-              onClick={() => signIn('apple', { callbackUrl: oauthCallback })}
-              className="w-full inline-flex items-center justify-center py-3 border border-neutral-300 dark:border-neutral-700 text-sm font-medium hover:border-neutral-900 dark:hover:border-white transition-colors"
-            >
-              Continue with Apple
-            </button>
-            <p className="text-xs text-neutral-500 dark:text-neutral-500">
-              Google/Apple sign-in is in beta.
-            </p>
-          </div>
           <TrustStrip className="mb-6" />
 
           <form onSubmit={handleSubmit} className="space-y-4">
