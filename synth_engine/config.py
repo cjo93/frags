@@ -39,6 +39,19 @@ class Settings(BaseSettings):
     app_base_url: str = "https://defrag.app"
     api_base_url: str = "https://api.defrag.app"
 
+    # Apple Wallet / PassKit
+    apple_pass_type_id: str = ""
+    apple_team_id: str = ""
+    apple_org_name: str = "Defrag"
+    apple_pass_cert_p12_b64: str = ""
+    apple_pass_cert_password: str = ""
+    apple_wwdr_cert_pem_b64: str = ""
+
+    # Wallet card config
+    wallet_fingerprint_salt: str = ""
+    wallet_daily_token_secret: str = ""
+    wallet_assets_dir: str = "/tmp/defrag_wallet"
+
     # OAuth (frontend handles login; backend verifies exchange)
     google_client_id: str = ""
     apple_client_id: str = ""

@@ -198,6 +198,27 @@ class ConstellationLayer(Base):
 
 
 # -------------------------
+# Wallet Passes
+# -------------------------
+class WalletPass(Base):
+    __tablename__ = "wallet_passes"
+    __table_args__ = (
+        UniqueConstraint("fingerprint", name="uq_wallet_pass_fingerprint"),
+        UniqueConstraint("pass_serial", name="uq_wallet_pass_serial"),
+        Index("ix_wallet_pass_user_profile", "user_id", "profile_id"),
+    )
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), index=True)
+    profile_id: Mapped[str] = mapped_column(String, ForeignKey("profiles.id"), index=True)
+    fingerprint: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    pass_serial: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    device_library_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    auth_token_hash: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    revoked_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+# -------------------------
 # Beta Invites
 # -------------------------
 class Invite(Base):

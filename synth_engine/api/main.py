@@ -62,6 +62,7 @@ from synth_engine.utils.diag import secret_fingerprint
 from synth_engine.api.billing import router as billing_router
 from synth_engine.api.admin import router as admin_router
 from synth_engine.api.ai import router as ai_router
+from synth_engine.api.wallet import router as wallet_router
 
 diag_logger = logging.getLogger("synth_engine.diag")
 
@@ -87,6 +88,7 @@ limiter = TokenBucketLimiter()
 app.include_router(billing_router)
 app.include_router(admin_router)
 app.include_router(ai_router)
+app.include_router(wallet_router)
 
 # Add abuse control middleware (order matters: RequestID first, then AbuseControl)
 # Note: Starlette middleware is added in reverse order (last added = first executed)

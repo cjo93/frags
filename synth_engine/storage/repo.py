@@ -23,6 +23,7 @@ from synth_engine.storage.models import (
     ConstellationEdge,
     ConstellationRun,
     ConstellationLayer,
+    WalletPass,
 )
 
 # Dev admin user ID constant retained for legacy compatibility
@@ -747,6 +748,60 @@ def redeem_invite(s: Session, token: str, user_id: str) -> Invite:
     user.tier = "beta"
     s.commit()
     return invite
+
+
+# -------------------------
+# Wallet passes
+# -------------------------
+def get_wallet_pass_by_fingerprint(s: Session, fingerprint: str) -> Optional[WalletPass]:
+    return s.query(WalletPass).filter(WalletPass.fingerprint == fingerprint).first()
+
+
+def get_wallet_pass_by_user_profile(s: Session, user_id: str, profile_id: str) -> Optional[WalletPass]:
+    return (
+        s.query(WalletPass)
+        .filter(WalletPass.user_id == user_id, WalletPass.profile_id == profile_id)
+        .first()
+    )
+
+
+def create_wallet_pass(
+    s: Session,
+    user_id: str,
+    profile_id: str,
+    fingerprint: str,
+    pass_serial: str,
+    auth_token_hash: str,
+) -> WalletPass:
+    wp = WalletPass(
+        id=new_id(),
+        user_id=user_id,
+        profile_id=profile_id,
+        fingerprint=fingerprint,
+        pass_serial=pass_serial,
+        auth_token_hash=auth_token_hash,
+        revoked_at=None,
+    )
+    s.add(wp)
+    s.commit()
+    return wp
+
+
+def update_wallet_pass_token(
+    s: Session,
+    wallet_pass: WalletPass,
+    auth_token_hash: str,
+) -> WalletPass:
+    wallet_pass.auth_token_hash = auth_token_hash
+    wallet_pass.revoked_at = None
+    s.commit()
+    return wallet_pass
+
+
+def revoke_wallet_pass(s: Session, wallet_pass: WalletPass) -> WalletPass:
+    wallet_pass.revoked_at = datetime.utcnow()
+    s.commit()
+    return wallet_pass
 
 
 def plan_for_user(s: Session, user_id: str) -> str:
