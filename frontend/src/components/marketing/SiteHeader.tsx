@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { cn } from "@/lib/cn";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function SiteHeader({ className }: { className?: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -35,6 +36,7 @@ export default function SiteHeader({ className }: { className?: string }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             href="/login"
             className="hidden sm:inline-flex text-[13px] text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors duration-200"
