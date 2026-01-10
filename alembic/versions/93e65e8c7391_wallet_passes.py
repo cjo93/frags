@@ -1,7 +1,7 @@
 """wallet_passes
 
 Revision ID: 93e65e8c7391
-Revises: c3c1b58a9f23
+Revises: d5cfd5be4e57
 Create Date: 2026-01-09 00:53:17.000000
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '93e65e8c7391'
-down_revision: Union[str, Sequence[str], None] = 'c3c1b58a9f23'
+down_revision: Union[str, Sequence[str], None] = 'd5cfd5be4e57'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

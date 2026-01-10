@@ -1,7 +1,7 @@
 """stripe_webhook_events
 
 Revision ID: d5cfd5be4e57
-Revises: a76aff43b5a8
+Revises: c3c1b58a9f23
 Create Date: 2026-01-05 11:51:43.839389
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'd5cfd5be4e57'
-down_revision: Union[str, Sequence[str], None] = 'a76aff43b5a8'
+down_revision: Union[str, Sequence[str], None] = 'c3c1b58a9f23'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
