@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import TrustStrip from '@/components/TrustStrip';
 import LegalFooter from '@/components/LegalFooter';
 import RotatingMantras from '@/components/RotatingMantras';
 import MandalaHero from '@/components/MandalaHero';
@@ -89,7 +88,6 @@ export default function Home() {
                 See how it works
               </Link>
             </div>
-            <TrustStrip className="mt-6" />
           </div>
 
           {/* Hero Visual */}
