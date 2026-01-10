@@ -74,9 +74,11 @@ export default function Home() {
               Old Technology. Updated Interface.
             </h1>
             <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Defrag synthesizes symbolic frameworks into structured self-reflection — so you can act with timing, not urgency.
+              Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured self-reflection, so you can act with timing, not urgency.
             </p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">Signal first. Action second.</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 tracking-wide">
+              Pattern recognition across people, time, and relationships.
+            </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Link
