@@ -61,6 +61,10 @@ export default function DashboardPage() {
         {/* First-run Onboarding */}
         {!hasSeenOnboarding && (
           <OnboardingPanel
+            hasProfiles={(profiles?.length || 0) > 0}
+            hasSynthesis={(profiles?.length || 0) > 0} // Synthesis is auto-computed on profile creation
+            hasAIAccess={featureFlags.ai_preview_allowed || featureFlags.ai_full_allowed || false}
+            hasConstellationAccess={featureFlags.constellation_create || false}
             onDismiss={markOnboardingSeen}
           />
         )}
@@ -68,7 +72,7 @@ export default function DashboardPage() {
         {/* Current Access */}
         <section className="mb-12">
           <div className="flex items-baseline justify-between mb-4">
-            <h2 className="text-lg font-medium">Access</h2>
+            <h2 className="text-lg font-medium">Current Access</h2>
             {currentPlan === 'free' && (
               <Link
                 href="/pricing"
@@ -82,7 +86,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">
-                  Plan & limits
+                  Plan
                 </p>
                 <p className="text-xl font-light capitalize">
                   {currentPlan === 'free' ? 'Free' : currentPlan}
@@ -96,15 +100,15 @@ export default function DashboardPage() {
             </div>
             {featureFlags.ai_preview_allowed && !featureFlags.ai_full_allowed && (
               <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
-                AI is enabled in preview mode (lower compute, shorter context).{' '}
+                You have access to AI synthesis previews.{' '}
                 <Link href="/pricing" className="underline underline-offset-4">
-                  Upgrade for full synthesis
+                  Unlock full synthesis
                 </Link>
               </p>
             )}
             {featureFlags.ai_full_allowed && (
               <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
-                Full AI synthesis is enabled for your account.
+                Full AI synthesis access enabled.
               </p>
             )}
             {currentPlan !== 'free' && (
@@ -126,13 +130,12 @@ export default function DashboardPage() {
 
           {(!profiles || profiles.length === 0) ? (
             <div className="p-8 border border-dashed border-neutral-300 dark:border-neutral-700 text-center">
-              <p className="text-neutral-600 dark:text-neutral-400 mb-3">
+              <p className="text-neutral-600 dark:text-neutral-400 mb-4">
                 No profiles yet.
               </p>
-              <p className="text-sm text-neutral-400 dark:text-neutral-600 leading-relaxed">
-                Create a profile to compute your synthesis across Human Design, Gene Keys,
-                numerology, and astrology. Your birth data is used only to generate your
-                results—never sold, never shared.
+              <p className="text-sm text-neutral-400 dark:text-neutral-600">
+                A profile contains your birth data and computed synthesis across 
+                Human Design, Gene Keys, numerology, and astrology.
               </p>
             </div>
           ) : (
@@ -150,22 +153,22 @@ export default function DashboardPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <SystemCard
               title="Human Design"
-              description="Decision-making strategy and signature themes"
+              description="Your energetic blueprint and decision-making strategy"
               available={true}
             />
             <SystemCard
               title="Gene Keys"
-              description="Themes across activation, vocation, and relationships"
+              description="Your hologenetic profile and life's purpose"
               available={true}
             />
             <SystemCard
               title="Numerology"
-              description="Core numbers, cycles, and emphasis patterns"
+              description="Your core numbers and life path"
               available={true}
             />
             <SystemCard
               title="Astrology"
-              description="Natal chart structure and timing context"
+              description="Your natal chart and planetary influences"
               available={true}
             />
           </div>
@@ -199,18 +202,12 @@ export default function DashboardPage() {
             </div>
           ) : (!constellations || constellations.length === 0) ? (
             <div className="p-8 border border-dashed border-neutral-300 dark:border-neutral-700 text-center">
-              <p className="text-neutral-600 dark:text-neutral-400 mb-2">
-                Some patterns only emerge between people.
+              <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+                Constellations reveal patterns that only emerge between people.
               </p>
-              <p className="text-sm text-neutral-400 dark:text-neutral-600 mb-4">
-                Constellations let you explore relational structure across profiles.
+              <p className="text-sm text-neutral-400 dark:text-neutral-600">
+                Create one when you&apos;re ready to explore relationships, not just traits.
               </p>
-              <Link
-                href="/constellation/new"
-                className="text-sm underline underline-offset-4 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
-              >
-                Create a constellation
-              </Link>
             </div>
           ) : (
             <div className="space-y-4">
@@ -221,39 +218,12 @@ export default function DashboardPage() {
           )}
         </section>
 
-        {/* Privacy & Security */}
-        <section className="mb-12">
-          <h2 className="text-lg font-medium mb-4">Privacy & Security</h2>
-          <div className="p-6 border border-neutral-200 dark:border-neutral-800">
-            <ul className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed space-y-2">
-              <li>Data is stored securely and scoped to your account.</li>
-              <li>AI tools are rate-limited and audited to prevent abuse.</li>
-              <li>Exports are signed, time-limited, and safe-formatted for sharing.</li>
-            </ul>
-            <div className="mt-4 flex flex-wrap gap-4 text-sm">
-              <Link
-                href="/how-ai-works"
-                className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4"
-              >
-                How AI works
-              </Link>
-              <Link
-                href="/settings"
-                className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4"
-              >
-                Settings
-              </Link>
-            </div>
-          </div>
-        </section>
-
         {/* Disclaimer */}
         <section className="pt-8 border-t border-neutral-200 dark:border-neutral-800">
           <p className="text-xs text-neutral-400 dark:text-neutral-600 leading-relaxed max-w-2xl">
-            Defrag synthesizes symbolic frameworks for structured self-reflection. It is not
-            predictive, diagnostic, or a substitute for professional medical, legal, or mental
-            health care. Your data is stored securely and is not sold or shared with third
-            parties for advertising.
+            Defrag synthesizes symbolic systems for self-exploration. It is not 
+            predictive, diagnostic, or a replacement for professional guidance. 
+            Your data is stored securely and never shared with third parties.
           </p>
         </section>
       </div>

@@ -24,6 +24,7 @@ from synth_engine.wallet.passkit import (
     verify_wallet_token,
 )
 from synth_engine.wallet.daily import build_daily_payload
+from synth_engine.core.orchestrator import orchestrate
 
 logger = logging.getLogger("synth_engine.wallet")
 
@@ -152,11 +153,14 @@ def wallet_daily_reading(
         raise HTTPException(404, "Profile not found")
 
     person = PersonInput.model_validate_json(profile.person_json)
-    daily_payload = build_daily_payload(person)
-
     logger.info("wallet_daily_reading fingerprint=%s", fingerprint)
 
+    # Route through orchestrator (contract locked even if placeholders)
+    result = orchestrate(user_id=wallet_pass.user_id, context={}, signals={}, request_type="daily")
     return {
-        "fingerprint": fingerprint,
-        "daily": daily_payload,
+        "state": result.state,
+        "pass_level": result.pass_level,
+        "briefing": result.briefing,
+        "field": result.field,
+        "kairotic_windows": result.kairotic_windows,
     }

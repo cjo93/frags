@@ -191,7 +191,7 @@ class BetaAccessRequest(BaseModel):
 
 class BetaInviteRequest(BaseModel):
     email: str
-    ttl_hours: int | None = 168
+    ttl_hours: Optional[int] = 168
 
 
 @router.post("/beta/grant")

@@ -53,6 +53,7 @@ def _reset_steps(theme: str) -> List[str]:
     ]
 
 
+# TODO: replace with call to synth_engine.core.orchestrator.orchestrate
 def build_daily_payload(person: PersonInput) -> Dict[str, object]:
     birth = person.birth
     birth_time = birth.time or "12:00:00"

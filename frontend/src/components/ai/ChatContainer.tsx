@@ -83,10 +83,13 @@ export function ChatContainer({ profileId, constellationId, initialMessage }: Ch
       <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-scroll">
         {messages.length === 0 && !isLoading && (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center max-w-md">
+            <div className="text-center max-w-md space-y-4">
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 Ask questions about this profile&apos;s synthesis. The AI will provide interpretations
                 based on the computed layers.
+              </p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-600">
+                For structured self-reflection. Not predictive, diagnostic, or a substitute for professional care.
               </p>
             </div>
           </div>

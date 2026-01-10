@@ -46,7 +46,7 @@ export default function Home() {
               href="/register"
               className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
             >
-              Get started
+              Enter the Field
             </Link>
           </div>
         </nav>

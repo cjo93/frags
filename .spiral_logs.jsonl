@@ -1,0 +1,7 @@
+{"ts": 1768000509.164191, "user_id": "test_user", "event": {"type": "reflection", "content": "sample event"}}
+{"ts": 1768000576.403462, "user_id": "unknown", "event": {"kind": "read_aloud_completed", "note": "persist test"}}
+{"ts": 1768000593.725288, "user_id": "unknown", "event": {"kind": "manual_test", "note": "testing user_id persistence"}}
+{"ts": 1768000600.1655831, "user_id": "unknown", "event": {"kind": "manual_test", "note": "testing user_id persistence"}}
+{"ts": 1768000626.9016252, "user_id": "unknown", "event": {"kind": "final_test", "note": "with proper user_id"}}
+{"ts": 1768005168.132322, "user_id": "test", "event": {"kind": "proposal_accepted", "action": "test", "session_id": "s1"}}
+{"ts": 1768005234.002472, "user_id": "test", "event": {"kind": "proposal_accepted", "action": "test", "session_id": "s1"}}

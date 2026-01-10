@@ -110,7 +110,7 @@ export default function PricingPage() {
                   href="/register"
                   className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
                 >
-                  Get started
+                  Enter the Field
                 </Link>
               </>
             )}
@@ -191,10 +191,13 @@ export default function PricingPage() {
 
       {/* Footer */}
       <section className="border-t border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="max-w-5xl mx-auto px-6 py-8 space-y-4">
           <p className="text-xs text-neutral-400 dark:text-neutral-600 max-w-2xl">
             Subscriptions are billed monthly. Cancel anytime. Your data remains accessible
             at your current tier level after cancellation.
+          </p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-600 max-w-2xl">
+            Defrag is for structured self-reflection. It is not predictive, diagnostic, or a substitute for professional medical, legal, or mental health care.
           </p>
         </div>
       </section>

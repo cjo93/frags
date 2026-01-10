@@ -16,6 +16,7 @@ def to01_from_0_100(v: int) -> Optional[float]:
         return None
     return float(clamp(v/100.0, 0.0, 1.0))
 
+# TODO: replace with call to synth_engine.core.orchestrator.orchestrate
 def build_state_from_sources(
     checkin: Optional[Dict[str, Any]],
     context_inferred: Optional[Dict[str, float]],

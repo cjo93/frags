@@ -51,6 +51,10 @@ from synth_engine.api.ratelimit import TokenBucketLimiter
 from synth_engine.api.auth import decode_token
 from synth_engine.api.entitlements import require_entitlement, require_plan
 from synth_engine.fusion.synthesis import synthesize_profile, synthesize_constellation
+from synth_engine.agency.pass_levels import PassLevel
+from synth_engine.agency.guardrails import allowed_action_names
+from synth_engine.core.spiral_store import append_spiral_event
+from synth_engine.core.spiral_query import query_spiral, KNOWN_EVENT_KINDS
 from synth_engine.api.abuse import (
     RequestIDMiddleware, 
     AbuseControlMiddleware,
@@ -63,6 +67,7 @@ from synth_engine.api.billing import router as billing_router
 from synth_engine.api.admin import router as admin_router
 from synth_engine.api.ai import router as ai_router
 from synth_engine.api.wallet import router as wallet_router
+from synth_engine.api.routes.agent_session import router as agent_session_router, _SESSIONS
 
 diag_logger = logging.getLogger("synth_engine.diag")
 
@@ -89,6 +94,7 @@ app.include_router(billing_router)
 app.include_router(admin_router)
 app.include_router(ai_router)
 app.include_router(wallet_router)
+app.include_router(agent_session_router)
 
 # Add abuse control middleware (order matters: RequestID first, then AbuseControl)
 # Note: Starlette middleware is added in reverse order (last added = first executed)
@@ -130,8 +136,7 @@ async def add_security_headers(request: Request, call_next):
     # Permissions policy - restrict sensitive APIs
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     
-    # Content Security Policy (report-only first to avoid breaking things)
-    # Once validated, change to Content-Security-Policy
+    # Content Security Policy
     response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
     
     return response
@@ -139,6 +144,126 @@ async def add_security_headers(request: Request, call_next):
 
 def new_id() -> str:
     return str(uuid.uuid4())
+
+
+class ExecuteActionRequest(BaseModel):
+    session_id: str
+    action: str
+    args: Dict[str, Any] = {}
+
+
+@app.post("/agent/action/execute")
+async def execute_action(req: ExecuteActionRequest):
+    # Read pass_level from session context
+    meta = _SESSIONS.get(req.session_id)
+    pass_level = PassLevel(meta["pass_level"]) if meta and "pass_level" in meta else PassLevel.GUIDED
+    user_id = meta["user_id"] if meta and "user_id" in meta else "unknown"
+
+    allow = set(allowed_action_names(pass_level))
+    if req.action not in allow:
+        diag_logger.warning(
+            "action_not_allowed session_id=%s action=%s pass_level=%s",
+            req.session_id,
+            req.action,
+            pass_level,
+        )
+        return {"ok": False, "error": "action_not_allowed", "pass_level": str(pass_level)}
+
+    # Log acceptance of a proposal (Spiral)
+    try:
+        append_spiral_event(user_id=user_id, event={
+            "kind": "proposal_accepted",
+            "session_id": req.session_id,
+            "pass_level": str(pass_level),
+            "action": req.action,
+            "args": req.args or {},
+        })
+    except Exception:
+        pass
+
+    diag_logger.info(
+        "execute_action session_id=%s action=%s args=%s pass_level=%s",
+        req.session_id,
+        req.action,
+        req.args,
+        pass_level,
+    )
+
+    # Implement minimal real executions (no side effects yet)
+    if req.action == "open_module":
+        # returns an instruction the UI can follow
+        return {"ok": True, "type": "navigate", "route": req.args.get("route", "/")}
+
+    if req.action == "log_event":
+        # Persist to Spiral (building block #1 for agent recurrence)
+        rec = append_spiral_event(user_id=user_id, event=req.args or {})
+        return {"ok": True, "type": "logged", "record": rec}
+
+    if req.action == "play_audio":
+        return {"ok": True, "type": "audio", "ref": req.args}
+
+    if req.action == "schedule_prompt":
+        # MVP: persist schedule intent only (no external side effects)
+        rec = append_spiral_event(user_id=user_id, event={
+            "kind": "schedule_prompt",
+            "session_id": req.session_id,
+            "args": req.args or {},
+        })
+        return {"ok": True, "type": "scheduled", "record": rec}
+
+    # Active-only actions remain "proposed but not executed" for now
+    return {"ok": True, "type": "ack", "executed": {"action": req.action, "args": req.args}}
+
+
+class DeclineActionRequest(BaseModel):
+    session_id: str
+    action: str
+    args: Dict[str, Any] = {}
+    reason: str = "user_declined"
+
+
+@app.post("/agent/action/decline")
+async def decline_action(req: DeclineActionRequest):
+    meta = _SESSIONS.get(req.session_id)
+    user_id = meta["user_id"] if meta and "user_id" in meta else "unknown"
+    pass_level = PassLevel(meta["pass_level"]) if meta and "pass_level" in meta else PassLevel.GUIDED
+
+    rec = append_spiral_event(user_id=user_id, event={
+        "kind": "proposal_declined",
+        "session_id": req.session_id,
+        "pass_level": str(pass_level),
+        "action": req.action,
+        "args": req.args or {},
+        "reason": req.reason,
+    })
+    return {"ok": True, "type": "declined", "record": rec}
+
+
+@app.get("/spiral/events")
+async def spiral_events(
+    user_id: str = Query(...),
+    kind: str = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    cursor: Optional[float] = Query(None, description="Unix timestamp cursor for pagination"),
+    current_user=Depends(get_current_user),
+):
+    """Query Spiral events for a user. Used for agent recurrence and UI display."""
+    # Auth safety: prevent cross-user leakage (compare as strings for UUID compat)
+    if current_user and str(current_user.id) != user_id:
+        raise HTTPException(status_code=403, detail="Cannot access another user's Spiral")
+    
+    # Validate kind if provided
+    if kind and kind not in KNOWN_EVENT_KINDS:
+        raise HTTPException(status_code=400, detail=f"Unknown event kind: {kind}")
+    
+    kinds = [kind] if kind else None
+    events, next_cursor = query_spiral(user_id=user_id, kinds=kinds, limit=limit, cursor=cursor)
+    return {
+        "ok": True,
+        "events": events,
+        "count": len(events),
+        "next_cursor": next_cursor,
+    }
 
 
 @app.get("/health")
@@ -902,6 +1027,7 @@ def jung_from_journal(
 
 # -------------------------
 # Internal helper: compute reading for a profile (used by constellation auto-compute)
+# TODO: replace with call to synth_engine.core.orchestrator.orchestrate
 # -------------------------
 def compute_profile_reading(s: Session, profile_id: str, days: int = 14, include_symbolic: bool = False) -> Dict[str, Any]:
     person = get_person(s, profile_id)
@@ -985,6 +1111,7 @@ def compute_profile_reading(s: Session, profile_id: str, days: int = 14, include
 
 # -------------------------
 # Compute reading (paid - requires Integration tier)
+# TODO: replace with call to synth_engine.core.orchestrator.orchestrate
 # -------------------------
 @app.post("/profiles/{profile_id}/compute_reading")
 def compute_reading(
