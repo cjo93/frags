@@ -34,13 +34,14 @@ function LoginInner() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // Check Turnstile if enabled
-    if (isTurnstileEnabled() && !turnstileToken) {
+    // Only require Turnstile if enabled AND the widget loaded successfully
+    if (isTurnstileEnabled() && turnstileReady && !turnstileToken) {
       setError('Please complete the verification');
       return;
     }
@@ -53,6 +54,8 @@ function LoginInner() {
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
+        // Reset turnstile token on error so user can retry
+        setTurnstileToken(null);
         setError(err.detail);
       } else {
         setError('An unexpected error occurred');
@@ -124,8 +127,12 @@ function LoginInner() {
             {isTurnstileEnabled() && (
               <Turnstile
                 siteKey={getTurnstileSiteKey()}
-                onVerify={setTurnstileToken}
+                onVerify={(token) => {
+                  setTurnstileReady(true);
+                  setTurnstileToken(token);
+                }}
                 onExpire={() => setTurnstileToken(null)}
+                onError={() => setTurnstileReady(false)}
                 className="flex justify-center"
               />
             )}

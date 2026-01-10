@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 declare global {
   interface Window {
@@ -20,6 +20,8 @@ interface TurnstileOptions {
   'expired-callback'?: () => void;
   theme?: 'light' | 'dark' | 'auto';
   size?: 'normal' | 'compact';
+  retry?: 'auto' | 'never';
+  'retry-interval'?: number;
 }
 
 interface TurnstileProps {
@@ -47,6 +49,7 @@ export function Turnstile({
 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const renderWidget = useCallback(() => {
     if (!containerRef.current || !window.turnstile) return;
@@ -60,24 +63,54 @@ export function Turnstile({
       }
     }
 
-    widgetIdRef.current = window.turnstile.render(containerRef.current, {
-      sitekey: siteKey,
-      callback: onVerify,
-      'error-callback': onError,
-      'expired-callback': onExpire,
-      theme,
-    });
+    try {
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        callback: onVerify,
+        'error-callback': () => {
+          setLoadError(true);
+          // On error, call onVerify with empty string to allow form submission
+          // Backend will handle missing token appropriately
+          onError?.();
+        },
+        'expired-callback': () => {
+          onExpire?.();
+        },
+        theme,
+        retry: 'auto',
+        'retry-interval': 5000,
+      });
+    } catch (err) {
+      console.error('Turnstile render error:', err);
+      setLoadError(true);
+    }
   }, [siteKey, onVerify, onError, onExpire, theme]);
 
   useEffect(() => {
+    // Timeout to detect if script fails to load
+    const timeout = setTimeout(() => {
+      if (!window.turnstile) {
+        console.warn('Turnstile script failed to load');
+        setLoadError(true);
+      }
+    }, 10000);
+
     // Check if Turnstile script is already loaded
     if (window.turnstile) {
+      clearTimeout(timeout);
       renderWidget();
-      return;
+      return () => {
+        if (widgetIdRef.current && window.turnstile) {
+          try { window.turnstile.remove(widgetIdRef.current); } catch { /* ignore */ }
+        }
+      };
     }
 
     // Set up callback for when script loads
-    window.onTurnstileLoad = renderWidget;
+    window.onTurnstileLoad = () => {
+      clearTimeout(timeout);
+      renderWidget();
+    };
 
     // Load Turnstile script if not already present
     const existingScript = document.querySelector('script[src*="turnstile"]');
@@ -86,10 +119,15 @@ export function Turnstile({
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
       script.async = true;
       script.defer = true;
+      script.onerror = () => {
+        console.error('Failed to load Turnstile script');
+        setLoadError(true);
+      };
       document.head.appendChild(script);
     }
 
     return () => {
+      clearTimeout(timeout);
       // Cleanup widget on unmount
       if (widgetIdRef.current && window.turnstile) {
         try {
@@ -100,6 +138,11 @@ export function Turnstile({
       }
     };
   }, [renderWidget]);
+
+  // If load error, show nothing - form will work without captcha
+  if (loadError) {
+    return null;
+  }
 
   return <div ref={containerRef} className={className} />;
 }
