@@ -488,8 +488,9 @@ def register(
     if not email or not password:
         raise HTTPException(400, "email and password required")
     
-    # Verify Turnstile if enabled
-    if is_turnstile_enabled():
+    # Verify Turnstile if enabled and token provided
+    # If no token, allow through (fail open) - frontend may have had issues loading widget
+    if is_turnstile_enabled() and turnstile_token:
         client_ip = request.client.host if request.client else None
         success, error = verify_turnstile_token_sync(turnstile_token, client_ip)
         if not success:
@@ -549,8 +550,9 @@ def login(
     if not email or not password:
         raise HTTPException(400, "email and password required")
     
-    # Verify Turnstile if enabled
-    if is_turnstile_enabled():
+    # Verify Turnstile if enabled and token provided
+    # If no token, allow through (fail open) - frontend may have had issues loading widget
+    if is_turnstile_enabled() and turnstile_token:
         client_ip = request.client.host if request.client else None
         success, error = verify_turnstile_token_sync(turnstile_token, client_ip)
         if not success:

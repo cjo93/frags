@@ -37,13 +37,16 @@ function RegisterInner() {
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileReady, setTurnstileReady] = useState(false);
+  const [turnstileFailed, setTurnstileFailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // Only require Turnstile if enabled AND the widget loaded successfully
-    if (isTurnstileEnabled() && turnstileReady && !turnstileToken) {
+    // Only require Turnstile if enabled AND widget loaded AND hasn't failed
+    // If Turnstile failed to load, allow submission (fail open)
+    const requiresCaptcha = isTurnstileEnabled() && turnstileReady && !turnstileFailed;
+    if (requiresCaptcha && !turnstileToken) {
       setError('Please complete the verification');
       return;
     }
@@ -135,15 +138,16 @@ function RegisterInner() {
             </div>
 
             {/* Turnstile CAPTCHA */}
-            {isTurnstileEnabled() && (
+            {isTurnstileEnabled() && !turnstileFailed && (
               <Turnstile
                 siteKey={getTurnstileSiteKey()}
-                onVerify={(token) => {
-                  setTurnstileReady(true);
-                  setTurnstileToken(token);
-                }}
+                onLoad={() => setTurnstileReady(true)}
+                onVerify={(token) => setTurnstileToken(token)}
                 onExpire={() => setTurnstileToken(null)}
-                onError={() => setTurnstileReady(false)}
+                onError={() => {
+                  setTurnstileFailed(true);
+                  setTurnstileReady(false);
+                }}
                 className="flex justify-center"
               />
             )}

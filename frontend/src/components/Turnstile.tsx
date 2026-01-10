@@ -29,6 +29,7 @@ interface TurnstileProps {
   onVerify: (token: string) => void;
   onError?: () => void;
   onExpire?: () => void;
+  onLoad?: () => void;
   theme?: 'light' | 'dark' | 'auto';
   className?: string;
 }
@@ -37,19 +38,21 @@ interface TurnstileProps {
  * Cloudflare Turnstile CAPTCHA widget.
  * 
  * Only renders if NEXT_PUBLIC_TURNSTILE_SITE_KEY is set.
- * Fails open if the widget fails to load.
+ * Fails open if the widget fails to load (calls onError).
  */
 export function Turnstile({
   siteKey,
   onVerify,
   onError,
   onExpire,
+  onLoad,
   theme = 'auto',
   className = '',
 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const hasCalledOnLoad = useRef(false);
 
   const renderWidget = useCallback(() => {
     if (!containerRef.current || !window.turnstile) return;
@@ -66,11 +69,16 @@ export function Turnstile({
     try {
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
-        callback: onVerify,
+        callback: (token) => {
+          // Widget successfully rendered and verified
+          if (!hasCalledOnLoad.current) {
+            hasCalledOnLoad.current = true;
+            onLoad?.();
+          }
+          onVerify(token);
+        },
         'error-callback': () => {
           setLoadError(true);
-          // On error, call onVerify with empty string to allow form submission
-          // Backend will handle missing token appropriately
           onError?.();
         },
         'expired-callback': () => {
@@ -80,26 +88,37 @@ export function Turnstile({
         retry: 'auto',
         'retry-interval': 5000,
       });
+      
+      // Widget rendered successfully (even if not yet verified)
+      if (!hasCalledOnLoad.current) {
+        hasCalledOnLoad.current = true;
+        onLoad?.();
+      }
     } catch (err) {
       console.error('Turnstile render error:', err);
       setLoadError(true);
+      onError?.();
     }
-  }, [siteKey, onVerify, onError, onExpire, theme]);
+  }, [siteKey, onVerify, onError, onExpire, onLoad, theme]);
 
   useEffect(() => {
-    // Timeout to detect if script fails to load
+    let mounted = true;
+    
+    // Timeout to detect if script fails to load (5s is more reasonable)
     const timeout = setTimeout(() => {
-      if (!window.turnstile) {
-        console.warn('Turnstile script failed to load');
+      if (mounted && !window.turnstile) {
+        console.warn('Turnstile script failed to load within timeout');
         setLoadError(true);
+        onError?.();
       }
-    }, 10000);
+    }, 5000);
 
     // Check if Turnstile script is already loaded
     if (window.turnstile) {
       clearTimeout(timeout);
       renderWidget();
       return () => {
+        mounted = false;
         if (widgetIdRef.current && window.turnstile) {
           try { window.turnstile.remove(widgetIdRef.current); } catch { /* ignore */ }
         }
@@ -108,6 +127,7 @@ export function Turnstile({
 
     // Set up callback for when script loads
     window.onTurnstileLoad = () => {
+      if (!mounted) return;
       clearTimeout(timeout);
       renderWidget();
     };
@@ -120,13 +140,16 @@ export function Turnstile({
       script.async = true;
       script.defer = true;
       script.onerror = () => {
+        if (!mounted) return;
         console.error('Failed to load Turnstile script');
         setLoadError(true);
+        onError?.();
       };
       document.head.appendChild(script);
     }
 
     return () => {
+      mounted = false;
       clearTimeout(timeout);
       // Cleanup widget on unmount
       if (widgetIdRef.current && window.turnstile) {
@@ -137,9 +160,9 @@ export function Turnstile({
         }
       }
     };
-  }, [renderWidget]);
+  }, [renderWidget, onError]);
 
-  // If load error, show nothing - form will work without captcha
+  // If load error, show nothing - form will work without captcha (fail open)
   if (loadError) {
     return null;
   }
