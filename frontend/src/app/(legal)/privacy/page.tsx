@@ -1,13 +1,19 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import LegalFooter from '@/components/LegalFooter';
 
+export const metadata: Metadata = {
+  title: "Privacy Policy — Data Control and Transparency",
+  description: "Your data stays yours. Control memory, request exports, delete anytime. Defrag stores only what's needed for continuity.",
+};
+
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen flex flex-col">
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <nav className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-lg font-medium tracking-tight">
-            Defrag
+    <main className="min-h-screen flex flex-col bg-white dark:bg-black">
+      <header className="border-b border-neutral-200/50 dark:border-neutral-800/50 bg-white/80 dark:bg-black/60 backdrop-blur-xl">
+        <nav className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="text-sm font-medium tracking-[0.15em] text-neutral-900 dark:text-neutral-50 hover:opacity-70 transition-opacity">
+            DEFRAG
           </Link>
           <div className="flex items-center gap-6">
             <Link

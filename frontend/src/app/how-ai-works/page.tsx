@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
 
+// Note: metadata export requires removing 'use client' and moving to a separate file
+// For now, we rely on the root layout's metadata
+
 export default function HowAIWorksPage() {
 
   return (
@@ -20,7 +23,7 @@ export default function HowAIWorksPage() {
               A mirror, not a mandate.
             </h1>
             <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
-              Defrag turns inputs into orientation.
+              Defrag turns inputs into orientation—using deterministic computation and optional AI interpretation.
             </p>
           </div>
         </Section>
@@ -169,13 +172,13 @@ export default function HowAIWorksPage() {
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+              className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
               Initialize the Mirror
             </Link>
             <Link
               href="/trust"
-              className="inline-flex items-center justify-center px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              className="inline-flex items-center justify-center px-7 py-3.5 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-all duration-200"
             >
               Trust &amp; Safety
             </Link>

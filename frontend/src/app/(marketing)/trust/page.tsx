@@ -1,5 +1,15 @@
+import type { Metadata } from 'next';
 import TrustStrip from '@/components/TrustStrip';
 import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
+
+export const metadata: Metadata = {
+  title: "Trust & Safety — Data Control, Privacy, and Security",
+  description: "Your data is protected. Defrag uses encrypted exports, signed audit trails, and user-controlled memory. Delete anytime.",
+  openGraph: {
+    title: "Trust & Safety — Defrag",
+    description: "Auditable, scoped, and reversible. Your reflection data stays yours.",
+  },
+};
 
 export default function TrustPage() {
   return (
@@ -11,8 +21,8 @@ export default function TrustPage() {
           <div className="relative">
             <h1 className="text-3xl md:text-4xl font-light tracking-tight">Trust is engineered.</h1>
             <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Defrag is built to be auditable, scoped, and reversible. Controls are explicit and designed
-              for safe real-world use.
+              Defrag is built to be auditable, scoped, and reversible. Your data stays yours—
+              with explicit controls and full deletion rights.
             </p>
             <TrustStrip className="mt-8" />
           </div>

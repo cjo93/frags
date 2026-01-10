@@ -1,4 +1,14 @@
+import type { Metadata } from 'next';
 import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
+
+export const metadata: Metadata = {
+  title: "About — Individuation Through Symbolic Frameworks",
+  description: "Defrag aligns with CBT, ACT, IFS, and Jungian frameworks for structured self-reflection. Evidence-based psychology meets ancient symbolic systems.",
+  openGraph: {
+    title: "About Defrag — Psychology-Aligned Self-Reflection",
+    description: "Evidence-based frameworks for self-understanding. Not therapy, not prediction—structured reflection.",
+  },
+};
 
 export default function AboutPage() {
   return (
@@ -12,8 +22,8 @@ export default function AboutPage() {
               A system for individuation, not identity.
             </h1>
             <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Defrag is built around attention, continuity, and choice. It aligns with evidence-based
-              psychological practice without impersonating clinical care.
+              Defrag synthesizes ancient symbolic systems with evidence-based psychological frameworks—
+              without impersonating clinical care.
             </p>
           </div>
         </Section>
@@ -22,8 +32,8 @@ export default function AboutPage() {
         <div>
           <h2 className="text-xl font-medium mb-3">What we focus on</h2>
           <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Reflection, values, pattern recognition, and safe action planning. We operate in the
-            language of systems: inputs, outputs, limits, and consent.
+            Reflection, values clarification, pattern recognition, and intentional action planning.
+            We operate in the language of systems: inputs, outputs, limits, and consent.
           </p>
         </div>
 

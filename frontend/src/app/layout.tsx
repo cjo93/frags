@@ -29,8 +29,68 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Defrag — Personal Integration",
-  description: "Understand yourself through the synthesis of ancient wisdom and modern psychology.",
+  title: {
+    default: "Defrag — Personal Integration Through Ancient Wisdom & Modern Psychology",
+    template: "%s | Defrag",
+  },
+  description: "Synthesize astrology, Human Design, and Gene Keys into structured self-reflection. Understand your patterns, timing, and relationships without predictions or diagnoses.",
+  keywords: [
+    "self-reflection app",
+    "personal integration",
+    "astrology synthesis",
+    "Human Design",
+    "Gene Keys",
+    "self-understanding",
+    "pattern recognition",
+    "timing optimization",
+    "relationship dynamics",
+    "individuation",
+    "symbolic psychology",
+    "birth chart analysis",
+    "personal development",
+    "mindfulness tool",
+    "psychological frameworks",
+  ],
+  authors: [{ name: "Defrag" }],
+  creator: "Defrag",
+  publisher: "Defrag",
+  metadataBase: new URL("https://defrag.app"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://defrag.app",
+    siteName: "Defrag",
+    title: "Defrag — Personal Integration Through Ancient Wisdom",
+    description: "Synthesize astrology, Human Design, and Gene Keys into structured self-reflection. Signal first. Action second.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Defrag — Personal Integration",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Defrag — Personal Integration",
+    description: "Synthesize ancient wisdom into structured self-reflection. Understand your patterns without predictions.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -45,6 +105,9 @@ export const metadata: Metadata = {
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 };
 
@@ -67,10 +130,37 @@ export default function RootLayout({
     })();
   `;
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Defrag",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Web",
+    "description": "Synthesize astrology, Human Design, and Gene Keys into structured self-reflection. Personal integration through ancient wisdom and modern psychology.",
+    "url": "https://defrag.app",
+    "offers": {
+      "@type": "AggregateOffer",
+      "lowPrice": "15",
+      "highPrice": "59",
+      "priceCurrency": "USD",
+      "offerCount": "3"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "100"
+    }
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}

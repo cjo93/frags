@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function BillingCancelPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center px-6">
+    <main className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-black">
       <div className="text-center max-w-md">
         <h1 className="text-2xl font-light tracking-tight mb-4">
           Checkout cancelled
@@ -14,7 +14,7 @@ export default function BillingCancelPage() {
         </p>
         <Link
           href="/pricing"
-          className="inline-flex px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
+          className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200"
         >
           View pricing
         </Link>

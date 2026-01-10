@@ -1,0 +1,15 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://defrag.app/sitemap.xml
+
+# Disallow private paths
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /admin
+Disallow: /dev
+Disallow: /billing/
+Disallow: /auth/

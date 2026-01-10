@@ -78,10 +78,11 @@ export default function PricingPage() {
           <FilmBackdrop src="/hero/mirror.webp" />
           <div className="relative">
             <h1 className="text-3xl md:text-4xl font-light tracking-tight">
-              Pricing for the spiritual rebel who wants traceability.
+              Clarity at your pace.
             </h1>
             <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-              Every plan uses the same deterministic synthesis engine. Higher tiers expand context depth, relational tooling, and AI capacity.
+              Every plan uses the same deterministic synthesis engine. Higher tiers expand context depth,
+              relational tooling, and AI interpretation capacity.
             </p>
             <TrustStrip className="mt-8" />
           </div>
