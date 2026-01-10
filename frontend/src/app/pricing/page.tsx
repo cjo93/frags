@@ -10,6 +10,7 @@ import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/mark
 const tiers = [
   {
     name: 'Insight',
+    subtitle: 'Personal',
     key: 'insight',
     price: 15,
     description: 'Deterministic synthesis for individual profiles with preview interpretation.',
@@ -22,8 +23,10 @@ const tiers = [
   },
   {
     name: 'Integration',
+    subtitle: 'Multi-profile',
     key: 'integration',
     price: 29,
+    popular: true,
     description: 'Multi-profile context with cross-system synthesis and broader continuity.',
     features: [
       'Unlimited profiles',
@@ -34,6 +37,7 @@ const tiers = [
   },
   {
     name: 'Constellation',
+    subtitle: 'Relational',
     key: 'constellation',
     price: 59,
     description: 'Relational synthesis across people with full interpretation.',
@@ -94,9 +98,24 @@ export default function PricingPage() {
           {tiers.map((tier) => (
             <div
               key={tier.key}
-              className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800/80 p-8 flex flex-col bg-white/50 dark:bg-neutral-950/50 backdrop-blur-sm hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors duration-200"
+              className={`relative rounded-2xl border p-8 flex flex-col backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                'popular' in tier && tier.popular
+                  ? 'border-neutral-900 dark:border-white bg-neutral-50 dark:bg-neutral-900 shadow-lg'
+                  : 'border-neutral-200/60 dark:border-neutral-800/60 bg-white/50 dark:bg-neutral-950/50 hover:border-neutral-300 dark:hover:border-neutral-700'
+              }`}
             >
+              {'popular' in tier && tier.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="px-3 py-1 text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full">
+                    Most Popular
+                  </span>
+                </div>
+              )}
+              
               <div>
+                <p className="text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1">
+                  {tier.subtitle}
+                </p>
                 <h3 className="text-xl font-medium">{tier.name}</h3>
                 <p className="mt-3 text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
                   {tier.description}
@@ -111,7 +130,7 @@ export default function PricingPage() {
               <ul className="mt-10 space-y-4 flex-1">
                 {tier.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
-                    <svg className="w-4 h-4 mt-0.5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 mt-0.5 text-neutral-500 dark:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-neutral-600 dark:text-neutral-400">{feature}</span>
@@ -122,9 +141,14 @@ export default function PricingPage() {
               <button
                 onClick={() => handleCheckout(tier.key)}
                 disabled={loading === tier.key}
-                className="mt-10 w-full py-3.5 rounded-full text-sm font-medium transition-all duration-200 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-700 dark:hover:bg-neutral-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className={`mt-10 w-full py-3.5 rounded-full text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-sm hover:shadow-md ${
+                  'popular' in tier && tier.popular
+                    ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-700 dark:hover:bg-neutral-200'
+                    : 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-700 dark:hover:bg-neutral-200'
+                }`}
               >
-                {loading === tier.key ? 'Loading...' : 'Continue'}              </button>
+                {loading === tier.key ? 'Loading...' : 'Continue'}
+              </button>
             </div>
           ))}
         </div>

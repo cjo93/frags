@@ -46,6 +46,21 @@ interface AdminConfig {
   api_base_url: string;
 }
 
+interface Invite {
+  email: string;
+  created_at: string | null;
+  expires_at: string | null;
+  accepted_at: string | null;
+}
+
+interface AbuseMetrics {
+  total_requests: number;
+  rate_limit_blocked: number;
+  concurrency_blocked: number;
+  size_blocked: number;
+  by_endpoint: Record<string, number>;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.defrag.app';
 const DEV_MODE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEV === 'true';
 
@@ -57,10 +72,19 @@ export default function AdminPage() {
   const [config, setConfig] = useState<AdminConfig | null>(null);
   const [aiConfig, setAIConfig] = useState<AIConfig | null>(null);
   const [users, setUsers] = useState<UserListItem[]>([]);
+  const [invites, setInvites] = useState<Invite[]>([]);
+  const [abuseMetrics, setAbuseMetrics] = useState<AbuseMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserListItem | null>(null);
   const [impersonateResult, setImpersonateResult] = useState<{token: string; expires_at: string} | null>(null);
+  
+  // Quick Action States
+  const [activeTab, setActiveTab] = useState<'users' | 'invites' | 'metrics'>('users');
+  const [quickActionEmail, setQuickActionEmail] = useState('');
+  const [quickActionPlan, setQuickActionPlan] = useState('insight');
+  const [quickActionLoading, setQuickActionLoading] = useState(false);
+  const [quickActionResult, setQuickActionResult] = useState<{type: 'success' | 'error'; message: string} | null>(null);
 
   const fetchAdminData = useCallback(async () => {
     if (!token) return;
@@ -72,11 +96,13 @@ export default function AdminPage() {
       const headers = { 'Authorization': `Bearer ${token}` };
       
       // Fetch all admin data in parallel
-      const [statsRes, configRes, aiConfigRes, usersRes] = await Promise.all([
+      const [statsRes, configRes, aiConfigRes, usersRes, invitesRes, metricsRes] = await Promise.all([
         fetch(`${API_URL}/admin/stats`, { headers }),
         fetch(`${API_URL}/admin/config`, { headers }),
         fetch(`${API_URL}/admin/ai/config`, { headers }),
         fetch(`${API_URL}/admin/users?limit=50`, { headers }),
+        fetch(`${API_URL}/admin/beta/invites`, { headers }).catch(() => null),
+        fetch(`${API_URL}/admin/metrics/abuse`, { headers }).catch(() => null),
       ]);
       
       if (!statsRes.ok || !configRes.ok || !aiConfigRes.ok || !usersRes.ok) {
@@ -99,16 +125,134 @@ export default function AdminPage() {
         usersRes.json(),
       ]);
       
+      // Optional data
+      const invitesData = invitesRes?.ok ? await invitesRes.json() : { invites: [] };
+      const metricsData = metricsRes?.ok ? await metricsRes.json() : null;
+      
       setStats(statsData);
       setConfig(configData);
       setAIConfig(aiConfigData);
       setUsers(usersData.users);
+      setInvites(invitesData.invites || []);
+      setAbuseMetrics(metricsData);
     } catch {
       setError('Network error');
     } finally {
       setLoading(false);
     }
   }, [token]);
+
+  // Quick Action Handlers
+  const handleGrantBeta = async () => {
+    if (!token || !quickActionEmail.trim()) return;
+    setQuickActionLoading(true);
+    setQuickActionResult(null);
+    
+    try {
+      const res = await fetch(`${API_URL}/admin/beta/grant`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: quickActionEmail.trim(), plan_key: quickActionPlan }),
+      });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        setQuickActionResult({ type: 'error', message: text });
+      } else {
+        setQuickActionResult({ type: 'success', message: `Granted ${quickActionPlan} access to ${quickActionEmail}` });
+        setQuickActionEmail('');
+        fetchAdminData();
+      }
+    } catch {
+      setQuickActionResult({ type: 'error', message: 'Network error' });
+    } finally {
+      setQuickActionLoading(false);
+    }
+  };
+
+  const handleRevokeBeta = async () => {
+    if (!token || !quickActionEmail.trim()) return;
+    setQuickActionLoading(true);
+    setQuickActionResult(null);
+    
+    try {
+      const res = await fetch(`${API_URL}/admin/beta/revoke`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: quickActionEmail.trim() }),
+      });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        setQuickActionResult({ type: 'error', message: text });
+      } else {
+        setQuickActionResult({ type: 'success', message: `Revoked access from ${quickActionEmail}` });
+        setQuickActionEmail('');
+        fetchAdminData();
+      }
+    } catch {
+      setQuickActionResult({ type: 'error', message: 'Network error' });
+    } finally {
+      setQuickActionLoading(false);
+    }
+  };
+
+  const handleCreateInvite = async () => {
+    if (!token || !quickActionEmail.trim()) return;
+    setQuickActionLoading(true);
+    setQuickActionResult(null);
+    
+    try {
+      const res = await fetch(`${API_URL}/admin/beta/invite`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: quickActionEmail.trim(), ttl_hours: 168 }),
+      });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        setQuickActionResult({ type: 'error', message: text });
+      } else {
+        const data = await res.json();
+        setQuickActionResult({ 
+          type: 'success', 
+          message: `Invite created! Token: ${data.invite_token?.slice(0, 16)}...` 
+        });
+        setQuickActionEmail('');
+        fetchAdminData();
+      }
+    } catch {
+      setQuickActionResult({ type: 'error', message: 'Network error' });
+    } finally {
+      setQuickActionLoading(false);
+    }
+  };
+
+  const handleResetAbuseMetrics = async () => {
+    if (!token || !confirm('Reset all abuse metrics? This cannot be undone.')) return;
+    
+    try {
+      const res = await fetch(`${API_URL}/admin/metrics/abuse/reset`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (res.ok) {
+        fetchAdminData();
+      }
+    } catch {
+      // Ignore
+    }
+  };
 
   useEffect(() => {
     if (!DEV_MODE_ENABLED) {
@@ -317,7 +461,124 @@ export default function AdminPage() {
           )}
         </div>
 
+        {/* Quick Actions Panel */}
+        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-8">
+          <h3 className="font-semibold mb-4">Quick Actions</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Grant/Revoke Access */}
+            <div className="space-y-3">
+              <label className="block text-sm text-gray-400">User Email</label>
+              <input
+                type="email"
+                value={quickActionEmail}
+                onChange={(e) => setQuickActionEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              
+              <div className="flex gap-2">
+                <select
+                  value={quickActionPlan}
+                  onChange={(e) => setQuickActionPlan(e.target.value)}
+                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                >
+                  <option value="insight">Insight</option>
+                  <option value="integration">Integration</option>
+                  <option value="constellation">Constellation</option>
+                  <option value="beta">Beta</option>
+                  <option value="pro">Pro (legacy)</option>
+                </select>
+                
+                <button
+                  onClick={handleGrantBeta}
+                  disabled={quickActionLoading || !quickActionEmail.trim() || !config?.admin_mutations_enabled}
+                  className="flex-1 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Grant Access
+                </button>
+                
+                <button
+                  onClick={handleRevokeBeta}
+                  disabled={quickActionLoading || !quickActionEmail.trim() || !config?.admin_mutations_enabled}
+                  className="px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Revoke
+                </button>
+              </div>
+              
+              <button
+                onClick={handleCreateInvite}
+                disabled={quickActionLoading || !quickActionEmail.trim() || !config?.admin_mutations_enabled}
+                className="w-full px-3 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create Invite Link
+              </button>
+            </div>
+            
+            {/* Quick Status & Result */}
+            <div className="space-y-3">
+              {quickActionResult && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  quickActionResult.type === 'success' 
+                    ? 'bg-green-500/10 border border-green-500/30 text-green-400' 
+                    : 'bg-red-500/10 border border-red-500/30 text-red-400'
+                }`}>
+                  {quickActionResult.message}
+                </div>
+              )}
+              
+              {!config?.admin_mutations_enabled && (
+                <div className="p-3 rounded-lg text-sm bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                  ⚠️ Admin mutations are disabled. Set SYNTH_ADMIN_MUTATIONS_ENABLED=true to enable.
+                </div>
+              )}
+              
+              <div className="text-xs text-gray-500 space-y-1">
+                <p>• <strong>Grant Access</strong>: Give a user a plan without Stripe</p>
+                <p>• <strong>Revoke</strong>: Remove manually-granted access</p>
+                <p>• <strong>Invite Link</strong>: Create a 7-day registration invite</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              activeTab === 'users' 
+                ? 'bg-indigo-600 text-white' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            Users ({users.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('invites')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              activeTab === 'invites' 
+                ? 'bg-indigo-600 text-white' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            Invites ({invites.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('metrics')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              activeTab === 'metrics' 
+                ? 'bg-indigo-600 text-white' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            Abuse Metrics
+          </button>
+        </div>
+
         {/* Users Table */}
+        {activeTab === 'users' && (
         <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
             <h3 className="font-semibold">Users</h3>
@@ -384,6 +645,132 @@ export default function AdminPage() {
             </table>
           </div>
         </div>
+        )}
+
+        {/* Invites Table */}
+        {activeTab === 'invites' && (
+          <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+              <h3 className="font-semibold">Beta Invites</h3>
+              <button
+                onClick={fetchAdminData}
+                className="px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded"
+              >
+                Refresh
+              </button>
+            </div>
+            {invites.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                No invites found. Create one using Quick Actions above.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-800/50">
+                    <tr>
+                      <th className="text-left px-4 py-2 text-gray-400 font-medium">Email</th>
+                      <th className="text-left px-4 py-2 text-gray-400 font-medium">Created</th>
+                      <th className="text-left px-4 py-2 text-gray-400 font-medium">Expires</th>
+                      <th className="text-left px-4 py-2 text-gray-400 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invites.map((invite, i) => {
+                      const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
+                      const isAccepted = !!invite.accepted_at;
+                      return (
+                        <tr key={i} className="border-t border-gray-800 hover:bg-gray-800/30">
+                          <td className="px-4 py-2 font-medium">{invite.email}</td>
+                          <td className="px-4 py-2 text-gray-400">
+                            {invite.created_at ? new Date(invite.created_at).toLocaleDateString() : '-'}
+                          </td>
+                          <td className="px-4 py-2 text-gray-400">
+                            {invite.expires_at ? new Date(invite.expires_at).toLocaleDateString() : '-'}
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              isAccepted ? 'bg-green-500/20 text-green-400' :
+                              isExpired ? 'bg-red-500/20 text-red-400' :
+                              'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {isAccepted ? 'Accepted' : isExpired ? 'Expired' : 'Pending'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Abuse Metrics */}
+        {activeTab === 'metrics' && (
+          <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+              <h3 className="font-semibold">AI Abuse Metrics</h3>
+              <div className="flex gap-2">
+                {config?.admin_mutations_enabled && (
+                  <button
+                    onClick={handleResetAbuseMetrics}
+                    className="px-3 py-1 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded"
+                  >
+                    Reset
+                  </button>
+                )}
+                <button
+                  onClick={fetchAdminData}
+                  className="px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+            
+            {abuseMetrics ? (
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-800 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-white">{abuseMetrics.total_requests}</div>
+                    <div className="text-gray-400 text-xs">Total Requests</div>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-red-400">{abuseMetrics.rate_limit_blocked}</div>
+                    <div className="text-gray-400 text-xs">Rate Limited</div>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-amber-400">{abuseMetrics.concurrency_blocked}</div>
+                    <div className="text-gray-400 text-xs">Concurrency Blocked</div>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-purple-400">{abuseMetrics.size_blocked}</div>
+                    <div className="text-gray-400 text-xs">Size Blocked</div>
+                  </div>
+                </div>
+                
+                {abuseMetrics.by_endpoint && Object.keys(abuseMetrics.by_endpoint).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-300 mb-2">By Endpoint</h4>
+                    <div className="space-y-1">
+                      {Object.entries(abuseMetrics.by_endpoint).map(([endpoint, count]) => (
+                        <div key={endpoint} className="flex justify-between text-sm bg-gray-800 rounded px-3 py-2">
+                          <span className="text-gray-400 font-mono text-xs">{endpoint}</span>
+                          <span className="text-white">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                Metrics not available. The endpoint may not be configured.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Impersonation Modal */}
         {impersonateResult && selectedUser && (
