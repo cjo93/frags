@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from synth_engine.api.deps import db, get_current_user, require_role, is_dev_admin_user
+from synth_engine.api.email import send_email, is_email_enabled
 from synth_engine.config import settings
 from synth_engine.storage import repo as R
 from synth_engine.storage.models import StripeWebhookEvent
@@ -94,6 +95,87 @@ def _prices_configured() -> dict[str, bool]:
         "integration": bool(settings.stripe_price_pro),  # Pro price → Integration tier
         "constellation": bool(settings.stripe_price_family),  # Family price → Constellation tier
     }
+
+
+def _get_plan_name_from_subscription(sub) -> str:
+    """Extract plan name from Stripe subscription object."""
+    price_id = None
+    if sub.get("items") and sub["items"].get("data"):
+        price_id = sub["items"]["data"][0].get("price", {}).get("id")
+    
+    # Map price ID to plan name
+    if price_id == settings.stripe_price_basic:
+        return "Insight"
+    elif price_id == settings.stripe_price_pro:
+        return "Integration"
+    elif price_id == settings.stripe_price_family:
+        return "Constellation"
+    return "Premium"
+
+
+def _send_receipt_email(to: str, plan_name: str, amount: str) -> bool:
+    """Send a payment receipt email."""
+    subject = f"Your Defrag {plan_name} subscription is active"
+    
+    html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="font-size: 14px; font-weight: 500; letter-spacing: 0.15em; margin: 0;">DEFRAG</h1>
+    </div>
+    
+    <p style="font-size: 16px; margin-bottom: 24px;">
+        Thank you for subscribing to Defrag!
+    </p>
+    
+    <div style="background: #f5f5f5; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Plan</p>
+        <p style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600;">{plan_name}</p>
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Amount charged</p>
+        <p style="margin: 0; font-size: 18px; font-weight: 600;">{amount}/month</p>
+    </div>
+    
+    <p style="font-size: 14px; color: #666; margin-bottom: 24px;">
+        Your subscription is now active. You have full access to all {plan_name} features.
+    </p>
+    
+    <a href="{settings.app_base_url}/dashboard" style="display: block; text-align: center; background: #000; color: #fff; padding: 14px 24px; border-radius: 9999px; text-decoration: none; font-weight: 500; margin-bottom: 24px;">
+        Go to Dashboard
+    </a>
+    
+    <p style="font-size: 14px; color: #666;">
+        Manage your subscription anytime from your <a href="{settings.app_base_url}/settings" style="color: #000;">account settings</a>.
+    </p>
+    
+    <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
+    
+    <p style="font-size: 12px; color: #999; text-align: center;">
+        Defrag &mdash; Your personal insight engine
+    </p>
+</body>
+</html>
+"""
+    
+    text = f"""DEFRAG
+
+Thank you for subscribing to Defrag!
+
+Plan: {plan_name}
+Amount charged: {amount}/month
+
+Your subscription is now active. You have full access to all {plan_name} features.
+
+Go to Dashboard: {settings.app_base_url}/dashboard
+
+Manage your subscription anytime from your account settings: {settings.app_base_url}/settings
+"""
+    
+    return send_email(to, subject, html, text)
 
 
 def _stripe_init():
@@ -233,11 +315,21 @@ async def stripe_webhook(req: Request, s: Session = Depends(db)):
     elif event_type == "checkout.session.completed":
         customer_id = data_object.get("customer")
         subscription_id = data_object.get("subscription")
+        customer_email = data_object.get("customer_email") or data_object.get("customer_details", {}).get("email")
+        amount_total = data_object.get("amount_total", 0)  # in cents
+        
         if customer_id and subscription_id:
             # Fetch full subscription details
             sub = stripe.Subscription.retrieve(subscription_id)
             R.upsert_subscription_from_stripe(s, customer_id=customer_id, sub_obj=dict(sub))
             logger.info(f"Processed checkout.session.completed for customer {customer_id}")
+            
+            # Send receipt email
+            if customer_email and is_email_enabled():
+                plan_name = _get_plan_name_from_subscription(sub)
+                amount_display = f"${amount_total / 100:.2f}" if amount_total else "$0.00"
+                _send_receipt_email(customer_email, plan_name, amount_display)
+                logger.info(f"Sent receipt email to {customer_email}")
 
     # Mark in memory cache after successful processing
     if event_id:
