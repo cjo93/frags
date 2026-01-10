@@ -5,8 +5,6 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { register as apiRegister, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
-import TrustStrip from '@/components/TrustStrip';
 import LegalFooter from '@/components/LegalFooter';
 
 export default function RegisterPage() {
@@ -35,30 +33,23 @@ function RegisterInner() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    // Fail-open: never block submission
-    // Backend will handle validation if token is provided
-
     setLoading(true);
 
     try {
       const { token } = await apiRegister(
         email,
         password,
-        turnstileToken || undefined,
+        undefined,
         inviteToken || undefined
       );
       login(token);
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
-        // Reset turnstile token on error so user can retry
-        setTurnstileToken(null);
         setError(err.detail);
       } else {
         setError('An unexpected error occurred');
@@ -88,8 +79,6 @@ function RegisterInner() {
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-8">
             Deterministic compute with optional memory. No predictions, no diagnoses.
           </p>
-
-          <TrustStrip className="mb-6" />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -129,16 +118,6 @@ function RegisterInner() {
               />
               <p className="mt-1 text-xs text-neutral-400">Minimum 8 characters</p>
             </div>
-
-            {/* Turnstile CAPTCHA - optional, fails open */}
-            {isTurnstileEnabled() && (
-              <Turnstile
-                siteKey={getTurnstileSiteKey()}
-                onVerify={(token) => setTurnstileToken(token)}
-                onExpire={() => setTurnstileToken(null)}
-                className="flex justify-center"
-              />
-            )}
 
             <button
               type="submit"

@@ -5,8 +5,6 @@ import { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login as apiLogin, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { Turnstile, isTurnstileEnabled, getTurnstileSiteKey } from '@/components/Turnstile';
-import TrustStrip from '@/components/TrustStrip';
 import LegalFooter from '@/components/LegalFooter';
 
 export default function LoginPage() {
@@ -33,26 +31,18 @@ function LoginInner() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    // Fail-open: only block if we have a verified token requirement
-    // Never block submission - backend will handle validation if token is provided
-    // This ensures login works even if Turnstile CDN is blocked
-
     setLoading(true);
 
     try {
-      const { token } = await apiLogin(email, password, turnstileToken || undefined);
+      const { token } = await apiLogin(email, password);
       login(token);
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError) {
-        // Reset turnstile token on error so user can retry
-        setTurnstileToken(null);
         setError(err.detail);
       } else {
         setError('An unexpected error occurred');
@@ -119,16 +109,6 @@ function LoginInner() {
                 className="w-full px-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-base focus:border-neutral-900 dark:focus:border-white transition-colors"
               />
             </div>
-
-            {/* Turnstile CAPTCHA - optional, fails open */}
-            {isTurnstileEnabled() && (
-              <Turnstile
-                siteKey={getTurnstileSiteKey()}
-                onVerify={(token) => setTurnstileToken(token)}
-                onExpire={() => setTurnstileToken(null)}
-                className="flex justify-center"
-              />
-            )}
 
             <button
               type="submit"
