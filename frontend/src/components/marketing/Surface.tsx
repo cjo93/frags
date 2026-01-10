@@ -1,14 +1,18 @@
-import { ReactNode } from 'react';
+import { cn } from "@/lib/cn";
 
-interface SurfaceProps {
-  children: ReactNode;
+type SurfaceProps = {
   className?: string;
-}
+  children: React.ReactNode;
+};
 
-export default function Surface({ children, className = '' }: SurfaceProps) {
+export default function Surface({ className, children }: SurfaceProps) {
   return (
-    <div className={`bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm border border-neutral-200/50 dark:border-neutral-800/50 ${className}`}>
-      {children}
+    <div className={cn("relative", className)}>
+      <div
+        aria-hidden
+        className="absolute inset-0 rounded-2xl bg-white/60 dark:bg-black/20 shadow-[0_1px_0_rgba(0,0,0,0.04)]"
+      />
+      <div className="relative rounded-2xl p-7">{children}</div>
     </div>
   );
 }

@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createCheckout } from '@/lib/api';
 import { useState } from 'react';
 import TrustStrip from '@/components/TrustStrip';
-import LegalFooter from '@/components/LegalFooter';
+import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
 
 const tiers = [
   {
@@ -71,63 +70,22 @@ export default function PricingPage() {
   };
 
   return (
-    <main className="min-h-screen">
-      {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <nav className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-lg font-medium tracking-tight">
-            Defrag
-          </Link>
-          <div className="flex items-center gap-6">
-            {isAuthenticated ? (
-              <Link 
-                href="/dashboard" 
-                className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/how-ai-works"
-                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                >
-                  How it works
-                </Link>
-                <Link
-                  href="/trust"
-                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                >
-                  Trust
-                </Link>
-                <Link 
-                  href="/login" 
-                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
-                >
-                  Enter the Field
-                </Link>
-              </>
-            )}
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-white dark:bg-black">
+        {/* Pricing Hero */}
+        <Section className="relative">
+          <FilmBackdrop src="/hero/mirror.webp" />
+          <div className="relative">
+            <h1 className="text-3xl md:text-4xl font-light tracking-tight">
+              Pricing for the spiritual rebel who wants traceability.
+            </h1>
+            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
+              Every plan uses the same deterministic synthesis engine. Higher tiers expand context depth, relational tooling, and AI capacity.
+            </p>
+            <TrustStrip className="mt-8" />
           </div>
-        </nav>
-      </header>
-
-      {/* Pricing Hero */}
-      <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
-        <h1 className="text-3xl md:text-4xl font-light tracking-tight">
-          Pricing for the spiritual rebel who wants traceability.
-        </h1>
-        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-          Every plan uses the same deterministic synthesis engine. Higher tiers expand context depth, relational tooling, and AI capacity.
-        </p>
-        <TrustStrip className="mt-8" />
-      </section>
+        </Section>
 
       {/* Pricing Cards */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
@@ -202,7 +160,8 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <LegalFooter className="border-t-0" />
+      <SiteFooter />
     </main>
+    </>
   );
 }

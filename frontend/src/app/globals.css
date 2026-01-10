@@ -210,7 +210,9 @@ select:focus {
 @media (prefers-reduced-motion: reduce) {
   .animate-kenburns,
   .animate-grain,
-  .animate-float {
+  .animate-float,
+  .film-kenburns,
+  .film-grain {
     animation: none !important;
   }
 }

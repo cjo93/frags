@@ -1,15 +1,14 @@
-import { ReactNode } from 'react';
+import { cn } from "@/lib/cn";
 
-interface SectionProps {
-  children: ReactNode;
+type SectionProps = {
   className?: string;
-  id?: string;
-}
+  children: React.ReactNode;
+};
 
-export default function Section({ children, className = '', id }: SectionProps) {
+export default function Section({ className, children }: SectionProps) {
   return (
-    <section id={id} className={`max-w-5xl mx-auto px-6 ${className}`}>
-      {children}
+    <section className={cn("relative overflow-hidden", className)}>
+      <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32">{children}</div>
     </section>
   );
 }

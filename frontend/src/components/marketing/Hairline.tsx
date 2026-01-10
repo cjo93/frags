@@ -1,9 +1,13 @@
-interface HairlineProps {
-  className?: string;
-}
+import { cn } from "@/lib/cn";
 
-export default function Hairline({ className = '' }: HairlineProps) {
+export default function Hairline({ className }: { className?: string }) {
   return (
-    <div className={`h-px bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent ${className}`} />
+    <div
+      aria-hidden
+      className={cn(
+        "h-px w-full bg-gradient-to-r from-transparent via-neutral-200/80 to-transparent dark:via-neutral-800",
+        className
+      )}
+    />
   );
 }

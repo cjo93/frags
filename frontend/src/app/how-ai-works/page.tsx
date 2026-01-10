@@ -1,72 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth-context';
-import LegalFooter from '@/components/LegalFooter';
+import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
 
 export default function HowAIWorksPage() {
-  const { isAuthenticated } = useAuth();
 
   return (
-    <main className="min-h-screen">
-      {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <nav className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-lg font-medium tracking-tight">
-            Defrag
-          </Link>
-          <div className="flex items-center gap-6">
-            {isAuthenticated ? (
-              <Link 
-                href="/dashboard" 
-                className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link 
-                  href="/pricing" 
-                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                >
-                  Pricing
-                </Link>
-                <Link 
-                  href="/trust" 
-                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                >
-                  Trust
-                </Link>
-                <Link 
-                  href="/login" 
-                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
-                >
-                  Enter the Field
-                </Link>
-              </>
-            )}
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-white dark:bg-black">
+        {/* Hero */}
+        <Section className="relative text-center">
+          <FilmBackdrop src="/hero/spiral.webp" />
+          <div className="relative">
+            <p className="text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-4">
+              How it works
+            </p>
+            <h1 className="text-4xl md:text-5xl font-light tracking-tight">
+              A mirror, not a mandate.
+            </h1>
+            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
+              Defrag turns inputs into orientation.
+            </p>
           </div>
-        </nav>
-      </header>
-
-      {/* Hero */}
-      <section className="max-w-4xl mx-auto px-6 py-20 md:py-28 text-center">
-        <p className="text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-4">
-          How it works
-        </p>
-        <h1 className="text-4xl md:text-5xl font-light tracking-tight">
-          A mirror, not a mandate.
-        </h1>
-        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
-          Defrag turns inputs into orientation.
-        </p>
-      </section>
+        </Section>
 
       {/* Flow Diagram */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
@@ -226,7 +183,8 @@ export default function HowAIWorksPage() {
         </div>
       </section>
 
-      <LegalFooter />
+      <SiteFooter />
     </main>
+    </>
   );
 }

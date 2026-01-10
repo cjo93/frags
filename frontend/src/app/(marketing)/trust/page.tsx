@@ -1,48 +1,24 @@
-import Link from 'next/link';
 import TrustStrip from '@/components/TrustStrip';
-import LegalFooter from '@/components/LegalFooter';
+import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
 
 export default function TrustPage() {
   return (
-    <main className="min-h-screen flex flex-col">
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <nav className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-lg font-medium tracking-tight">
-            Defrag
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/pricing"
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              About
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              Sign in
-            </Link>
+    <>
+      <SiteHeader />
+      <main className="min-h-screen flex flex-col bg-white dark:bg-black">
+        <Section className="relative">
+          <FilmBackdrop src="/hero/constellation.webp" />
+          <div className="relative">
+            <h1 className="text-3xl md:text-4xl font-light tracking-tight">Trust is engineered.</h1>
+            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              Defrag is built to be auditable, scoped, and reversible. Controls are explicit and designed
+              for safe real-world use.
+            </p>
+            <TrustStrip className="mt-8" />
           </div>
-        </nav>
-      </header>
+        </Section>
 
-      <section className="max-w-4xl mx-auto px-6 py-16 md:py-24">
-        <h1 className="text-3xl md:text-4xl font-light tracking-tight">Trust is engineered.</h1>
-        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-          Defrag is built to be auditable, scoped, and reversible. Controls are explicit and designed
-          for safe real-world use.
-        </p>
-        <TrustStrip className="mt-8" />
-      </section>
-
-      <section className="max-w-4xl mx-auto px-6 pb-24 space-y-12">
+        <section className="max-w-4xl mx-auto px-6 pb-24 space-y-12">
         <div>
           <h2 className="text-xl font-medium mb-3">Data control</h2>
           <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -96,7 +72,8 @@ export default function TrustPage() {
         </div>
       </section>
 
-      <LegalFooter />
+      <SiteFooter />
     </main>
+    </>
   );
 }

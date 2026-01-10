@@ -4,3 +4,6 @@ export { default as Surface } from './Surface';
 export { default as Hairline } from './Hairline';
 export { default as SiteHeader } from './SiteHeader';
 export { default as SiteFooter } from './SiteFooter';
+
+// Named re-exports for convenience
+export type { } from './FilmBackdrop';

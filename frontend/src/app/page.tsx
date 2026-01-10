@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import LegalFooter from '@/components/LegalFooter';
 import RotatingMantras from '@/components/RotatingMantras';
 import MandalaHero from '@/components/MandalaHero';
+import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
 
 const MANTRAS = [
   { saying: "To everything there is a season.", translation: "Timing Optimization." },
@@ -13,74 +13,13 @@ const MANTRAS = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-black/40 backdrop-blur">
-        <nav className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between gap-8">
-          <Link href="/" className="text-lg font-medium tracking-tight">
-            Defrag
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link 
-              href="/pricing" 
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              About
-            </Link>
-            <Link
-              href="/how-ai-works"
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              How it works
-            </Link>
-            <Link
-              href="/trust"
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              Trust
-            </Link>
-            <Link 
-              href="/login" 
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/register"
-              className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
-            >
-              Enter the Field
-            </Link>
-          </div>
-        </nav>
-      </header>
-
+    <>
+      <SiteHeader />
+      <main className="min-h-screen flex flex-col bg-white dark:bg-black">
       {/* Hero */}
-      <section className="relative flex-1 flex items-center bg-white dark:bg-black overflow-hidden">
-        {/* Film backdrop */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          {/* Soft orbs */}
-          <div className="absolute -top-24 left-1/2 h-72 w-[48rem] -translate-x-1/2 rounded-full bg-gradient-to-b from-neutral-200/40 to-transparent blur-3xl dark:from-neutral-700/20" />
-          <div className="absolute -bottom-32 right-[-8rem] h-80 w-80 rounded-full bg-gradient-to-tr from-neutral-200/30 to-transparent blur-3xl dark:from-neutral-700/15" />
-          {/* Fog wash */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/75 via-white/30 to-white/85 dark:from-black/70 dark:via-black/35 dark:to-black/85" />
-          {/* Vignette */}
-          <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_0_140px_rgba(0,0,0,0.25)]" />
-          {/* Grain */}
-          <div
-            className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07] mix-blend-overlay"
-            style={{
-              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E\")",
-            }}
-          />
-        </div>
-        <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32 flex flex-col lg:flex-row items-center gap-10">
+      <Section className="flex-1 flex items-center bg-white dark:bg-black">
+        <FilmBackdrop src="/hero/field.webp" />
+        <div className="relative flex flex-col lg:flex-row items-center gap-10">
           {/* Hero Text */}
           <div className="lg:w-1/2 space-y-6">
             <h1 className="text-5xl md:text-6xl font-light tracking-tight leading-tight text-neutral-900 dark:text-neutral-50">
@@ -114,7 +53,7 @@ export default function Home() {
             <MandalaHero state="CLEAR" />
           </div>
         </div>
-      </section>
+      </Section>
 
       {/* Insight / Premium Feature band */}
       <section className="bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800">
@@ -339,7 +278,8 @@ export default function Home() {
         </div>
       </section>
 
-      <LegalFooter className="border-t-0" />
+      <SiteFooter />
     </main>
+    </>
   );
 }
