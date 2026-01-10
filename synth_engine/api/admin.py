@@ -211,7 +211,27 @@ def grant_beta_access(
         raise HTTPException(404, "User not found")
 
     if plan_key == "beta":
-        user.tier = "beta"
+        # tier column not yet migrated - use subscription instead
+        stripe_customer_id = R.get_stripe_customer_id(s, user.id) or f"beta_{user.id}"
+        if not R.get_stripe_customer_id(s, user.id):
+            R.ensure_stripe_customer(s, user.id, user.email, stripe_customer_id)
+        sub_id = f"beta_{user.id}"
+        sub = s.query(StripeSubscription).filter(StripeSubscription.stripe_subscription_id == sub_id).first()
+        if sub:
+            sub.status = "active"
+            sub.price_id = "beta"
+            sub.updated_at = datetime.utcnow()
+        else:
+            sub = StripeSubscription(
+                id=R.new_id(),
+                user_id=user.id,
+                stripe_subscription_id=sub_id,
+                status="active",
+                price_id="beta",
+                current_period_end=None,
+                cancel_at_period_end=False,
+            )
+            s.add(sub)
         s.commit()
         return {"ok": True, "user_id": user.id, "plan_key": plan_key}
 
@@ -255,10 +275,7 @@ def revoke_beta_access(
     if not user:
         raise HTTPException(404, "User not found")
 
-    if user.tier == "beta":
-        user.tier = "standard"
-        s.commit()
-
+    # tier column not yet migrated - revoke via subscription
     sub_id = f"beta_{user.id}"
     sub = s.query(StripeSubscription).filter(StripeSubscription.stripe_subscription_id == sub_id).first()
     if sub:

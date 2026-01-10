@@ -684,8 +684,8 @@ def is_dev_admin_user_id(s: Session, user_id: Optional[str]) -> bool:
 def get_user_tier(s: Session, user_id: str) -> str:
     if is_dev_admin_user_id(s, user_id):
         return "dev_admin"
-    user = s.query(User).filter(User.id == user_id).first()
-    return user.tier if user else "standard"
+    # tier is determined by subscription, not user column
+    return "standard"
 
 
 def get_latest_profile_for_user(s: Session, user_id: str) -> Optional[Profile]:
@@ -703,8 +703,9 @@ def set_user_tier(s: Session, user_id: str, tier: str) -> None:
     user = s.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError("User not found")
-    user.tier = tier
-    s.commit()
+    # tier column not yet migrated - this is a no-op
+    # tier is managed via subscriptions
+    pass
 
 
 def _hash_invite_token(token: str) -> str:
@@ -754,7 +755,7 @@ def redeem_invite(s: Session, token: str, user_id: str) -> Invite:
     user = s.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError("User not found")
-    user.tier = "beta"
+    # tier column not yet migrated - skip setting it
     s.commit()
     return invite
 

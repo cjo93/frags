@@ -644,7 +644,6 @@ async def oauth_exchange(
     return {
         "token": create_token(user.id),
         "user_id": user.id,
-        "tier": user.tier,
     }
 
 

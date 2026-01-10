@@ -27,7 +27,6 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.user, nullable=False, index=True)
-    tier: Mapped[str] = mapped_column(String, default="standard", nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
