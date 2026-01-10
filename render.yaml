@@ -20,4 +20,7 @@ services:
       - key: SYNTH_DEV_ADMIN_EMAIL
         sync: false
       - key: SYNTH_TURNSTILE_ENABLED
-        value: "false"
+        value: "true"
+      - key: SYNTH_TURNSTILE_SECRET_KEY
+        sync: false
+        
