@@ -35,3 +35,4 @@ Defrag is a deterministic synthesis engine with an interpretation layer. It comp
 - Frontend env: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_ENABLE_DEV` (dev-only).
 - Ensure `X-Request-Id` is passed end-to-end and logged.
 - Rate limits are enforced in `synth_engine/api/abuse.py` and the Worker abuse module.
+# Deploy trigger Sat Jan 10 12:50:08 PST 2026
