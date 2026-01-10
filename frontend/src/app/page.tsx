@@ -4,16 +4,12 @@ import Link from 'next/link';
 import TrustStrip from '@/components/TrustStrip';
 import LegalFooter from '@/components/LegalFooter';
 import RotatingMantras from '@/components/RotatingMantras';
+import MandalaHero from '@/components/MandalaHero';
 
 const MANTRAS = [
-  { saying: 'Gate 1 — Self-Expression', translation: 'The Creative: Creative power springs from stillness' },
-  { saying: 'Gate 2 — Direction of Self', translation: 'The Receptive: Trust the direction that emerges' },
-  { saying: 'Gate 3 — Ordering', translation: 'Difficulty at the Beginning: Honor the struggle of new starts' },
-  { saying: 'Gate 4 — Mental Solutions', translation: 'Youthful Folly: Answers arrive when you stop forcing' },
-  { saying: 'Line 1 — The Investigator', translation: 'Build your foundation before you share it' },
-  { saying: 'Line 2 — The Hermit', translation: 'Gifts emerge through call, not effort' },
-  { saying: 'Line 3 — The Martyr', translation: 'Every trial teaches what works' },
-  { saying: 'Line 4 — The Opportunist', translation: 'Your network is your resource' },
+  { saying: "To everything there is a season.", translation: "Timing Optimization." },
+  { saying: "Reap what you sow.", translation: "Vector Stabilization." },
+  { saying: "Iron sharpens iron.", translation: "Resonance Alignment." },
 ];
 
 export default function Home() {
@@ -67,56 +63,75 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="flex-1 flex items-center">
-        <div className="max-w-5xl mx-auto px-6 py-24 md:py-32">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight max-w-3xl">
-            Compute your timing. Follow the curriculum.
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-            Create your profile (birth time/place + preferences), get your Daily Reading + 3-day Curriculum with System Weather, then use AI to explore what the engine computed.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/register"
-              className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity"
-            >
-              Begin your synthesis
-            </Link>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center justify-center px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-            >
-              View pricing
-            </Link>
+      <section className="flex-1 flex items-center bg-white dark:bg-black">
+        <div className="max-w-5xl mx-auto px-6 py-24 md:py-32 flex flex-col lg:flex-row items-center gap-10">
+          {/* Hero Text */}
+          <div className="lg:w-1/2 space-y-6">
+            <h1 className="text-5xl md:text-6xl font-light tracking-tight leading-tight text-neutral-900 dark:text-neutral-50">
+              Old Technology. Updated Interface.
+            </h1>
+            <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              Defrag synthesizes symbolic frameworks into structured self-reflection — so you can act with timing, not urgency.
+            </p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Signal first. Action second.</p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+              >
+                Initialize the Mirror
+              </Link>
+              <Link
+                href="/how-ai-works"
+                className="inline-flex items-center justify-center px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                See how it works
+              </Link>
+            </div>
+            <TrustStrip className="mt-6" />
           </div>
-          <TrustStrip className="mt-10" />
+
+          {/* Hero Visual */}
+          <div className="lg:w-1/2 flex justify-center">
+            <MandalaHero state="CLEAR" />
+          </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="border-t border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-5xl mx-auto px-6 py-24">
-          <p className="text-center text-sm text-neutral-500 dark:text-neutral-400 mb-8 tracking-wide">
-            Signal first. Action second.
+      {/* Insight / Premium Feature band */}
+      <section className="bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-5xl mx-auto px-6 py-24 text-center space-y-10">
+          <p className="text-sm uppercase text-neutral-500 dark:text-neutral-400 tracking-widest">
+            A Mirror, Not a Mandate
           </p>
-          <RotatingMantras mantras={MANTRAS} className="mb-16" />
-          <div className="grid md:grid-cols-3 gap-12">
+          <RotatingMantras mantras={MANTRAS} />
+
+          <div className="grid md:grid-cols-3 gap-12 text-left">
             <div>
-              <h3 className="text-lg font-medium mb-3">1. Create your profile</h3>
+              <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-3">
+                Reflect
+              </h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Enter birth time/place + preferences to generate your Pattern Summary and Calibration baseline.
+                Bring your inputs into a clean field — so you see signal before noise.
               </p>
             </div>
+
             <div>
-              <h3 className="text-lg font-medium mb-3">2. Daily Reading + 3-day Curriculum</h3>
+              <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-3">
+                Stabilize
+              </h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Each day brings System Weather, pressure windows, and a focused theme with micro-reset guidance.
+                Small adjustments that prevent drift and preserve coherence.
               </p>
             </div>
+
             <div>
-              <h3 className="text-lg font-medium mb-3">3. Use AI to explore</h3>
+              <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-3">
+                Align
+              </h3>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                AI helps you explore what the engine computed: explain, apply, and export safely.
+                Choose people + environments that sharpen you — not drain you.
               </p>
             </div>
           </div>
