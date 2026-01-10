@@ -89,11 +89,11 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <section className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {tiers.map((tier) => (
             <div
               key={tier.key}
-              className="border border-neutral-200 dark:border-neutral-800 p-8 flex flex-col"
+              className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800/80 p-8 flex flex-col bg-white/50 dark:bg-neutral-950/50 backdrop-blur-sm hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors duration-200"
             >
               <div>
                 <h3 className="text-xl font-medium">{tier.name}</h3>
@@ -121,10 +121,9 @@ export default function PricingPage() {
               <button
                 onClick={() => handleCheckout(tier.key)}
                 disabled={loading === tier.key}
-                className="mt-10 w-full py-3 text-sm font-medium transition-all border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-10 w-full py-3.5 rounded-full text-sm font-medium transition-all duration-200 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-700 dark:hover:bg-neutral-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                {loading === tier.key ? 'Loading...' : 'Continue'}
-              </button>
+                {loading === tier.key ? 'Loading...' : 'Continue'}              </button>
             </div>
           ))}
         </div>

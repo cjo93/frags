@@ -10,26 +10,26 @@ export default function SiteHeader({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 border-b border-neutral-200/70 dark:border-neutral-800/70 bg-white/70 dark:bg-black/40 backdrop-blur",
+        "sticky top-0 z-50 border-b border-neutral-200/50 dark:border-neutral-800/50 bg-white/80 dark:bg-black/60 backdrop-blur-xl backdrop-saturate-150 transition-all duration-300",
         className
       )}
     >
       <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="text-sm tracking-wide text-neutral-900 dark:text-neutral-50">
+        <Link href="/" className="text-sm font-medium tracking-[0.15em] text-neutral-900 dark:text-neutral-50 hover:opacity-70 transition-opacity">
           DEFRAG
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm text-neutral-600 dark:text-neutral-400">
-          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="/how-ai-works">
+        <nav className="hidden md:flex items-center gap-8 text-[13px] text-neutral-500 dark:text-neutral-400">
+          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors duration-200" href="/how-ai-works">
             How it works
           </Link>
-          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="/pricing">
+          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors duration-200" href="/pricing">
             Pricing
           </Link>
-          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="/trust">
+          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors duration-200" href="/trust">
             Trust
           </Link>
-          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="/about">
+          <Link className="hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors duration-200" href="/about">
             About
           </Link>
         </nav>
@@ -37,13 +37,13 @@ export default function SiteHeader({ className }: { className?: string }) {
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="hidden sm:inline-flex text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+            className="hidden sm:inline-flex text-[13px] text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors duration-200"
           >
             Sign in
           </Link>
           <Link
             href="/register"
-            className="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-[13px] font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             Initialize the Mirror
           </Link>

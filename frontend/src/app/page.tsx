@@ -37,17 +37,17 @@ export default function Home() {
             </p>
 
             {/* Framework chips */}
-            <div className="mt-6 flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-              <span className="inline-flex items-center rounded-full bg-neutral-900/5 dark:bg-white/10 px-3 py-1">
+            <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="inline-flex items-center rounded-full bg-neutral-900/[0.03] dark:bg-white/[0.06] border border-neutral-200/60 dark:border-neutral-700/40 px-3.5 py-1.5 backdrop-blur-sm">
                 Astrology
               </span>
-              <span className="inline-flex items-center rounded-full bg-neutral-900/5 dark:bg-white/10 px-3 py-1">
+              <span className="inline-flex items-center rounded-full bg-neutral-900/[0.03] dark:bg-white/[0.06] border border-neutral-200/60 dark:border-neutral-700/40 px-3.5 py-1.5 backdrop-blur-sm">
                 Human Design
               </span>
-              <span className="inline-flex items-center rounded-full bg-neutral-900/5 dark:bg-white/10 px-3 py-1">
+              <span className="inline-flex items-center rounded-full bg-neutral-900/[0.03] dark:bg-white/[0.06] border border-neutral-200/60 dark:border-neutral-700/40 px-3.5 py-1.5 backdrop-blur-sm">
                 Gene Keys
               </span>
-              <span className="ml-1 hidden sm:inline text-neutral-400 dark:text-neutral-500">
+              <span className="ml-2 hidden sm:inline text-neutral-400 dark:text-neutral-500 italic">
                 — lenses, not labels
               </span>
             </div>
@@ -60,13 +60,13 @@ export default function Home() {
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+                className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md"
               >
                 Initialize the Mirror
               </Link>
               <Link
                 href="/how-ai-works"
-                className="inline-flex items-center justify-center px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                className="inline-flex items-center justify-center px-7 py-3.5 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-all duration-200 hover:border-neutral-300 dark:hover:border-neutral-600"
               >
                 See how it works
               </Link>
@@ -81,18 +81,18 @@ export default function Home() {
           </div>
 
           {/* Right: Visual panel */}
-          <div className="relative">
-            <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-tr from-neutral-200/30 via-transparent to-neutral-200/10 blur-2xl dark:from-neutral-700/15 dark:to-neutral-700/5" />
+          <div className="relative hidden lg:block">
+            <div className="absolute -inset-8 rounded-[2.5rem] bg-gradient-to-tr from-neutral-200/40 via-transparent to-neutral-100/20 blur-3xl dark:from-neutral-700/20 dark:to-neutral-800/10" />
 
-            <div className="relative overflow-hidden rounded-3xl">
+            <div className="relative overflow-hidden rounded-[1.75rem] shadow-2xl shadow-neutral-900/[0.08] dark:shadow-black/30">
               <img
                 src="/hero/constellation.webp"
                 alt=""
-                className="h-[340px] w-full object-cover opacity-[0.22] dark:opacity-[0.16] scale-[1.05] film-kenburns"
+                className="h-[380px] w-full object-cover opacity-[0.28] dark:opacity-[0.18] scale-[1.05] film-kenburns"
                 style={{ animation: "kenburns 34s ease-in-out infinite" }}
               />
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/65 via-white/10 to-transparent dark:from-black/65 dark:via-black/10" />
-              <div className="absolute inset-0 ring-1 ring-inset ring-neutral-200/70 dark:ring-neutral-800/70" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/70 via-white/20 to-transparent dark:from-black/70 dark:via-black/20" />
+              <div className="absolute inset-0 ring-1 ring-inset ring-neutral-200/50 dark:ring-neutral-700/50" />
 
               {/* Mandala overlay (kept subtle) */}
               <div className="absolute inset-0 flex items-center justify-center">
@@ -273,13 +273,13 @@ export default function Home() {
           <div className="mt-14 flex flex-col sm:flex-row gap-4">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+              className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
             >
               Initialize the Mirror
             </Link>
             <Link
               href="/how-ai-works"
-              className="inline-flex items-center justify-center px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              className="inline-flex items-center justify-center px-7 py-3.5 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-all duration-200"
             >
               See how it works
             </Link>
