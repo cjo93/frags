@@ -30,6 +30,17 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
+class PasswordResetToken(Base):
+    """Stores password reset codes with expiration."""
+    __tablename__ = "password_reset_tokens"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), index=True)
+    code: Mapped[str] = mapped_column(String(6), index=True)  # 6-digit code
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
 class Profile(Base):
     __tablename__ = "profiles"
     id: Mapped[str] = mapped_column(String, primary_key=True)

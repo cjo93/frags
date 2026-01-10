@@ -102,6 +102,11 @@ class Settings(BaseSettings):
     free_chat_daily_limit: int = 10
     free_compute_daily_limit: int = 3
 
+    # Email (Resend) - for password reset, notifications
+    # https://resend.com/
+    resend_api_key: str = ""  # Resend API key
+    email_from: str = "Defrag <noreply@defrag.app>"  # From address (must be verified domain)
+    
     # Dev admin bypass (for founder testing without Stripe)
     # SECURITY: Must set both enable flag AND secret token
     # Never enable in production unless emergency debugging needed

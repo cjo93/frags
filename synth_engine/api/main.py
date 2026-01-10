@@ -20,12 +20,13 @@ from jose import JWTError
 from pydantic import BaseModel, ValidationError
 
 from synth_engine.storage.db import engine
-from synth_engine.storage.models import Base, User, Profile, Constellation
+from synth_engine.storage.models import Base, User, Profile, Constellation, PasswordResetToken
 from synth_engine.storage import repo as R
 
 from synth_engine.api.auth import hash_password, verify_password, create_token, create_agent_token
 from synth_engine.api.deps import db, me_user_id, get_current_user
 from synth_engine.api.oauth import verify_google_id_token, verify_apple_id_token
+from synth_engine.api.email import send_password_reset_email, is_email_enabled
 from synth_engine.config import settings
 
 from synth_engine.schemas.person import PersonInput
@@ -562,6 +563,112 @@ def login(
     if not u or not verify_password(password, u.password_hash):
         raise HTTPException(401, "Invalid credentials")
     return {"token": create_token(u.id)}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    code: str
+    new_password: str
+
+
+def _generate_reset_code() -> str:
+    """Generate a 6-digit numeric reset code."""
+    import secrets
+    return str(secrets.randbelow(1000000)).zfill(6)
+
+
+@app.post("/auth/forgot-password")
+def forgot_password(
+    body: ForgotPasswordRequest = Body(...),
+    s: Session = Depends(db),
+):
+    """Send a password reset code to the user's email.
+    
+    Always returns success to prevent email enumeration.
+    """
+    email = (body.email or "").strip().lower()
+    if not email:
+        raise HTTPException(400, "Email required")
+    
+    # Find user (don't reveal if email exists)
+    user = s.query(User).filter(User.email == email).first()
+    
+    if user:
+        # Invalidate any existing unused tokens for this user
+        from datetime import timedelta
+        existing = s.query(PasswordResetToken).filter(
+            PasswordResetToken.user_id == user.id,
+            PasswordResetToken.used_at.is_(None)
+        ).all()
+        for token in existing:
+            token.used_at = datetime.utcnow()  # Mark as used
+        
+        # Create new token
+        code = _generate_reset_code()
+        expires_at = datetime.utcnow() + timedelta(minutes=15)
+        
+        reset_token = PasswordResetToken(
+            id=new_id(),
+            user_id=user.id,
+            code=code,
+            expires_at=expires_at,
+        )
+        s.add(reset_token)
+        s.commit()
+        
+        # Send email (fire and forget - don't fail request if email fails)
+        if is_email_enabled():
+            send_password_reset_email(email, code)
+        else:
+            # Log code in dev for testing (remove in prod)
+            logging.getLogger(__name__).info("Password reset code for %s: %s", email, code)
+    
+    # Always return success to prevent email enumeration
+    return {"message": "If that email exists, we sent a reset code"}
+
+
+@app.post("/auth/reset-password")
+def reset_password(
+    body: ResetPasswordRequest = Body(...),
+    s: Session = Depends(db),
+):
+    """Reset password using a code sent via email."""
+    email = (body.email or "").strip().lower()
+    code = (body.code or "").strip()
+    new_password = body.new_password or ""
+    
+    if not email or not code or not new_password:
+        raise HTTPException(400, "Email, code, and new password required")
+    
+    if len(new_password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
+    
+    # Find user
+    user = s.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(400, "Invalid or expired code")
+    
+    # Find valid token
+    reset_token = s.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user.id,
+        PasswordResetToken.code == code,
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > datetime.utcnow(),
+    ).first()
+    
+    if not reset_token:
+        raise HTTPException(400, "Invalid or expired code")
+    
+    # Update password
+    user.password_hash = hash_password(new_password)
+    reset_token.used_at = datetime.utcnow()
+    s.commit()
+    
+    return {"message": "Password reset successfully"}
 
 
 @app.post("/auth/agent-token")
