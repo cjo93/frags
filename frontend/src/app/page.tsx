@@ -63,20 +63,24 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative flex-1 flex items-center bg-white dark:bg-black overflow-hidden">
-        {/* Background orbs */}
+        {/* Film backdrop */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
+          {/* Soft orbs */}
           <div className="absolute -top-24 left-1/2 h-72 w-[48rem] -translate-x-1/2 rounded-full bg-gradient-to-b from-neutral-200/40 to-transparent blur-3xl dark:from-neutral-700/20" />
           <div className="absolute -bottom-32 right-[-8rem] h-80 w-80 rounded-full bg-gradient-to-tr from-neutral-200/30 to-transparent blur-3xl dark:from-neutral-700/15" />
+          {/* Fog wash */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/75 via-white/30 to-white/85 dark:from-black/70 dark:via-black/35 dark:to-black/85" />
+          {/* Vignette */}
+          <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_0_140px_rgba(0,0,0,0.25)]" />
+          {/* Grain */}
+          <div
+            className="absolute inset-0 opacity-[0.05] dark:opacity-[0.07] mix-blend-overlay"
+            style={{
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E\")",
+            }}
+          />
         </div>
-        {/* Grain texture */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.06] mix-blend-overlay"
-          style={{
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E\")",
-          }}
-        />
-        <div className="max-w-5xl mx-auto px-6 py-24 md:py-32 flex flex-col lg:flex-row items-center gap-10">
+        <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32 flex flex-col lg:flex-row items-center gap-10">
           {/* Hero Text */}
           <div className="lg:w-1/2 space-y-6">
             <h1 className="text-5xl md:text-6xl font-light tracking-tight leading-tight text-neutral-900 dark:text-neutral-50">
