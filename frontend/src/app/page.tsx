@@ -1,6 +1,20 @@
+'use client';
+
 import Link from 'next/link';
 import TrustStrip from '@/components/TrustStrip';
 import LegalFooter from '@/components/LegalFooter';
+import RotatingMantras from '@/components/RotatingMantras';
+
+const MANTRAS = [
+  { saying: 'Gate 1 — Self-Expression', translation: 'The Creative: Creative power springs from stillness' },
+  { saying: 'Gate 2 — Direction of Self', translation: 'The Receptive: Trust the direction that emerges' },
+  { saying: 'Gate 3 — Ordering', translation: 'Difficulty at the Beginning: Honor the struggle of new starts' },
+  { saying: 'Gate 4 — Mental Solutions', translation: 'Youthful Folly: Answers arrive when you stop forcing' },
+  { saying: 'Line 1 — The Investigator', translation: 'Build your foundation before you share it' },
+  { saying: 'Line 2 — The Hermit', translation: 'Gifts emerge through call, not effort' },
+  { saying: 'Line 3 — The Martyr', translation: 'Every trial teaches what works' },
+  { saying: 'Line 4 — The Opportunist', translation: 'Your network is your resource' },
+];
 
 export default function Home() {
   return (
@@ -82,6 +96,10 @@ export default function Home() {
       {/* Features */}
       <section className="border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-5xl mx-auto px-6 py-24">
+          <p className="text-center text-sm text-neutral-500 dark:text-neutral-400 mb-8 tracking-wide">
+            Signal first. Action second.
+          </p>
+          <RotatingMantras mantras={MANTRAS} className="mb-16" />
           <div className="grid md:grid-cols-3 gap-12">
             <div>
               <h3 className="text-lg font-medium mb-3">1. Create your profile</h3>

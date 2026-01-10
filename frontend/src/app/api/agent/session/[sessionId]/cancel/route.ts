@@ -2,10 +2,10 @@ import { NextRequest } from 'next/server';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
-  const { sessionId } = params;
+  const { sessionId } = await params;
   const targetUrl = `${backendUrl}/agent/session/${sessionId}/cancel`;
 
   try {
