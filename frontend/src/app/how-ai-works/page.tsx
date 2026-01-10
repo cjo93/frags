@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import TrustStrip from '@/components/TrustStrip';
 import LegalFooter from '@/components/LegalFooter';
 
 export default function HowAIWorksPage() {
@@ -57,240 +56,174 @@ export default function HowAIWorksPage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-3xl mx-auto px-6 py-16 md:py-24">
-        <h1 className="text-3xl md:text-4xl font-light tracking-tight">
-          How AI works in Defrag
-        </h1>
-        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-          Deterministic compute first. AI interpretation second. Clear boundaries throughout.
+      <section className="max-w-4xl mx-auto px-6 py-20 md:py-28 text-center">
+        <p className="text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-4">
+          How it works
         </p>
-        <TrustStrip className="mt-6" />
+        <h1 className="text-4xl md:text-5xl font-light tracking-tight">
+          A mirror, not a mandate.
+        </h1>
+        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
+          Defrag turns inputs into orientation.
+        </p>
       </section>
 
-      {/* Content */}
-      <section className="max-w-3xl mx-auto px-6 pb-24 space-y-16">
-        
-        {/* Section: Two Layers */}
-        <div>
-          <h2 className="text-xl font-medium mb-4">Two distinct layers</h2>
-          <div className="space-y-6 text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            <p>
-              Defrag uses <strong className="text-neutral-900 dark:text-white">deterministic synthesis</strong> as its foundation. 
-              Your natal chart, numerology profile, Human Design, and Gene Keys are computed using established algorithms—not AI. 
-              These calculations are reproducible, auditable, and don&apos;t change based on model updates.
+      {/* Flow Diagram */}
+      <section className="max-w-4xl mx-auto px-6 pb-20">
+        <div className="grid md:grid-cols-4 gap-6 md:gap-4">
+          {/* Step 1 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+              <svg className="w-7 h-7 text-neutral-600 dark:text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+              </svg>
+            </div>
+            <div className="hidden md:block h-px bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent" />
+            <h3 className="text-sm font-medium">Capture</h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              Log what matters: mood, friction, decisions.
             </p>
-            <p>
-              AI enters only as an <strong className="text-neutral-900 dark:text-white">interpretation layer</strong>—an assistant that 
-              helps you explore and connect the computed data. It can explain what a Sun square Mars means, or how your 
-              Profile 4/6 might express in relationships. It never invents placements or generates data.
+          </div>
+
+          {/* Step 2 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+              <svg className="w-7 h-7 text-neutral-600 dark:text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611l-.572.095a9.031 9.031 0 01-6.563-.89" />
+              </svg>
+            </div>
+            <div className="hidden md:block h-px bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent" />
+            <h3 className="text-sm font-medium">Synthesize</h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              Frameworks act as lenses. Output is a calm readout.
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+              <svg className="w-7 h-7 text-neutral-600 dark:text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+              </svg>
+            </div>
+            <div className="hidden md:block h-px bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent" />
+            <h3 className="text-sm font-medium">Propose</h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              The agent proposes. You confirm or decline.
+            </p>
+          </div>
+
+          {/* Step 4 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+              <svg className="w-7 h-7 text-neutral-600 dark:text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+            </div>
+            <div className="hidden md:block h-px bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent" />
+            <h3 className="text-sm font-medium">Learn</h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              Spiral logs outcomes. Prompts adapt over time.
             </p>
           </div>
         </div>
+      </section>
 
-        {/* Section: What AI Can Do */}
-        <div>
-          <h2 className="text-xl font-medium mb-4">What AI does</h2>
-          <ul className="space-y-3 text-neutral-600 dark:text-neutral-400">
-            <li className="flex items-start gap-3">
-              <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
-              <span>Explains computed layers in natural language</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
-              <span>Connects patterns across different systems (astrology + numerology + Human Design)</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
-              <span>Answers questions about your chart with citations to computed placements</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
-              <span>Suggests where to look for deeper understanding</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
-              <span>Transcribes voice notes into check-in entries</span>
-            </li>
-          </ul>
+      {/* Two Layers Visual */}
+      <section className="bg-neutral-50 dark:bg-neutral-900 border-y border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-4xl mx-auto px-6 py-20">
+          <div className="grid md:grid-cols-2 gap-12">
+            {/* Deterministic */}
+            <div className="space-y-4">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <span className="text-emerald-600 dark:text-emerald-400 text-lg">⚙</span>
+              </div>
+              <h3 className="text-lg font-medium">Deterministic Layer</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                Charts, numerology, Human Design — computed with established algorithms. 
+                Reproducible. Auditable. No AI.
+              </p>
+            </div>
+
+            {/* AI */}
+            <div className="space-y-4">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                <span className="text-indigo-600 dark:text-indigo-400 text-lg">◇</span>
+              </div>
+              <h3 className="text-lg font-medium">Interpretation Layer</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                AI explains and connects computed data. It never invents placements 
+                or generates predictions.
+              </p>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* Section: What AI Cannot Do */}
-        <div>
-          <h2 className="text-xl font-medium mb-4">What AI doesn&apos;t do</h2>
-          <ul className="space-y-3 text-neutral-600 dark:text-neutral-400">
-            <li className="flex items-start gap-3">
-              <span className="text-red-600 dark:text-red-400 mt-1">✗</span>
-              <span>Generate or invent chart placements</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-red-600 dark:text-red-400 mt-1">✗</span>
-              <span>Make predictions about your life</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-red-600 dark:text-red-400 mt-1">✗</span>
-              <span>Provide therapy, medical, or financial advice</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-red-600 dark:text-red-400 mt-1">✗</span>
-              <span>Access data outside your profile context</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-red-600 dark:text-red-400 mt-1">✗</span>
-              <span>Remember conversations across sessions without explicit memory opt-in</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Section: Privacy */}
-        <div>
-          <h2 className="text-xl font-medium mb-4">Privacy and data handling</h2>
-          <div className="space-y-6 text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            <p>
-              When you use AI features, your profile data (chart placements, check-ins, constellation relationships) 
-              is sent to the AI provider as context. This data is:
-            </p>
-            <ul className="space-y-2 ml-6">
-              <li>• <strong className="text-neutral-900 dark:text-white">Not stored</strong> by the AI provider beyond the request</li>
-              <li>• <strong className="text-neutral-900 dark:text-white">Not used</strong> to train AI models</li>
-              <li>• <strong className="text-neutral-900 dark:text-white">Encrypted</strong> in transit via TLS</li>
-              <li>• <strong className="text-neutral-900 dark:text-white">Scoped</strong> to only the profile you&apos;re viewing</li>
+      {/* Boundaries */}
+      <section className="max-w-4xl mx-auto px-6 py-20">
+        <div className="grid md:grid-cols-2 gap-12">
+          {/* Does */}
+          <div>
+            <h3 className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-4">AI does</h3>
+            <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-500">✓</span> Explain computed patterns
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-500">✓</span> Connect across frameworks
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-500">✓</span> Cite source placements
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-500">✓</span> Transcribe voice notes
+              </li>
             </ul>
-            <p>
-              We currently use <strong className="text-neutral-900 dark:text-white">Cloudflare Workers AI</strong> for inference. 
-              Your data never leaves Cloudflare&apos;s network and is processed on their secure edge infrastructure.
-            </p>
-            <p>
-              Exports are rendered artifacts with expiring links, and request IDs are attached end-to-end for auditability.
-            </p>
+          </div>
+
+          {/* Doesn't */}
+          <div>
+            <h3 className="text-sm font-medium text-red-600 dark:text-red-400 mb-4">AI doesn&apos;t</h3>
+            <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+              <li className="flex items-center gap-2">
+                <span className="text-red-500">✗</span> Invent chart data
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-red-500">✗</span> Make predictions
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-red-500">✗</span> Provide medical/financial advice
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-red-500">✗</span> Access data outside your profile
+              </li>
+            </ul>
           </div>
         </div>
+      </section>
 
-        {/* Section: Model Info */}
-        <div>
-          <h2 className="text-xl font-medium mb-4">Models we use</h2>
-          <div className="space-y-4">
-            <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">Chat & Interpretation</span>
-                <code className="text-sm text-neutral-500 dark:text-neutral-400">Llama 3.1 8B</code>
-              </div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                Open-source model from Meta, run on Cloudflare&apos;s infrastructure
-              </p>
-            </div>
-            <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">Voice Transcription</span>
-                <code className="text-sm text-neutral-500 dark:text-neutral-400">Whisper</code>
-              </div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                OpenAI&apos;s open-source speech recognition model
-              </p>
-            </div>
-            <div className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg opacity-50">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">Image Generation</span>
-                <code className="text-sm text-neutral-500 dark:text-neutral-400">SDXL</code>
-              </div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                Coming soon — Stable Diffusion XL for visual synthesis
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Section: Tier Access */}
-        <div>
-          <h2 className="text-xl font-medium mb-4">AI access by tier</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                  <th className="text-left py-3 font-medium">Feature</th>
-                  <th className="text-center py-3 font-medium">Free</th>
-                  <th className="text-center py-3 font-medium">Insight</th>
-                  <th className="text-center py-3 font-medium">Integration</th>
-                  <th className="text-center py-3 font-medium">Constellation</th>
-                </tr>
-              </thead>
-              <tbody className="text-neutral-600 dark:text-neutral-400">
-                <tr className="border-b border-neutral-100 dark:border-neutral-800/50">
-                  <td className="py-3">Deterministic synthesis</td>
-                  <td className="text-center">✓</td>
-                  <td className="text-center">✓</td>
-                  <td className="text-center">✓</td>
-                  <td className="text-center">✓</td>
-                </tr>
-                <tr className="border-b border-neutral-100 dark:border-neutral-800/50">
-                  <td className="py-3">AI chat (preview)</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">✓</td>
-                  <td className="text-center">✓</td>
-                  <td className="text-center">—</td>
-                </tr>
-                <tr className="border-b border-neutral-100 dark:border-neutral-800/50">
-                  <td className="py-3">AI chat (full)</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">✓</td>
-                </tr>
-                <tr className="border-b border-neutral-100 dark:border-neutral-800/50">
-                  <td className="py-3">Voice transcription</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">✓</td>
-                </tr>
-                <tr>
-                  <td className="py-3">Image generation</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">—</td>
-                  <td className="text-center">Soon</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Section: Philosophy */}
-        <div>
-          <h2 className="text-xl font-medium mb-4">Our philosophy</h2>
-          <div className="space-y-6 text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            <p>
-              AI is a lens, not an oracle. We use it to help you understand the patterns that deterministic 
-              systems reveal—not to replace your own discernment.
-            </p>
-            <p>
-              When available, AI responses include citations to the computed layers they draw from. You can trace
-              an interpretation back to its source data. This isn&apos;t about blind trust; it&apos;s about informed exploration.
-            </p>
-            <p>
-              We&apos;ll continue to be transparent about what models we use, how your data flows, and what 
-              limitations exist. AI is a tool, and tools work best when you understand how they work.
-            </p>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="pt-8 border-t border-neutral-200 dark:border-neutral-800">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div>
-              <h3 className="font-medium">Questions?</h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                We&apos;re happy to explain anything in more detail.
-              </p>
-            </div>
+      {/* Disclaimer */}
+      <section className="border-t border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-4xl mx-auto px-6 py-12 text-center">
+          <p className="text-xs text-neutral-500 dark:text-neutral-500">
+            Not predictive. Not diagnostic. Not a substitute for professional care.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="mailto:support@defrag.app"
-              className="px-4 py-2 text-sm border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+              href="/register"
+              className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
             >
-              Contact us
+              Initialize the Mirror
+            </Link>
+            <Link
+              href="/trust"
+              className="inline-flex items-center justify-center px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              Trust &amp; Safety
             </Link>
           </div>
         </div>
-
       </section>
 
       <LegalFooter />
