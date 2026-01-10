@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import RotatingMantras from '@/components/RotatingMantras';
 import MandalaHero from '@/components/MandalaHero';
-import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
+import { SiteHeader, SiteFooter, FilmBackdrop, Section, Hairline } from '@/components/marketing';
 
 const MANTRAS = [
   { saying: "To everything there is a season.", translation: "Timing Optimization." },
@@ -17,22 +17,47 @@ export default function Home() {
       <SiteHeader />
       <main className="min-h-screen flex flex-col bg-white dark:bg-black">
       {/* Hero */}
-      <Section className="flex-1 flex items-center bg-white dark:bg-black">
+      <Section className="bg-white dark:bg-black">
         <FilmBackdrop src="/hero/field.webp" />
-        <div className="relative flex flex-col lg:flex-row items-center gap-10">
-          {/* Hero Text */}
-          <div className="lg:w-1/2 space-y-6">
-            <h1 className="text-5xl md:text-6xl font-light tracking-tight leading-tight text-neutral-900 dark:text-neutral-50">
-              Old Technology. Updated Interface.
-            </h1>
-            <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured self-reflection, so you can act with timing, not urgency.
-            </p>
-            <p className="text-xs text-neutral-400 dark:text-neutral-500 tracking-wide">
-              Pattern recognition across people, time, and relationships.
+
+        <div className="relative grid gap-12 lg:grid-cols-2 items-center">
+          {/* Left: Copy */}
+          <div className="max-w-xl">
+            <p className="text-xs uppercase tracking-[0.28em] text-neutral-500 dark:text-neutral-400">
+              Old Technology
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+            <h1 className="mt-5 text-5xl md:text-7xl font-light tracking-tight leading-[1.05] text-neutral-900 dark:text-neutral-50">
+              Old technology. Updated interface.
+            </h1>
+
+            <p className="mt-7 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured
+              self-reflection, so you can act with timing, not urgency.
+            </p>
+
+            {/* Framework chips */}
+            <div className="mt-6 flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+              <span className="inline-flex items-center rounded-full bg-neutral-900/5 dark:bg-white/10 px-3 py-1">
+                Astrology
+              </span>
+              <span className="inline-flex items-center rounded-full bg-neutral-900/5 dark:bg-white/10 px-3 py-1">
+                Human Design
+              </span>
+              <span className="inline-flex items-center rounded-full bg-neutral-900/5 dark:bg-white/10 px-3 py-1">
+                Gene Keys
+              </span>
+              <span className="ml-1 hidden sm:inline text-neutral-400 dark:text-neutral-500">
+                — lenses, not labels
+              </span>
+            </div>
+
+            <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
+              Signal first. Action second.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
                 href="/register"
                 className="inline-flex items-center justify-center px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
@@ -46,12 +71,47 @@ export default function Home() {
                 See how it works
               </Link>
             </div>
+
+            {/* Premium divider */}
+            <Hairline className="mt-10 max-w-md" />
+
+            <p className="mt-6 text-xs text-neutral-600 dark:text-neutral-400 max-w-md leading-relaxed">
+              Not predictive. Not diagnostic. Built for clarity, pacing, and self-authored decisions.
+            </p>
           </div>
 
-          {/* Hero Visual */}
-          <div className="lg:w-1/2 flex justify-center">
-            <MandalaHero state="CLEAR" />
+          {/* Right: Visual panel */}
+          <div className="relative">
+            <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-tr from-neutral-200/30 via-transparent to-neutral-200/10 blur-2xl dark:from-neutral-700/15 dark:to-neutral-700/5" />
+
+            <div className="relative overflow-hidden rounded-3xl">
+              <img
+                src="/hero/constellation.webp"
+                alt=""
+                className="h-[340px] w-full object-cover opacity-[0.22] dark:opacity-[0.16] scale-[1.05] film-kenburns"
+                style={{ animation: "kenburns 34s ease-in-out infinite" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-white/65 via-white/10 to-transparent dark:from-black/65 dark:via-black/10" />
+              <div className="absolute inset-0 ring-1 ring-inset ring-neutral-200/70 dark:ring-neutral-800/70" />
+
+              {/* Mandala overlay (kept subtle) */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-[220px] h-[220px] opacity-[0.92]">
+                  <MandalaHero state="CLEAR" />
+                </div>
+              </div>
+            </div>
+
+            {/* Small caption */}
+            <p className="mt-4 text-xs text-neutral-500 dark:text-neutral-400">
+              Pattern recognition across people, time, and relationships.
+            </p>
           </div>
+        </div>
+
+        {/* Mantra rail */}
+        <div className="relative mt-16">
+          <RotatingMantras mantras={MANTRAS} />
         </div>
       </Section>
 
@@ -61,7 +121,6 @@ export default function Home() {
           <p className="text-sm uppercase text-neutral-500 dark:text-neutral-400 tracking-widest">
             A Mirror, Not a Mandate
           </p>
-          <RotatingMantras mantras={MANTRAS} />
 
           <div className="grid md:grid-cols-3 gap-10 text-left">
             <div className="relative">
