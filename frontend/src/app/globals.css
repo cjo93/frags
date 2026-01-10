@@ -184,3 +184,33 @@ select:focus {
 .scroll-safe {
   padding-bottom: calc(var(--safe-area-inset-bottom) + 100px);
 }
+
+/* Premium visual animations */
+@keyframes kenburns {
+  0% { transform: scale(1.06) translate3d(0, 0, 0); }
+  50% { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+  100% { transform: scale(1.06) translate3d(0, 0, 0); }
+}
+
+@keyframes grain {
+  0% { transform: translate(0,0); }
+  20% { transform: translate(-5%, 3%); }
+  40% { transform: translate(4%, -6%); }
+  60% { transform: translate(-3%, -2%); }
+  80% { transform: translate(6%, 4%); }
+  100% { transform: translate(0,0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-kenburns,
+  .animate-grain,
+  .animate-float {
+    animation: none !important;
+  }
+}
