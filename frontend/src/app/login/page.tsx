@@ -65,10 +65,10 @@ function LoginInner() {
   return (
     <main className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <nav className="max-w-5xl mx-auto px-6 h-16 flex items-center">
-          <Link href="/" className="text-lg font-medium tracking-tight">
-            Defrag
+      <header className="border-b border-neutral-200/50 dark:border-neutral-800/50 bg-white/80 dark:bg-black/60 backdrop-blur-xl">
+        <nav className="max-w-5xl mx-auto px-6 h-14 flex items-center">
+          <Link href="/" className="text-sm font-medium tracking-[0.15em] text-neutral-900 dark:text-neutral-50 hover:opacity-70 transition-opacity">
+            DEFRAG
           </Link>
         </nav>
       </header>
@@ -76,11 +76,11 @@ function LoginInner() {
       {/* Form */}
       <section className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-light tracking-tight mb-8">
+          <h1 className="text-2xl font-light tracking-tight mb-2">
             Sign in
           </h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
-            Access your profiles with deterministic compute and optional memory.
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-8">
+            Access your profiles. Deterministic compute with optional memory.
           </p>
 
           <TrustStrip className="mb-6" />
@@ -135,7 +135,7 @@ function LoginInner() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
