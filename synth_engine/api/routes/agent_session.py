@@ -14,7 +14,7 @@ from synth_engine.agency.guardrails import (
 from synth_engine.agency.pass_levels import PassLevel
 from synth_engine.core.orchestrator import orchestrate
 from synth_engine.core.spiral_store import append_spiral_event
-from synth_engine.core.spiral_query import count_proposal_outcomes
+from synth_engine.core.spiral_query import count_proposal_outcomes, query_spiral
 
 router = APIRouter()
 
@@ -91,6 +91,35 @@ def has_near_term_kairotic_window(kairotic_windows: list, within_hours: float = 
     return (best is not None), best
 
 
+def recently_handled_action(user_id: str, action: str, cooldown_minutes: int = 120) -> bool:
+    """True if the user accepted/declined the same action within cooldown window."""
+    lookback = cooldown_minutes * 60
+    now = time.time()
+    events, _ = query_spiral(user_id=user_id, kinds=["proposal_accepted", "proposal_declined"], limit=200)
+    for rec in events:
+        ts = rec.get("ts")
+        if not ts:
+            continue
+        if now - float(ts) > lookback:
+            break
+        ev = (rec.get("event") or {})
+        if ev.get("action") == action:
+            return True
+    return False
+
+
+def dedupe_proposals(proposals: list) -> list:
+    seen = set()
+    out = []
+    for p in proposals:
+        a = p.get("action")
+        if not a or a in seen:
+            continue
+        seen.add(a)
+        out.append(p)
+    return out
+
+
 def build_action_proposals(result, user_id: str = "unknown") -> list:
     """
     Computed proposals grounded in orchestrator output.
@@ -114,7 +143,7 @@ def build_action_proposals(result, user_id: str = "unknown") -> list:
             "requires_confirmation": False,
             "rationale": "Log that passive guidance was delivered.",
         })
-        return proposals
+        return dedupe_proposals(proposals)
 
     # GUIDED/ACTIVE: safe navigation + audio + logging
     proposals += [
@@ -138,18 +167,29 @@ def build_action_proposals(result, user_id: str = "unknown") -> list:
         },
     ]
 
+    # Acceptance-weighted schedule horizon:
+    # - declines > accepts => 2h
+    # - accepts > declines => 8h
+    # - otherwise => 6h
+    outcomes = count_proposal_outcomes(user_id, "schedule_prompt", lookback=20)
+    accepts = outcomes.get("accepts", 0)
+    declines = outcomes.get("declines", 0)
+    horizon_hours = 6.0
+    if declines > accepts:
+        horizon_hours = 2.0
+    elif accepts > declines:
+        horizon_hours = 8.0
+
     # Kairotic near-term window → propose schedule_prompt (ACTIVE only)
-    # Use Spiral history to bias: if declines > accepts, reduce window to 2 hours
-    if pass_level == PassLevel.ACTIVE:
-        outcomes = count_proposal_outcomes(user_id, "schedule_prompt", lookback=10)
-        # If user has declined more than accepted in recent history, be more conservative
-        within_hours = 2.0 if outcomes["declines"] > outcomes["accepts"] else 6.0
-        
-        near, w = has_near_term_kairotic_window(
-            getattr(result, "kairotic_windows", []), 
-            within_hours=within_hours
-        )
-        if near and w:
+    near, w = has_near_term_kairotic_window(getattr(result, "kairotic_windows", []), within_hours=horizon_hours)
+    if pass_level == PassLevel.ACTIVE and near and w:
+        start_ts = _parse_window_start_ts(w) or 0.0
+        very_soon = (start_ts > 0.0) and (start_ts - time.time() <= 60 * 60)
+
+        # Cooldown: suppress repeats unless the window is very soon
+        if (not very_soon) and recently_handled_action(user_id=user_id, action="schedule_prompt", cooldown_minutes=120):
+            pass
+        else:
             label = w.get("label") or w.get("name") or "kairotic_window"
             when = w.get("start") or w.get("start_ts") or "soon"
             proposals.append({
@@ -159,14 +199,20 @@ def build_action_proposals(result, user_id: str = "unknown") -> list:
                 "rationale": "A near-term kairotic window is coming up. Schedule a check-in.",
             })
 
-    return proposals
+    # General cooldown: suppress other repeated actions recently handled
+    refined = []
+    for p in proposals:
+        a = p.get("action")
+        if not a:
+            continue
+        if a in ("open_module", "play_audio", "log_event"):
+            refined.append(p)
+            continue
+        if recently_handled_action(user_id=user_id, action=a, cooldown_minutes=120):
+            continue
+        refined.append(p)
 
-
-async def emit_action_proposals(result, yield_fn):
-    allow = set(allowed_action_names(result.pass_level))
-    for p in build_action_proposals(result.pass_level):
-        if p["action"] in allow:
-            yield_fn(sse("action_proposal", p))
+    return dedupe_proposals(refined)
 
 
 @router.post("/agent/session")
