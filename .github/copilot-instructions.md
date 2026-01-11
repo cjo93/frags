@@ -33,5 +33,5 @@
 - When adding agent tools, wire the allowlist in `cloudflare/agent-worker/src/tools/index.ts` and implement the backend handler under `/tools/*` with HMAC verification.
 ## Brand copy protection
 - **DO NOT** change hero headlines, taglines, or CTAs during polish/refactoring passes.
-- Canonical brand copy is documented in [docs/copy/BRAND_COPY.md](docs/copy/BRAND_COPY.md) — read before any "copy refinement" task.
+- Canonical brand copy is documented in [docs/copy/COPY_SPEC.md](docs/copy/COPY_SPEC.md) — read before any "copy refinement" task.
 - Key protected phrases: "Old technology. Updated interface.", "Initialize the Mirror", "Signal first. Action second."

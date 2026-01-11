@@ -31,6 +31,37 @@ Is not:
 Allowed: short, agency-inviting hooks in hero headings only.
 Not allowed: destiny claims, fear/urgency, "guarantees", medical outcomes.
 
+## Locked hero copy (DO NOT CHANGE)
+
+### Headline
+```
+Old technology. Updated interface.
+```
+
+### Subheadline  
+```
+Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured self-reflection, so you can act with timing, not urgency.
+```
+
+### Mantras (Old Wisdom → Modern Translation)
+These proverbs bridge ancient wisdom to modern terminology. The juxtaposition IS the brand voice.
+
+| Saying (Old Wisdom) | Translation (Modern) |
+|---------------------|---------------------|
+| "To everything there is a season." | Timing Optimization. |
+| "Reap what you sow." | Vector Stabilization. |
+| "Iron sharpens iron." | Resonance Alignment. |
+
+### Taglines
+- "Signal first. Action second."
+- "A Mirror, Not a Mandate"
+- "Not predictive. Not diagnostic."
+- "— lenses, not labels"
+
+### CTAs
+- Primary: "Initialize the Mirror"
+- Secondary: "See how it works"
+
 ## Banned patterns (always)
 - Medical claims: diagnose, cure, treat, heal.
 - Coercive urgency: "act now", "don't miss", guilt or shame.
