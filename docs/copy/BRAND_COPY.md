@@ -18,6 +18,18 @@ Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys
 
 **Note**: Use em-dash (—) not hyphen (-). Capitalize system names.
 
+## Mantras (Old Wisdom → Modern Translation)
+
+These proverbs bridge ancient wisdom to modern terminology. Each pairing is intentional:
+
+| Saying (Old Wisdom) | Translation (Modern) |
+|---------------------|---------------------|
+| "To everything there is a season." | Timing Optimization. |
+| "Reap what you sow." | Vector Stabilization. |
+| "Iron sharpens iron." | Resonance Alignment. |
+
+**Rationale**: The left column uses timeless proverbs people already know. The right column reframes them in systems/engineering language. This juxtaposition IS the brand voice — do not replace proverbs with generic copy or remove the "technical" translations.
+
 ## Taglines (Locked)
 
 - "Signal first. Action second."
