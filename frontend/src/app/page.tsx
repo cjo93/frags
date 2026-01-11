@@ -24,15 +24,15 @@ export default function Home() {
         <div className="relative grid gap-12 lg:grid-cols-2 items-center">
           {/* Left: Copy */}
           <div className="max-w-xl">
-            <p className="text-xs uppercase tracking-[0.28em] text-neutral-500 dark:text-neutral-400">
+            <p className="fade-up text-xs uppercase tracking-[0.28em] text-neutral-500 dark:text-neutral-400">
               Old Technology
             </p>
 
-            <h1 className="mt-5 text-5xl md:text-7xl font-light tracking-tight leading-[1.05] text-neutral-900 dark:text-neutral-50">
+            <h1 className="fade-up fade-up-2 mt-5 text-5xl md:text-7xl font-light tracking-tight leading-[1.05] text-neutral-900 dark:text-neutral-50">
               Old technology. Updated interface.
             </h1>
 
-            <p className="mt-7 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            <p className="fade-up fade-up-3 mt-7 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
               Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured
               self-reflection, so you can act with timing, not urgency.
             </p>
@@ -58,10 +58,10 @@ export default function Home() {
             </p>
 
             {/* CTAs */}
-            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+            <div className="fade-up fade-up-4 mt-10 flex flex-col sm:flex-row gap-4">
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md"
+                className="hover-lift inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 Initialize the Mirror
               </Link>
@@ -82,7 +82,7 @@ export default function Home() {
           </div>
 
           {/* Right: Visual panel */}
-          <div className="relative hidden lg:block">
+          <div className="hover-lift soft-shimmer relative hidden lg:block">
             <div className="absolute -inset-8 rounded-[2.5rem] bg-gradient-to-tr from-neutral-200/40 via-transparent to-neutral-100/20 blur-3xl dark:from-neutral-700/20 dark:to-neutral-800/10" />
 
             <div className="relative overflow-hidden rounded-[1.75rem] shadow-2xl shadow-neutral-900/[0.08] dark:shadow-black/30">
@@ -111,20 +111,20 @@ export default function Home() {
         </div>
 
         {/* Mantra rail */}
-        <div className="relative mt-16">
+        <div className="fade-up fade-up-3 relative mt-16">
           <RotatingMantras mantras={MANTRAS} />
         </div>
       </Section>
 
       {/* Insight / Premium Feature band */}
-      <section className="bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800">
+      <section className="fade-up bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-5xl mx-auto px-6 py-24 text-center space-y-10">
           <p className="text-sm uppercase text-neutral-500 dark:text-neutral-400 tracking-widest">
             A Mirror, Not a Mandate
           </p>
 
           <div className="grid md:grid-cols-3 gap-10 text-left">
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-white/60 dark:bg-black/20 shadow-[0_1px_0_rgba(0,0,0,0.04)]" />
               <div className="relative p-6">
                 <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-white/60 dark:bg-black/20 shadow-[0_1px_0_rgba(0,0,0,0.04)]" />
               <div className="relative p-6">
                 <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-white/60 dark:bg-black/20 shadow-[0_1px_0_rgba(0,0,0,0.04)]" />
               <div className="relative p-6">
                 <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export default function Home() {
       </section>
 
       {/* How it works */}
-      <section className="relative border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black overflow-hidden">
+      <section className="fade-up relative border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute left-[-10rem] top-10 h-80 w-80 rounded-full bg-gradient-to-tr from-neutral-200/35 to-transparent blur-3xl dark:from-neutral-700/15" />
           <div className="absolute right-[-12rem] bottom-[-6rem] h-96 w-96 rounded-full bg-gradient-to-tl from-neutral-200/30 to-transparent blur-3xl dark:from-neutral-700/10" />
@@ -211,7 +211,7 @@ export default function Home() {
           </div>
 
           <div className="mt-14 grid gap-8 md:grid-cols-3">
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/30" />
               <div className="relative p-6">
                 <div className="flex items-center justify-between">
@@ -230,7 +230,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/30" />
               <div className="relative p-6">
                 <div className="flex items-center justify-between">
@@ -250,7 +250,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/30" />
               <div className="relative p-6">
                 <div className="flex items-center justify-between">
@@ -274,7 +274,7 @@ export default function Home() {
           <div className="mt-14 flex flex-col sm:flex-row gap-4">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+              className="hover-lift inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Initialize the Mirror
             </Link>
@@ -289,10 +289,10 @@ export default function Home() {
       </section>
 
       {/* Disclaimer */}
-      <section className="border-t border-neutral-200 dark:border-neutral-800">
+      <section className="fade-up border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/30" />
               <div className="relative p-6">
                 <div className="flex items-center gap-3">
@@ -314,7 +314,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="relative">
+            <div className="hover-lift relative">
               <div aria-hidden className="absolute inset-0 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/30" />
               <div className="relative p-6">
                 <div className="flex items-center gap-3">
