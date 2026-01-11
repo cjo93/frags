@@ -19,8 +19,8 @@ export default function TrustPage() {
         <Section className="relative">
           <FilmBackdrop src="/hero/constellation.webp" />
           <div className="relative">
-            <h1 className="text-3xl md:text-4xl font-light tracking-tight">Trust is engineered.</h1>
-            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            <h1 className="fade-up text-3xl md:text-4xl font-light tracking-tight">Trust is engineered.</h1>
+            <p className="fade-up fade-up-2 mt-4 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
               Defrag is built to be auditable, scoped, and reversible. Your data stays yours—
               with explicit controls and full deletion rights.
             </p>
