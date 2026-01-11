@@ -28,12 +28,12 @@ export default function Home() {
             </p>
 
             <h1 className="mt-5 text-5xl md:text-7xl font-light tracking-tight leading-[1.05] text-neutral-900 dark:text-neutral-50">
-              Understand yourself through symbolic synthesis.
+              Old technology. Updated interface.
             </h1>
 
             <p className="mt-7 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              Defrag synthesizes astrology, Human Design, and Gene Keys into structured
-              self-reflection—so you can act with timing, not urgency.
+              Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured
+              self-reflection, so you can act with timing, not urgency.
             </p>
 
             {/* Framework chips */}
