@@ -8,6 +8,7 @@ import { createPortal } from '@/lib/api';
 import type { FeatureFlags } from '@/lib/api';
 import { OnboardingPanel, useOnboardingState } from '@/components/onboarding';
 import Mandala from '@/components/Mandala';
+import { ANCHORS } from '@/content/marketingCopy';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -61,12 +62,12 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-light tracking-tight">
-                {user?.email ? `Welcome back` : 'Dashboard'}
+                {user?.email ? 'Enter the Field' : 'Enter the Field'}
               </h1>
               <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                 {currentPlan !== 'free' && isActive
-                  ? `${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan active`
-                  : 'Free tier'}
+                  ? `Capacity: ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}`
+                  : 'Capacity: Free'}
               </p>
             </div>
             <Mandala state="CLEAR" />
@@ -111,7 +112,7 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <p className="text-neutral-600 dark:text-neutral-400 mb-1">No profiles yet</p>
-                <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-4">Create a profile to begin your synthesis journey</p>
+                <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-4">Create a profile to begin your daily read</p>
                 <Link
                   href="/dashboard/profiles/new"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-90 transition-opacity"
@@ -168,7 +169,7 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <p className="text-neutral-600 dark:text-neutral-400 mb-1">No constellations yet</p>
-                  <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-4">Map relationships between profiles</p>
+                  <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-4">See relational geometry between profiles</p>
                   {featureFlags.constellation_create && (
                     <button
                       onClick={async () => {
@@ -194,7 +195,7 @@ export default function DashboardPage() {
           {(featureFlags.ai_preview_allowed || featureFlags.ai_full_allowed) && (
             <section className="mb-12">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-medium">AI Exploration</h2>
+                <h2 className="text-lg font-medium">Ask</h2>
               </div>
               <div className="p-6 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-950">
                 <div className="flex items-start gap-4">
@@ -204,15 +205,15 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium mb-1">AI Exploration</h3>
+                    <h3 className="font-medium mb-1">Ask</h3>
                     <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                      Explore and understand your computed patterns through conversation.
+                      Ask grounded questions about your profile. Receive structured reflection.
                     </p>
                     <Link
                       href="/dashboard/ai"
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:scale-[1.02] active:scale-[0.98] transition-transform"
                     >
-                      Open AI Chat
+                      Enter Ask
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                       </svg>
@@ -229,7 +230,7 @@ export default function DashboardPage() {
       <footer className="border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-5xl mx-auto px-6 py-6">
           <p className="text-xs text-neutral-400">
-            Defrag is a tool for self-reflection. Not medical or therapeutic advice.
+            {ANCHORS.trustLine}
           </p>
         </div>
       </footer>

@@ -1,37 +1,50 @@
 # Copilot instructions (frags / defrag)
 
-## Big picture
-- **Python API (Render)**: FastAPI app in [synth_engine/api/main.py](synth_engine/api/main.py). SQLAlchemy models in `synth_engine/storage/models.py`, DB access/helpers in `synth_engine/storage/repo.py`, migrations in `alembic/`.
-- **AI endpoints**: `/ai/*` router in [synth_engine/api/ai.py](synth_engine/api/ai.py) builds *grounded context* from stored computed layers and calls the configured provider (`synth_engine/ai/providers/*`).
-- **Cloudflare agent worker**: edge router in [cloudflare/agent-worker/src/index.ts](cloudflare/agent-worker/src/index.ts) proxies authenticated requests into a per-user Durable Object [cloudflare/agent-worker/src/do/UserAgentDO.ts](cloudflare/agent-worker/src/do/UserAgentDO.ts) for chat/tool execution + optional D1/R2/Vectorize persistence.
-- **Next.js frontend (Vercel)**: app router under `frontend/src/app/*`; API wrapper in [frontend/src/lib/api.ts](frontend/src/lib/api.ts) stores JWT in `localStorage` and sends `Authorization: Bearer <token>`.
+## Operating principles
+- Keep diffs minimal and reversible.
+- Prefer small, incremental commits.
+- Run checks after changes (frontend: `npm run lint` + `npm run build`; backend: run tests if present).
+- Do not add new dependencies unless explicitly requested.
+- Never change production auth/billing behavior without an explicit task.
 
-## Local dev workflows
-- **Backend (Python 3.10+)**
-  - Install: `pip install -e .`
-  - Migrate: `alembic upgrade head` (required; app fails fast if tables missing)
-  - Run: `python -m uvicorn synth_engine.api.main:app --reload --port 8000`
-  - Tests: `pytest` (see `tests/test_billing.py` for unit-style tests with mocks)
-- **Frontend** (from `frontend/`): `npm i && npm run dev` (defaults to `http://localhost:3000`).
-  - Config: [frontend/src/lib/api.ts](frontend/src/lib/api.ts) uses `NEXT_PUBLIC_API_URL` (falls back to `https://api.defrag.app`).
-- **Worker** (from `cloudflare/agent-worker/`): `npm i && wrangler dev --local`.
-  - Optional local D1 schema: `wrangler d1 execute ... --file src/memory/schema.sql --local` (see `cloudflare/agent-worker/README.md`).
+## Brand copy protection (NON-NEGOTIABLE)
+- **COPY IS LOCKED.** Do not invent or rewrite brand voice, headlines, taglines, CTAs, or sayings.
+- Canonical copy should be centralized (preferred: `frontend/src/content/oldWiseTales.ts`).
+  - If this module does not exist yet, create it (do **not** inline new copy across pages).
+- v0 is allowed to generate **layout and styling only** (sections, grids, spacing, subtle motion wrappers). v0 must not alter any strings.
+- Fluid (voice) is allowed to add **interaction** (interruptible speech, SSE UX), but must not change copy.
 
-## Auth, entitlements, and “dev admin”
-- Backend auth is JWT (`SYNTH_JWT_SECRET`, `SYNTH_JWT_ALGORITHM`), with login accepting query params or JSON body (see `/auth/login` in [synth_engine/api/main.py](synth_engine/api/main.py)).
-- “Dev admin” bypass is **opt-in and audited** via settings in [synth_engine/api/deps.py](synth_engine/api/deps.py) (`SYNTH_DEV_ADMIN_ENABLED`, `SYNTH_DEV_ADMIN_TOKEN`, etc.). Billing blocks dev-admin users (see [synth_engine/api/billing.py](synth_engine/api/billing.py)).
-- Plan names appear in both **legacy** (`basic/pro/family`) and **new** (`insight/integration/constellation`) forms; checkout accepts both (see [synth_engine/api/billing.py](synth_engine/api/billing.py) and `tests/test_billing.py`).
+### Protected phrases (must remain exact)
+- "Old technology. Updated interface."
+- "Initialize the Mirror"
+- "Signal first. Action second."
 
-## Cross-service contracts (worker ↔ backend)
-- Agent JWTs for the worker are minted by backend `POST /auth/agent-token` (see [synth_engine/api/main.py](synth_engine/api/main.py)) and verified in [cloudflare/agent-worker/src/auth/verify.ts](cloudflare/agent-worker/src/auth/verify.ts).
-- Worker → backend tool calls are **HMAC-signed** with `BACKEND_HMAC_SECRET` and verified by backend using `SYNTH_BACKEND_HMAC_SECRET` (see `/tools/natal/export_full` and `_verify_tool_signature` in [synth_engine/api/main.py](synth_engine/api/main.py), and signing in [cloudflare/agent-worker/src/tools/index.ts](cloudflare/agent-worker/src/tools/index.ts)).
-- Request tracing: both backend and worker propagate `X-Request-Id` (backend middleware in `synth_engine/api/abuse.py`, worker helper `getOrCreateRequestId` in `cloudflare/agent-worker/src/util/requestId`).
+### Wise-tales style sayings (allowed set)
+Use only these sayings (or their explicitly-listed variations in the canonical copy module). Do not add new sayings.
+- "To everything there is a season." → Timing Optimization
+- "Reap what you sow." → Vector Stabilization
+- "Iron sharpens iron." → Resonance Alignment
+- "Still waters run deep." → Silence is valid data
+- "Measure twice, cut once." → Signal before action
+- "Don’t wake a sleeping dog." → Don’t force a closed loop
+- "Where there’s smoke, there’s fire." → Pattern detection
+- "Slow is smooth, smooth is fast." → Low-latency without forcing
 
-## Repo-specific patterns to follow
-- Prefer adding API routes as routers (see `synth_engine/api/billing.py`, `synth_engine/api/ai.py`) and include them from [synth_engine/api/main.py](synth_engine/api/main.py).
-- For AI endpoints, enforce size/rate/concurrency limits via helpers in `synth_engine/api/abuse.py` (don’t invent new limit mechanisms).
-- When adding agent tools, wire the allowlist in `cloudflare/agent-worker/src/tools/index.ts` and implement the backend handler under `/tools/*` with HMAC verification.
-## Brand copy protection
-- **DO NOT** change hero headlines, taglines, or CTAs during polish/refactoring passes.
-- Canonical brand copy is documented in [docs/copy/COPY_SPEC.md](docs/copy/COPY_SPEC.md) — read before any "copy refinement" task.
-- Key protected phrases: "Old technology. Updated interface.", "Initialize the Mirror", "Signal first. Action second."
+### Drift triggers (must be removed if introduced)
+Delete/replace any copy containing: transform, unlock, predict, diagnose, guarantee, optimize your life, dashboard insights, growth, hustle.
+
+### Animation / visuals guardrails
+- One ambient motion layer per surface. Prefer slow (20–40s) and subtle.
+- Monochrome film look only (grain + fog + quiet plates). No colorful gradients.
+- Motion communicates **state**, never hype.
+
+## Engineering guardrails
+- UI: Tailwind-only primitives are preferred. Avoid adding component libraries unless requested.
+- Accessibility: respect `prefers-reduced-motion` and ensure text contrast remains high over plates.
+- Security: agent actions must be allowlisted and pass-level gated; never execute arbitrary tools.
+- Privacy: do not log sensitive user data; Spiral should store minimal event metadata.
+
+## Work style
+- When asked to change UI: propose changes, implement, then verify by building.
+- When asked to change copy: only adjust canonical copy module and propagate imports.
+- When unsure, add a `TODO:` note instead of inventing behavior.
