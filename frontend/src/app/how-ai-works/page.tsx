@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
+import { SiteHeader, SiteFooter, FilmBackdrop, Section, Hairline } from '@/components/marketing';
 
 // Note: metadata export requires removing 'use client' and moving to a separate file
 // For now, we rely on the root layout's metadata
@@ -27,6 +27,8 @@ export default function HowAIWorksPage() {
             </p>
           </div>
         </Section>
+
+        <Hairline className="max-w-4xl mx-auto" />
 
       {/* Flow Diagram */}
       <section className="fade-up max-w-4xl mx-auto px-6 pb-20">
@@ -89,6 +91,8 @@ export default function HowAIWorksPage() {
         </div>
       </section>
 
+      <Hairline className="max-w-4xl mx-auto" />
+
       {/* Two Layers Visual */}
       <section className="fade-up bg-neutral-50 dark:bg-neutral-900 border-y border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto px-6 py-20">
@@ -119,6 +123,8 @@ export default function HowAIWorksPage() {
           </div>
         </div>
       </section>
+
+      <Hairline className="max-w-4xl mx-auto" />
 
       {/* Boundaries */}
       <section className="fade-up max-w-4xl mx-auto px-6 py-20">
