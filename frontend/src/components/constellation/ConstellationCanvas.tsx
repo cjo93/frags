@@ -184,13 +184,13 @@ export function ConstellationCanvas({
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-950/80">
           <div className="text-center p-6">
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-              Relational synthesis is available in the Constellation tier.
+              Iron sharpens iron. Relational synthesis is available in the Constellation tier.
             </p>
             <Link
               href="/pricing"
               className="inline-flex px-4 py-2 text-sm font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:opacity-80 transition-opacity"
             >
-              Unlock full synthesis
+              Expand the mirror
             </Link>
           </div>
         </div>

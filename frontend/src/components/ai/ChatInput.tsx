@@ -78,13 +78,13 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about this prof
       {previewLocked ? (
         <div className="mt-2 flex items-center justify-between">
           <p className="text-xs text-neutral-400 dark:text-neutral-500">
-            Upgrade to unlock full interpretation.
+            Full synthesis available at higher tiers.
           </p>
           <a
             href="/pricing"
             className="text-xs text-neutral-600 dark:text-neutral-400 underline underline-offset-2 hover:text-neutral-900 dark:hover:text-white"
           >
-            Unlock full synthesis
+            Expand the mirror
           </a>
         </div>
       ) : (

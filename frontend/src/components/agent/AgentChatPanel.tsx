@@ -176,7 +176,7 @@ export function AgentChatPanel({
             {exportError.code === 'profile_required' ? (
               <>
                 <div className="text-sm font-medium text-red-700 dark:text-red-200">Profile required</div>
-                <div>Create your profile to unlock your Daily Reading, curriculum, and exports.</div>
+                <div>Create your profile to access your Daily Reading, curriculum, and exports.</div>
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center justify-center px-3 py-1 text-[11px] rounded-full border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200"

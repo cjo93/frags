@@ -4,12 +4,13 @@ import Link from 'next/link';
 import RotatingMantras from '@/components/RotatingMantras';
 import MandalaHero from '@/components/MandalaHero';
 import { SiteHeader, SiteFooter, FilmBackdrop, Section, Hairline } from '@/components/marketing';
+import { HERO_MANTRAS } from '@/content/oldWiseTales';
 
-const MANTRAS = [
-  { saying: "To everything there is a season.", translation: "Timing Optimization." },
-  { saying: "Reap what you sow.", translation: "Vector Stabilization." },
-  { saying: "Iron sharpens iron.", translation: "Resonance Alignment." },
-];
+// Use canonical mantras from single source of truth
+const MANTRAS = HERO_MANTRAS.map(m => ({
+  saying: m.saying,
+  translation: `${m.translation}.`,
+}));
 
 export default function Home() {
   return (

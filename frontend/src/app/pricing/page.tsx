@@ -164,7 +164,7 @@ export default function PricingPage() {
               progression from personal patterns to multi-person dynamics and timing sensitivity.
             </p>
             <p>
-              Each tier unlocks computational depth and context scope. We aim for clear boundaries,
+              Each tier expands computational depth and context scope. We aim for clear boundaries,
               predictable costs, and upgrade paths that respect your pace.
             </p>
           </div>

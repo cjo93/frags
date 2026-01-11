@@ -1,124 +1,200 @@
-# COPY_SPEC: DEFRAG
+# Old Wise Tales Alignment Spec
 
-## One-line definition (non-negotiable)
-DEFRAG is a private, safety-first system for psychological individuation and mental clarity, combining structured reflection, validated frameworks, and computation-backed patterning to help users organize inner experience into actionable insight, without medical claims or manipulation.
+> The thread's "north star" is the **old wise tales → modern interface translation system**.
+> Anything that introduces a new "brand voice" outside that frame is drift.
 
-## Primary use-cases (top 3)
-1) Clarify internal patterns (traits, cycles, conflicts) into a readable, bounded dashboard.
-2) Run guided reflection protocols (parts language, values prompts, behavior experiments) with explicit boundaries.
-3) Generate safe, time-limited exports that are sanitized and shareable.
+---
 
-## What DEFRAG is / is not (regulator-safe)
-Is:
-- A private clarity system for structured reflection and decision hygiene.
-- Consent-first, reversible, and transparent about limits.
-- Built with guardrails: allowlisted tools, audit logs, rate limits, optional memory.
+## Brand Voice Rules
 
-Is not:
-- Therapy, medical care, or a diagnostic tool.
-- A source of certainty about a user's inner life.
-- A system that uses coercive, urgent, or shame-based language.
+| Rule | Requirement |
+|------|-------------|
+| **Tone** | Calm, exact, reverent, non-preachy |
+| **Rhythm** | Short lines, spacious, weighty |
+| **Claims** | Reflection + patterning + timing context only |
+| **Language** | signal / noise / seasons / alignment / coherence / mirror |
+| **CTA** | Invitation, not urgency |
 
-## Tone constraints (must follow)
-- Technically rigorous: describe inputs, outputs, limits, and controls.
-- Psychologically restrained: no diagnosing, no certainty claims, no coercive "you are" statements.
-- Symbolically resonant only as optional framing, not authority.
-- Demo-safe and regulator-safe: explicit boundaries and user controls.
-- User-respectful: consent-first, reversible actions, plain language.
-- Future-proof: avoid brittle claims about algorithms or internal weights.
+---
 
-## Allowed spiritual hook style (hero-only)
-Allowed: short, agency-inviting hooks in hero headings only.
-Not allowed: destiny claims, fear/urgency, "guarantees", medical outcomes.
+## Copy Anchors (NEVER CHANGE)
 
-## Locked hero copy (DO NOT CHANGE)
+| Anchor | Text |
+|--------|------|
+| **Headline** | Old technology. Updated interface. |
+| **Primary CTA** | Initialize the Mirror |
+| **Microline** | Signal first. Action second. |
+| **Trust line** | Not predictive. Not diagnostic. Built for clarity, pacing, and self-authored decisions. |
 
-### Headline
+---
+
+## The Old Sayings Table (Canonical)
+
+**This table IS the entire brand.** Use these as section headers, tooltips, empty states, microcopy.
+
+| Old saying | DEFRAG translation | Best placements |
+|------------|-------------------|-----------------|
+| To everything there is a season. | Timing Optimization | Hero, daily state, kairotic windows |
+| Reap what you sow. | Vector Stabilization | Spiral, habit loops, outcomes |
+| Iron sharpens iron. | Resonance Alignment | Constellations, sharing, mesh |
+| Still waters run deep. | Silence is valid data | Empty states, "no action" moments |
+| Measure twice, cut once. | Signal before action | Confirm/decline screens |
+| Don't wake a sleeping dog. | Don't force a closed loop | Warnings, boundaries |
+| Slow is smooth, smooth is fast. | Low latency without forcing | Coaching, UX microcopy |
+| Where there's smoke… | Pattern detection | Spiral insights |
+
+---
+
+## What "Drift" Looks Like (Remove Everywhere)
+
+### Delete/replace any copy that sounds like:
+- "transform your life"
+- "guaranteed breakthrough"
+- "unlock your highest self"
+- "predict"
+- "diagnose"
+- "we know what will happen"
+
+### Also remove generic SaaS marketing language:
+- "optimize" (except in the translation pairs)
+- "insights dashboard"
+- "productivity"
+- "data-driven results"
+
+You can still use "data" but as translator, not "growth analytics."
+
+---
+
+## Canonical Page Copy
+
+### Landing (/)
+
+**Hero**
+- Eyebrow: `Old Technology`
+- H1: `Old technology. Updated interface.`
+- Subhead: `Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured self-reflection, so you can act with timing, not urgency.`
+- Mantra rail rotates ONLY these pairs:
+  - "To everything there is a season." → Timing Optimization
+  - "Reap what you sow." → Vector Stabilization
+  - "Iron sharpens iron." → Resonance Alignment
+  - "Still waters run deep." → Silence is valid data
+- Trust line (small): `Not predictive. Not diagnostic…`
+
+### Trust (/trust)
+
+Use only:
+- "No silent actions."
+- "Pass levels."
+- "Spiral memory."
+- "Data handling."
+
+End with: `Structured self-reflection. Not predictive or diagnostic.`
+
+### How it Works (/how-ai-works)
+
+Frame as: **Capture → Synthesize → Propose → Learn**
+
+Footer: `Not predictive. Not diagnostic. Not a substitute for professional care.`
+
+### Pricing (/pricing)
+
+- Title: `Upgrade for capacity, not status.`
+- No "status", no "power", no "elite".
+
+---
+
+## Agent Copy (Critical)
+
+### Proposal format (3 lines max)
+
+1. **Observation:** "Pressure is elevated right now."
+2. **Timing:** "A clearer window opens around 2:00 PM."
+3. **Invitation:** "If you act, do one small thing: ice cream + silence."
+
+### Decline response (one line)
+
 ```
-Old technology. Updated interface.
+Understood. Still waters run deep. No action required.
 ```
 
-### Subheadline  
+### PASSIVE day line
+
 ```
-Defrag synthesizes ancient symbolic systems—Astrology, Human Design, Gene Keys—into structured self-reflection, so you can act with timing, not urgency.
+To everything there is a season. Today is for listening.
 ```
 
-### Mantras (Old Wisdom → Modern Translation)
-These proverbs bridge ancient wisdom to modern terminology. The juxtaposition IS the brand voice.
+---
 
-| Saying (Old Wisdom) | Translation (Modern) |
-|---------------------|---------------------|
-| "To everything there is a season." | Timing Optimization. |
-| "Reap what you sow." | Vector Stabilization. |
-| "Iron sharpens iron." | Resonance Alignment. |
+## Enforcement: Single Source of Truth
 
-### Taglines
-- "Signal first. Action second."
-- "A Mirror, Not a Mandate"
-- "Not predictive. Not diagnostic."
-- "— lenses, not labels"
+**Rule:** Marketing + microcopy must come from `src/content/*`. Layout generators (v0, agents) are allowed to generate layout only, not inline strings.
 
-### CTAs
-- Primary: "Initialize the Mirror"
-- Secondary: "See how it works"
+### Files:
+- `frontend/src/content/oldWiseTales.ts` — sayings table
+- `frontend/src/content/marketingCopy.ts` — page copy
 
-## Banned patterns (always)
+Import from these files. Never hardcode marketing strings in components.
+
+---
+
+## Drift Audit Checklist
+
+Search the repo for these phrases and remove:
+- [ ] "transform"
+- [ ] "predict"
+- [ ] "diagnose"
+- [ ] "optimize your life"
+- [ ] "results"
+- [ ] "insights dashboard"
+- [ ] "unlock"
+
+Then ensure every major surface includes at least one old-saying line.
+
+---
+
+## Tone Constraints
+
+- **Technically rigorous:** describe inputs, outputs, limits, and controls.
+- **Psychologically restrained:** no diagnosing, no certainty claims, no coercive "you are" statements.
+- **Symbolically resonant** only as optional framing, not authority.
+- **Demo-safe and regulator-safe:** explicit boundaries and user controls.
+- **User-respectful:** consent-first, reversible actions, plain language.
+- **Future-proof:** avoid brittle claims about algorithms or internal weights.
+
+---
+
+## Banned Patterns (Always)
+
 - Medical claims: diagnose, cure, treat, heal.
 - Coercive urgency: "act now", "don't miss", guilt or shame.
 - Totalizing identity: "we know who you are", "the truth is".
 - Literal claims about mystical or quantum mechanisms.
 
-## Trust markers (use consistently on public pages)
-- Encrypted transport (TLS)
-- Not medical care (clear boundary)
-- Data control: export / delete / memory toggle
-- Tool safety: allowlisted tools + audit log
-- No dark patterns: no urgency, no shame
+---
 
-## AI response style guide (app behavior)
-Voice:
-- Calm, precise, non-performative.
-- Short paragraphs; explicit assumptions.
-
-Boundaries:
-- Never claim diagnosis, treatment, or cure.
-- If urgent or unsafe: encourage professional help.
-
-Behavior:
-- Ask at most one clarifying question, otherwise proceed.
-- Provide a next step plus one optional deeper step.
-- Echo provenance: request_id, profile scope, and high-level retrieval.
-
-## Frameworks (safe framing)
-Use "informed by" or "aligned with":
-- CBT-style cognitive reframing (skills-oriented)
-- IFS-informed parts language (non-clinical self-dialogue)
-- ACT-style values and committed action
-- Somatic tracking (body sensation labeling)
-- Jungian/archetypal reflection (symbolic framing)
-- Attachment-aware communication prompts
-- Mindfulness-based attention training (secular framing)
-
-## Page-by-page requirements (goal + required sections)
+## Page-by-Page Requirements
 
 ### Landing (Home)
-Goal: user understands what it is, who it is for, and what to do in 60 seconds.
+**Goal:** user understands what it is, who it is for, and what to do in 60 seconds.
+
 Required:
-- Hero hook (spiritual-rebel style, short).
+- Hero hook (old-wise-tales style, short).
 - Subhead grounded in outcomes + boundaries.
-- 3 concrete bullets (map patterns, run protocols, export safe artifacts).
-- TrustStrip.
+- Old sayings mantra rail.
+- Trust line.
 - "Not therapy" footnote.
 
 ### About
-Goal: explain the system and its alignment without overpromising.
+**Goal:** explain the system and its alignment without overpromising.
+
 Required:
 - What DEFRAG is (definition).
 - Frameworks list (safe framing).
 - Safety stance (no diagnosis, no coercion, user control).
 
 ### Trust
-Goal: make controls and auditability explicit.
+**Goal:** make controls and auditability explicit.
+
 Required:
 - What is stored vs not stored.
 - Retention and deletion controls.
@@ -126,50 +202,38 @@ Required:
 - Export safety + TTL.
 
 ### Pricing
-Goal: clear tiers, limits, and privacy posture.
+**Goal:** clear tiers, limits, and privacy posture.
+
 Required:
 - "What you get" per tier, in concrete terms.
 - "What is private" and "what is not included."
 - Trust markers (rate limiting, signed tools, time-limited exports).
 
 ### Terms
-Goal: human summary before legal text.
+**Goal:** human summary before legal text.
+
 Required:
 - 6-bullet plain-language summary.
 - Legal body remains unchanged unless required.
 
 ### Privacy
-Goal: plain, specific data handling description.
+**Goal:** plain, specific data handling description.
+
 Required:
 - Data stored (turns, memory summaries, tool audit metadata).
 - Data not stored (passwords, secrets, internal prompts).
 - Retention and deletion policy (current reality).
 - Export format and TTL.
 
-### Login / Register
-Goal: clarity and consent, not hype.
-Required:
-- Buttons for OAuth if enabled.
-- Email/password fallback.
-- TrustStrip.
-- Microcopy: no data selling, memory optional.
+---
 
-### Settings (AI)
-Goal: user control and reversibility.
-Required:
-- Memory toggle explanation (on/off).
-- Export is sanitized + time-limited.
-- Tool audit visibility (if present).
+## Workflow Guardrails
 
-### Chat / AgentDock
-Goal: consistent scope and safe tool usage.
-Required:
-- Profile scope shown (selected profile).
-- Error UI with request_id and retry.
-- Clear statement: guidance, not diagnosis.
-
-## Workflow guardrails (must follow)
 - Do not change copy unless it matches this spec.
 - One page per commit.
 - Before editing, produce a page-by-page diff preview.
 - Meaning check: can a first-time user answer what it is, who it is for, and what to do in 60 seconds?
+
+---
+
+*Last updated: January 10, 2026*

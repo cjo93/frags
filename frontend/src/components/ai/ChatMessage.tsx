@@ -67,7 +67,7 @@ export function ChatMessage({ message, isPreview, upgradeRequired }: ChatMessage
             href="/pricing"
             className="inline-flex px-4 py-2 text-sm font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:opacity-80 transition-opacity"
           >
-            Unlock full synthesis
+            Expand the mirror
           </Link>
         </div>
       )}
