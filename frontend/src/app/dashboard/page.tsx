@@ -59,7 +59,7 @@ export default function DashboardPage() {
       {/* Main content */}
       <section className="flex-1">
         <div className="max-w-5xl mx-auto px-6 py-12">
-          <div className="flex items-center justify-between mb-8">
+          <div className="fade-up flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-light tracking-tight">
                 {user?.email ? 'Enter the Field' : 'Enter the Field'}
@@ -79,7 +79,7 @@ export default function DashboardPage() {
           )}
 
           {/* Profiles section */}
-          <section className="mb-12">
+          <section className="fade-up fade-up-2 mb-12">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-medium">Profiles</h2>
               <Link
@@ -95,7 +95,7 @@ export default function DashboardPage() {
                   <Link
                     key={profile.id}
                     href={`/dashboard/profiles/${profile.id}`}
-                    className="group p-5 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 hover:border-neutral-400 dark:hover:border-neutral-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                    className="hover-lift group p-5 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-200"
                   >
                     <h3 className="font-medium group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{profile.name || 'Unnamed profile'}</h3>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-4">Create a profile to begin your daily read</p>
                 <Link
                   href="/dashboard/profiles/new"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-90 transition-opacity"
+                  className="hover-lift inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium transition-all duration-200"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -128,7 +128,7 @@ export default function DashboardPage() {
 
           {/* Constellations section */}
           {(featureFlags.constellation_create || featureFlags.constellation_compute) && (
-            <section className="mb-12">
+            <section className="fade-up fade-up-3 mb-12">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-medium">Constellations</h2>
                 {featureFlags.constellation_create && (
@@ -151,7 +151,7 @@ export default function DashboardPage() {
                     <Link
                       key={c.id}
                       href={`/dashboard/constellation/${c.id}`}
-                      className="group p-5 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 hover:border-neutral-400 dark:hover:border-neutral-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                      className="hover-lift group p-5 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-200"
                     >
                       <h3 className="font-medium group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{c.name || 'Unnamed constellation'}</h3>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
@@ -178,7 +178,7 @@ export default function DashboardPage() {
                           window.location.href = portal.url;
                         }
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:opacity-90 transition-opacity"
+                      className="hover-lift inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium transition-all duration-200"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -193,11 +193,11 @@ export default function DashboardPage() {
 
           {/* AI Preview section */}
           {(featureFlags.ai_preview_allowed || featureFlags.ai_full_allowed) && (
-            <section className="mb-12">
+            <section className="fade-up fade-up-4 mb-12">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-medium">Ask</h2>
               </div>
-              <div className="p-6 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-950">
+              <div className="hover-lift p-6 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-gradient-to-br from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-950">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-white flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-white dark:text-neutral-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                     </p>
                     <Link
                       href="/dashboard/ai"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                      className="hover-lift inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium transition-all duration-200"
                     >
                       Enter Ask
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
