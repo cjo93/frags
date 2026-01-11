@@ -31,3 +31,7 @@
 - Prefer adding API routes as routers (see `synth_engine/api/billing.py`, `synth_engine/api/ai.py`) and include them from [synth_engine/api/main.py](synth_engine/api/main.py).
 - For AI endpoints, enforce size/rate/concurrency limits via helpers in `synth_engine/api/abuse.py` (don’t invent new limit mechanisms).
 - When adding agent tools, wire the allowlist in `cloudflare/agent-worker/src/tools/index.ts` and implement the backend handler under `/tools/*` with HMAC verification.
+## Brand copy protection
+- **DO NOT** change hero headlines, taglines, or CTAs during polish/refactoring passes.
+- Canonical brand copy is documented in [docs/copy/BRAND_COPY.md](docs/copy/BRAND_COPY.md) — read before any "copy refinement" task.
+- Key protected phrases: "Old technology. Updated interface.", "Initialize the Mirror", "Signal first. Action second."
