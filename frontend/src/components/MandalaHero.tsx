@@ -18,19 +18,52 @@ export default function MandalaHero({ state = "CLEAR" }: MandalaHeroProps) {
     "fill-red-300/5";
 
   return (
-    <div className="w-64 h-64 md:w-80 md:h-80">
-      <svg viewBox="0 0 200 200" className="w-full h-full animate-[spin_24s_linear_infinite]" aria-label="Mandala visual">
+    <div className="w-64 h-64 md:w-80 md:h-80 transition-all duration-700 ease-out">
+      <svg 
+        viewBox="0 0 200 200" 
+        className="w-full h-full animate-[spin_28s_linear_infinite]" 
+        aria-label="Mandala visual"
+        style={{ willChange: 'transform' }}
+      >
         <defs>
           <radialGradient id="hero-mandala-g" cx="50%" cy="50%" r="60%">
             <stop offset="0%" stopOpacity="0.2" />
             <stop offset="100%" stopOpacity="0" />
           </radialGradient>
         </defs>
-        <circle cx="100" cy="100" r="90" className={`${ringClass} ${fillClass}`} strokeWidth="0.5" fill="url(#hero-mandala-g)" />
-        <circle cx="100" cy="100" r="70" className={ringClass} strokeWidth="0.4" fill="none" />
-        <circle cx="100" cy="100" r="50" className={ringClass} strokeWidth="0.3" fill="none" />
-        <circle cx="100" cy="100" r="30" className={ringClass} strokeWidth="0.2" fill="none" />
-        {/* Radial lines */}
+        <circle 
+          cx="100" 
+          cy="100" 
+          r="90" 
+          className={`${ringClass} ${fillClass} transition-all duration-700`} 
+          strokeWidth="0.5" 
+          fill="url(#hero-mandala-g)" 
+        />
+        <circle 
+          cx="100" 
+          cy="100" 
+          r="70" 
+          className={`${ringClass} transition-all duration-700`} 
+          strokeWidth="0.4" 
+          fill="none" 
+        />
+        <circle 
+          cx="100" 
+          cy="100" 
+          r="50" 
+          className={`${ringClass} transition-all duration-700`} 
+          strokeWidth="0.3" 
+          fill="none" 
+        />
+        <circle 
+          cx="100" 
+          cy="100" 
+          r="30" 
+          className={`${ringClass} transition-all duration-700`} 
+          strokeWidth="0.2" 
+          fill="none" 
+        />
+        {/* Radial lines with staggered opacity */}
         {[...Array(12)].map((_, i) => {
           const angle = (i * 30 * Math.PI) / 180;
           const x1 = 100 + 30 * Math.cos(angle);
@@ -44,8 +77,11 @@ export default function MandalaHero({ state = "CLEAR" }: MandalaHeroProps) {
               y1={y1}
               x2={x2}
               y2={y2}
-              className={ringClass}
+              className={`${ringClass} transition-all duration-700`}
               strokeWidth="0.2"
+              style={{
+                opacity: 0.3 + (i % 4) * 0.15
+              }}
             />
           );
         })}
