@@ -9,7 +9,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 /**
  * Consistent button component with proper tap targets (44px min height).
- * Supports loading state, variants, and sizes.
+ * Supports loading state, variants, and sizes with enhanced animations.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", loading, disabled, children, ...props }, ref) => {
@@ -21,11 +21,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         aria-busy={loading}
         className={cn(
-          // Base styles
-          "inline-flex items-center justify-center font-medium transition-colors",
+          // Base styles with enhanced transitions
+          "inline-flex items-center justify-center font-medium rounded-full",
+          "transition-all duration-200 ease-out",
           "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "-webkit-tap-highlight-color-transparent",
+          "active:scale-[0.97]",
+          "shadow-sm hover:shadow-md",
           
           // Size variants - all meet 44px minimum tap target
           {
@@ -34,18 +37,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             "h-12 px-6 text-base min-h-[44px]": size === "lg",
           },
           
-          // Color variants
+          // Color variants with enhanced hover states
           {
-            // Primary - solid dark
-            "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100":
+            // Primary - solid dark with smooth hover
+            "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-700 dark:hover:bg-neutral-200":
               variant === "primary",
-            // Secondary - outlined
-            "border border-neutral-300 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800":
+            // Secondary - outlined with subtle background on hover
+            "border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 hover:border-neutral-300 dark:hover:border-neutral-600":
               variant === "secondary",
-            // Ghost - minimal
+            // Ghost - minimal with smooth transition
             "bg-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white":
               variant === "ghost",
-            // Danger - red
+            // Danger - red with enhanced feedback
             "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700":
               variant === "danger",
           },

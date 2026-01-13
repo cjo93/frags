@@ -288,8 +288,30 @@ select:focus {
 
 /* Premium motion utilities (subtle, state-neutral) */
 @keyframes fadeUp {
-  0% { opacity: 0; transform: translate3d(0, 10px, 0); }
-  100% { opacity: 1; transform: translate3d(0, 0, 0); }
+  0% { 
+    opacity: 0; 
+    transform: translate3d(0, 16px, 0);
+  }
+  100% { 
+    opacity: 1; 
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  0% { 
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes softShimmer {
@@ -297,17 +319,40 @@ select:focus {
   100% { transform: translate3d(140%, 0, 0); }
 }
 
-.fade-up { animation: fadeUp 700ms ease-out both; }
-.fade-up-2 { animation-delay: 120ms; }
-.fade-up-3 { animation-delay: 240ms; }
-.fade-up-4 { animation-delay: 360ms; }
-
-.hover-lift {
-  transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease, opacity 250ms ease;
+/* Fade-up with improved easing and GPU acceleration */
+.fade-up { 
+  animation: fadeUp 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
 }
-.hover-lift:hover { transform: translate3d(0, -2px, 0); }
+.fade-up-2 { animation-delay: 100ms; }
+.fade-up-3 { animation-delay: 200ms; }
+.fade-up-4 { animation-delay: 300ms; }
+.fade-up-5 { animation-delay: 400ms; }
+.fade-up-6 { animation-delay: 500ms; }
 
-.soft-shimmer { position: relative; overflow: hidden; }
+/* Enhanced hover lift with smooth shadow transition */
+.hover-lift {
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 300ms cubic-bezier(0.16, 1, 0.3, 1), 
+              opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.hover-lift:hover { 
+  transform: translate3d(0, -3px, 0);
+}
+
+/* Smooth scale on active state */
+.hover-lift:active {
+  transform: translate3d(0, -1px, 0) scale(0.98);
+  transition-duration: 100ms;
+}
+
+/* Soft shimmer effect */
+.soft-shimmer { 
+  position: relative; 
+  overflow: hidden; 
+}
 .soft-shimmer::after {
   content: '';
   position: absolute;
@@ -315,11 +360,52 @@ select:focus {
   width: 60%;
   transform: translate3d(-40%, 0, 0) rotate(18deg);
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
-  animation: softShimmer 6.5s linear infinite;
+  animation: softShimmer 7s linear infinite;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.6;
 }
 .dark .soft-shimmer::after {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
   opacity: 0.5;
+}
+
+/* Button press animation */
+@keyframes buttonPress {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+}
+
+/* Smooth button interactions */
+.button-press {
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.button-press:active {
+  transform: scale(0.97);
+}
+
+/* Enhanced focus states with smooth ring animation */
+@keyframes focusRing {
+  0% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 0.5;
+  }
+  100% {
+    box-shadow: 0 0 0 4px currentColor;
+    opacity: 0;
+  }
+}
+
+.focus-ring:focus-visible {
+  outline: none;
+  position: relative;
+}
+
+.focus-ring:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  animation: focusRing 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
