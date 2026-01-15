@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createPortal } from '@/lib/api';
@@ -41,7 +41,7 @@ export default function DashboardPage() {
           </Link>
           <div className="flex items-center gap-6">
             <Link
-              href="/dashboard/settings"
+              href="/settings"
               className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
             >
               Settings
@@ -83,7 +83,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-medium">Profiles</h2>
               <Link
-                href="/dashboard/profiles/new"
+                href="/profile/new"
                 className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
               >
                 + New profile
@@ -94,7 +94,7 @@ export default function DashboardPage() {
                 {profiles.map((profile) => (
                   <Link
                     key={profile.id}
-                    href={`/dashboard/profiles/${profile.id}`}
+                    href={`/profile/${profile.id}`}
                     className="hover-lift group p-5 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-200"
                   >
                     <h3 className="font-medium group-hover:text-neutral-900 dark:group-hover:text-white transition-colors">{profile.name || 'Unnamed profile'}</h3>
@@ -114,7 +114,7 @@ export default function DashboardPage() {
                 <p className="text-neutral-600 dark:text-neutral-400 mb-1">No profiles yet</p>
                 <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-4">Create a profile to begin your daily read</p>
                 <Link
-                  href="/dashboard/profiles/new"
+                  href="/profile/new"
                   className="hover-lift inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium transition-all duration-200"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                       Ask grounded questions about your profile. Receive structured reflection.
                     </p>
                     <Link
-                      href="/dashboard/ai"
+                      href={profiles && profiles.length > 0 ? `/profile/${profiles[0].id}/ask` : "/profile/new"}
                       className="hover-lift inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium transition-all duration-200"
                     >
                       Enter Ask

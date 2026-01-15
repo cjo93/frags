@@ -18,10 +18,10 @@ export default function MandalaHero({ state = "CLEAR" }: MandalaHeroProps) {
     "fill-red-300/5";
 
   return (
-    <div className="w-64 h-64 md:w-80 md:h-80 transition-all duration-700 ease-out">
+    <div className="w-64 h-64 md:w-80 md:h-80 transition-all duration-700 ease-out group">
       <svg 
         viewBox="0 0 200 200" 
-        className="w-full h-full animate-[spin_28s_linear_infinite]" 
+        className="w-full h-full animate-[spin_28s_linear_infinite] group-hover:animate-[spin_20s_linear_infinite] group-hover:scale-105 transition-transform duration-500"
         aria-label="Mandala visual"
         style={{ willChange: 'transform' }}
       >
