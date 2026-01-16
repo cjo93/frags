@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import TrustStrip from '@/components/TrustStrip';
 import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
 
 export const metadata: Metadata = {
@@ -24,7 +23,9 @@ export default function TrustPage() {
               Defrag is built to be auditable, scoped, and reversible. Your data stays yours—
               with explicit controls and full deletion rights.
             </p>
-            <TrustStrip className="mt-8" />
+            <div className="mt-8 fade-up fade-up-3 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              Private by default • Memory is optional • Exports are sanitized • Signed tool calls
+            </div>
           </div>
         </Section>
 

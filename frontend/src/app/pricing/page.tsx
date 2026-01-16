@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { createCheckout } from '@/lib/api';
 import { useState } from 'react';
-import TrustStrip from '@/components/TrustStrip';
 import { SiteHeader, SiteFooter, FilmBackdrop, Section } from '@/components/marketing';
 
 const tiers = [
@@ -71,8 +70,8 @@ export default function PricingPage() {
               Every plan uses the same deterministic synthesis engine. Higher tiers expand context depth,
               relational tooling, and AI interpretation capacity.
             </p>
-            <div className="fade-up fade-up-3">
-              <TrustStrip className="mt-8" />
+            <div className="mt-8 fade-up fade-up-3 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              Private by default • Memory is optional • Exports are sanitized
             </div>
           </div>
         </Section>
